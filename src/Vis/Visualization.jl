@@ -89,6 +89,12 @@ Create a new Makie scene with the given resolution including control buttons.
 function scene(resolution = (1000, 1000))
     @assert resolution[1] > 0 && resolution[2] > 0
 
+    # possible fix for fixing layoutscene no longer existing in Makie. Many other changes appear to be necessary 
+    # in addition to this. the call to Makie.LScene errors and when fixed the call to Makie.Button errors. Looks like 
+    # a lot of work.
+    # fig = Makie.Figure(resolution=resolution)
+    # lscene = Makie.LScene(fig[1, 1])
+
     scene, layout = Makie.layoutscene(resolution = resolution)
     global current_main_scene = scene
     global current_layout_scene = layout
