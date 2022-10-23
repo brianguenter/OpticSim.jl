@@ -111,7 +111,7 @@ alltestsets = [
     "OpticalSystem",
    "Allocations",
     "GlassCat",  
-    "Visualization"
+    # "Visualization"
 ]
 
 runtestsets = ALL_TESTS ? alltestsets : intersect(alltestsets, ARGS)
