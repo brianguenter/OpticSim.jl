@@ -42,7 +42,7 @@ nothing # hide
 
 If you are using Julia 1.5, we recommend compiling a custom [Julia system image](https://julialang.github.io/PackageCompiler.jl/dev/sysimages) for the OpticSim.jl package to reduce startup time and improve first-time performance.
 
-With VSCode, you can create a sysimage by opening the commant palette (CTRL-shift-P) and selecting `Tasks: Run Build Task, julia: Build custom sysimage for current environment`.
+With VSCode, you can create a sysimage by opening the command palette (CTRL-shift-P) and selecting `Tasks: Run Build Task, julia: Build custom sysimage for current environment`.
 
 Alternatively, we provide a Julia script that will build the sysimage using a representative workload. To do this, activate a Julia environment which has OpticSim installed and run
 
