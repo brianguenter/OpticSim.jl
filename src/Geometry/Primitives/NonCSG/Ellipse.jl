@@ -141,7 +141,7 @@ end
 """
     Circle(radius, [surfacenormal, centrepoint]; interface = nullinterface(T))
 
-Shortcut method to create a circle. The minimal case returns a circle centred at the origin with `normal = [0, 0, 1]`.
+Shortcut method to create a circle. The minimal case returns a circle centered at the origin with `normal = [0, 0, 1]`.
 """
 function Circle(radius::T, surfacenormal::SVector{3,T}, centrepoint::SVector{3,T}; interface::NullOrFresnel{T} = NullInterface(T)) where {T<:Real}
     return Ellipse(radius, radius, surfacenormal, centrepoint; interface = interface, rotationvec = SVector{3,T}(0.0, 1.0, 0.0))

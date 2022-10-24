@@ -67,7 +67,7 @@ export BoundedCylinder, Cuboid, HexagonalPrism, RectangularPrism, TriangularPris
 """
     BoundedCylinder(radius::T, height::T; interface::NullOrFresnel{T} = nullinterface(T)) -> CSGGenerator{T}
 
-Create a cylinder with planar caps on both ends centred at `(0, 0, 0)` with axis `(0, 0, 1)`.
+Create a cylinder with planar caps on both ends centered at `(0, 0, 0)` with axis `(0, 0, 1)`.
 """
 function BoundedCylinder(radius::T, height::T; interface::NullOrFresnel{T} = NullInterface(T)) where {T<:Real}
     barrel = Cylinder(radius, height, interface = interface)
@@ -79,7 +79,7 @@ end
 """
     Cuboid(halfsizex::T, halfsizey::T, halfsizez::T; interface::NullOrFresnel{T} = nullinterface(T)) -> CSGGenerator{T}
 
-Create a cuboid centred at `(0, 0, 0)`.
+Create a cuboid centered at `(0, 0, 0)`.
 """
 function Cuboid(halfsizex::T, halfsizey::T, halfsizez::T; interface::NullOrFresnel{T} = NullInterface(T)) where {T<:Real}
     xmin = Plane(SVector{3,T}(-1.0, 0.0, 0.0), SVector{3,T}(-halfsizex, 0.0, 0.0); vishalfsizeu = halfsizez, vishalfsizev = halfsizey, interface)
