@@ -44,7 +44,7 @@ makedocs(
 )
 
 deploydocs(
-    repo = "github.com/brianguenter/OpticSim.jl.git",
+    repo = "brianguenter.github.io/OpticSim.jl.git",
     devbranch = "main",
     push_preview = true,
 )
