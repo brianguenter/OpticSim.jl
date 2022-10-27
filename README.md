@@ -37,11 +37,9 @@
 
 OpticSim.jl is a [Julia](https://julialang.org/) package for geometric optics (ray tracing) simulation and optimization of complex optical systems. It was originally developed by the Microsoft Research Interactive Media Group and the Microsoft Hardware Architecture Incubation Team (HART). Microsoft no longer supports the package; this is now the official repository.
 
-It is designed to allow optical engineers to create optical systems procedurally and then to simulate and optimize them. Unlike Zemax, Code V, or other interactive optical design systems OpticSim.jl has limited support for interactivity, primarily in the tools for visualizing optical systems.
+It is designed to allow optical engineers to create optical systems procedurally and then to simulate and optimize them. It is primarily intended for complex optical systems that are difficult to create interactively but easy to create procedurally. Unlike Zemax, Code V, or other interactive optical design systems OpticSim.jl has limited support for interactivity. 
 
 A large variety of surface types are supported, and these can be composed into complex 3D objects through the use of constructive solid geometry (CSG). A substantial catalog of optical materials is provided through the GlassCat submodule.
-
-This software provides extensive control over the modelling, simulation, visualization and optimization of optical systems. It is especially suited for designs that have a procedural architecture.
 
 # Installation
 
