@@ -166,7 +166,7 @@ function make2dy(scene::Makie.LScene = current_3d_scene)
     s.transformation.rotation[] = scene_transform
     # hide x ticks
 
-    # there is a bug in Makie 0.14.2 which causes an e xception setting the X showticks to false. 
+    # there is a bug in Makie 0.14.2 which causes an exception setting the X showticks to false. 
     # we work around it by making sure the labels we want to turn off are orthogonal to the view direction 
     # s[Makie.OldAxis].attributes.showticks[] = (false, true, true)
     s[Makie.OldAxis].attributes.showticks[] = (true, true, true)
