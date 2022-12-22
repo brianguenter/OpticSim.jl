@@ -33,6 +33,18 @@ function snell(surfacenormal::S, raydirection::S, nᵢ::T, nₜ::T) where {T<:Re
     return sinθᵢ, sinθₜ
 end
 
+# https://en.wikipedia.org/wiki/Diffuse_reflection
+function diffusedray(surfacenormal::S) where {T<:Real,S<:AbstractArray{T}}
+
+    d = surfacenormal
+
+    (uvec, vvec) = get_orthogonal_vectors(d)
+    ϕ = rand()*2π
+    θ = acos(rand())
+
+    return normalize(sin(θ) * (cos(ϕ) * uvec + sin(ϕ) * vvec) + cos(θ) * d)
+end
+
 function reflectedray(surfacenormal::S, raydirection::S) where {T<:Real,S<:AbstractArray{T}}
     r = raydirection
     nₛ = surfacenormal
@@ -169,6 +181,14 @@ function processintersection(opticalinterface::FresnelInterface{T}, point::SVect
         # reflection
         raypower = powᵣ * incident_pow
         raydirection = reflectedray(normal, direction(incidentray))
+        # diffusive reflection
+        if (diffusereflection(opticalinterface) > zero(T))
+            # override specural reflection only if the ray falls under diffution ratio
+            if (rand()<diffusereflection(opticalinterface))
+                raypower = incident_pow
+                raydirection = diffusedray(normal)
+            end
+        end
     else
         return nothing
     end
