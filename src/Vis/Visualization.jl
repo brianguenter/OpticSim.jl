@@ -159,8 +159,8 @@ function make2dy(scene::Makie.LScene = current_3d_scene)
     # use 2d camera
     Makie.cam2d!(s)
 
-    scene_transform = Makie.qrotation(Makie.Vec3f(0, 1, 0), 0.5pi)
-    scene_transform_inv = Makie.qrotation(Makie.Vec3f(0, 1, 0), -0.5pi)    # to use with the ticks and names
+    scene_transform = Makie.qrotation(SVector{3, Float64}(0, 1, 0), 0.5pi)
+    scene_transform_inv = Makie.qrotation(SVector{3, Float64}(0, 1, 0), -0.5pi)    # to use with the ticks and names
 
     # set rotation to look onto yz plane
     s.transformation.rotation[] = scene_transform
@@ -192,8 +192,8 @@ function make2dx(scene::Makie.LScene = current_3d_scene)
     # use 2d camera
     Makie.cam2d!(s)
 
-    scene_transform= Makie.qrotation(Makie.Vec3f(0, 0, 1), 0.5pi) * Makie.qrotation(Makie.Vec3f(1, 0, 0), 0.5pi)
-    scene_transform_inv=Makie.qrotation(Makie.Vec3f(1, 0, 0), -0.5pi) * Makie.qrotation(Makie.Vec3f(0, 0, 1), -0.5pi) 
+    scene_transform= Makie.qrotation(SVector{3, Float64}(0, 0, 1), 0.5pi) * Makie.qrotation(SVector{3, Float64}(1, 0, 0), 0.5pi)
+    scene_transform_inv=Makie.qrotation(SVector{3, Float64}(1, 0, 0), -0.5pi) * Makie.qrotation(SVector{3, Float64}(0, 0, 1), -0.5pi) 
 
     # set rotation to look onto yz plane
     s.transformation.rotation[] = scene_transform
