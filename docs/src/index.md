@@ -31,7 +31,7 @@ Run this example to check that everything installed properly:
 
 ```@example
 using OpticSim
-Vis.draw(SphericalLens(OpticSim.GlassCat.SCHOTT.N_BK7, 0.0, 10.0, 10.0, 5.0, 5.0))
+Vis.draw(SphericalLens(Examples.Examples_N_BK7, 0.0, 10.0, 10.0, 5.0, 5.0))
 Vis.save("assets/test_install.png") # hide
 nothing # hide
 ```
