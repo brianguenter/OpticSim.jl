@@ -97,7 +97,7 @@ Interface between two materials with behavior defined according to the [Fresnel 
 Assumes unpolarized light.
 
 ```julia
-FresnelInterface{T}(insidematerial, outsidematerial; reflectance = 0, transmission = 1, interfacemode = ReflectOrTransmit)
+FresnelInterface{T}(insidematerial, outsidematerial; reflectance = 0, transmission = 1, diffusereflection = 0, interfacemode = ReflectOrTransmit)
 ```
 
 The interfacemode can be used to trace rays deterministically. Valid values are defined in the InterfaceMode enum.
@@ -106,6 +106,8 @@ reflect and transmit rays with the distribution given by the reflection and tran
 In all cases the power recorded with the ray is correctly updated. This can be used to fake sequential raytracing. For
 example a beamsplitter surface may be set to either Reflect or Transmit to switch between the two outgoing ray paths.
 
+`diffusereflection` parameter defines the ratio of a diffuse reflection to a specular reflection. The probability ratio of a diffusive reflection is calculated from `reflectance` percentage.
+
 """
 struct FresnelInterface{T} <: OpticalInterface{T}
     # storing glasses as IDs (integer) rather than the whole thing seems to improve performance significantly, even when the Glass type is a fixed size (i.e. the interface is pointer-free)
@@ -113,29 +115,32 @@ struct FresnelInterface{T} <: OpticalInterface{T}
     outsidematerial::GlassID
     reflectance::T
     transmission::T
+    diffusereflection::T
     interfacemode::InterfaceMode
 
-    function FresnelInterface{T}(insidematerial::Z, outsidematerial::Y; reflectance::T = zero(T), transmission::T = one(T), interfacemode = ReflectOrTransmit) where {Z<:OpticSim.GlassCat.AbstractGlass,Y<:OpticSim.GlassCat.AbstractGlass,T<:Real}
-        return FresnelInterface{T}(glassid(insidematerial), glassid(outsidematerial), reflectance = reflectance, transmission = transmission, interfacemode = interfacemode)
+    function FresnelInterface{T}(insidematerial::Z, outsidematerial::Y; reflectance::T = zero(T), transmission::T = one(T), diffusereflection::T = zero(T), interfacemode = ReflectOrTransmit) where {Z<:OpticSim.GlassCat.AbstractGlass,Y<:OpticSim.GlassCat.AbstractGlass,T<:Real}
+        return FresnelInterface{T}(glassid(insidematerial), glassid(outsidematerial), reflectance = reflectance, transmission = transmission, diffusereflection = diffusereflection, interfacemode = interfacemode)
     end
 
-    function FresnelInterface{T}(insidematerialid::GlassID, outsidematerialid::GlassID; reflectance::T = zero(T), transmission::T = one(T), interfacemode = ReflectOrTransmit) where {T<:Real}
+    function FresnelInterface{T}(insidematerialid::GlassID, outsidematerialid::GlassID; reflectance::T = zero(T), transmission::T = one(T), diffusereflection::T = zero(T), interfacemode = ReflectOrTransmit) where {T<:Real}
         @assert zero(T) <= reflectance <= one(T)
         @assert zero(T) <= transmission <= one(T)
         @assert reflectance + transmission <= one(T)
-        return new{T}(insidematerialid, outsidematerialid, reflectance, transmission, interfacemode)
+        @assert zero(T) <= diffusereflection <= one(T)
+        return new{T}(insidematerialid, outsidematerialid, reflectance, transmission, diffusereflection, interfacemode)
     end
 end
 export FresnelInterface
 
 function Base.show(io::IO, a::FresnelInterface{R}) where {R<:Real}
-    print(io, "FresnelInterface($(glassname(a.insidematerial)), $(glassname(a.outsidematerial)), $(a.reflectance), $(a.transmission), $(a.interfacemode))")
+    print(io, "FresnelInterface($(glassname(a.insidematerial)), $(glassname(a.outsidematerial)), $(a.reflectance), $(a.transmission), $(a.diffusereflection), $(a.interfacemode))")
 end
 
 insidematerialid(a::FresnelInterface{T}) where {T<:Real} = a.insidematerial
 outsidematerialid(a::FresnelInterface{T}) where {T<:Real} = a.outsidematerial
 reflectance(a::FresnelInterface{T}) where {T<:Real} = a.reflectance
 transmission(a::FresnelInterface{T}) where {T<:Real} = a.transmission
+diffusereflection(a::FresnelInterface{T}) where {T<:Real} = a.diffusereflection
 interfacemode(a::FresnelInterface{T}) where {T<:Real} = a.interfacemode
 
 transmissiveinterface(::Type{T}, insidematerial::X, outsidematerial::Y) where {T<:Real,X<:OpticSim.GlassCat.AbstractGlass,Y<:OpticSim.GlassCat.AbstractGlass} = FresnelInterface{T}(insidematerial, outsidematerial, reflectance = zero(T), transmission = one(T))
