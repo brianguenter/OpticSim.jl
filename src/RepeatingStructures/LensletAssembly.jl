@@ -69,7 +69,7 @@ function project(lenslet::LensletAssembly{T}, displaypoint::SVector{3,T}, vertex
     return SMatrix{2,N,T}(projectedpoints)
 end
 
-function convertlazysets(verts::LazySets.VectorIterator)
+function convertlazysets(verts::AbstractVector)
     M = length(verts)
     T = eltype(eltype(verts))
     temp = MMatrix{3,M,T}(undef)
