@@ -7,7 +7,7 @@ following default entries.
 
 ```
 NIKON a49714470fa875ad4fd8d11cbc0edbf1adfe877f42926d7612c1649dd9441e75 https://www.nikon.com/business/components/assets/pdf/nikon_zemax_data.zip
-OHARA 0c9021bf11b8d4e660012191818685ad3110d4f9490699cabdc89aae1fd26d2e https://www.oharacorp.com/xls/OHARA_201130_CATALOG.zip
+OHARA b8a0bea2a59ec643998040255925c7e051ea5352ff239f1aca50268ac27bb7f7 https://oharacorp.com/wp-content/uploads/2024/02/OHARA_240131_CATALOG.zip
 HOYA b02c203e5a5b7a8918cc786badf0a9db1fe2572372c1c163dc306b0a8a908854 http://www.hoya-opticalworld.com/common/agf/HOYA20210105.agf
 SCHOTT e9aabbb8ebff116ba0c106a71afd86e72f2a397ac9bc447469129e325e795f4e https://www.schott.com/d/advanced_optics/6959f9a4-0e4f-4ef2-a302-2347468a82f5/1.31/schott-optical-glass-overview-zemax-format.zip
 SUMITA c1093e42a1d08acbe30698aba730161e3b43f8f0d50533f65de8b6b11100fdc8 https://www.sumita-opt.co.jp/en/wp/wp-content/themes/sumita-opt-en/download-files.php files%5B%5D=new_sumita.agf&category=data

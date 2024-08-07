@@ -20,7 +20,7 @@ Here are links to several publicly available glass files:
 
 * [NIKON](https://www.nikon.com/business/components/assets/pdf/nikon_zemax_data.zip) (automatically downloaded)
 * [NHG](http://hbnhg.com/down/data/nhgagp.zip) (you have to manually download)
-* [OHARA](https://www.oharacorp.com/xls/OHARA_201130_CATALOG.zip) (automatically downloaded)
+* [OHARA](https://oharacorp.com/wp-content/uploads/2024/02/OHARA_240131_CATALOG.zip) (automatically downloaded)
 * [HOYA](https://hoyaoptics.com/wp-content/uploads/2019/10/HOYA20170401.zip) (automatically downloaded)
 * [SUMITA](https://www.sumita-opt.co.jp/en/download/) (automatically downloaded)
 * [SCHOTT](https://www.schott.com/advanced_optics/english/download/index.html) (automatically downloaded)
