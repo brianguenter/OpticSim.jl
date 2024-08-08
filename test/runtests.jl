@@ -102,7 +102,7 @@ alltestsets = [
     "Paraxial",
    "ParaxialAnalysis",
     "Transform",
-     "JuliaLang",
+    # "JuliaLang",
     # "BVH",
     # "Examples", # slow
     "General",

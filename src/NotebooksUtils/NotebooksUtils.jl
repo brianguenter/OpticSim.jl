@@ -14,7 +14,7 @@ import Format
 import Makie
 import WGLMakie
 import GLMakie
-import JSServe
+import Bonito
 
 mutable struct Defs
     authors::String     # authors
@@ -271,7 +271,7 @@ function SetDocsBackend(be::String)
         Makie.__init__();
         Makie.inline!(true)   
 
-        return JSServe.Page(exportable=true, offline=true)
+        return Bonito.Page(exportable=true, offline=true)
     else 
         GLMakie.activate!()
         Makie.__init__();
@@ -285,19 +285,19 @@ end
 """
     InitNotebook(; port=8449)
 
-initialize the JSServe package.
+initialize the Bonito package.
 """
 function InitNotebook(; port=8449)
     @eval begin
         try
-            import JSServe
+            import Bonito
             local port = 8449 # the port you want
-            JSServe.JSSERVE_CONFIGURATION.listen_port[] = port 
-            JSServe.JSSERVE_CONFIGURATION.external_url[] = "http://localhost:$(port)"
-            JSServe.JSSERVE_CONFIGURATION.content_delivery_url[] = "http://localhost:$(port)"
-            return JSServe.Page() # needs to get displayed by Pluto
+            Bonito.SERVER_CONFIGURATION.listen_port[] = port 
+            Bonito.SERVER_CONFIGURATION.external_url[] = "http://localhost:$(port)"
+            Bonito.SERVER_CONFIGURATION.content_delivery_url[] = "http://localhost:$(port)"
+            return Bonito.Page() # needs to get displayed by Pluto
         catch e
-            @warn "Can't initialize the JSServe package\n$e"
+            @warn "Can't initialize the Bonito package\n$e"
         end
     end
 end

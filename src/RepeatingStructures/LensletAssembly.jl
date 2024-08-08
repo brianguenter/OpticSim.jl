@@ -69,7 +69,7 @@ function project(lenslet::LensletAssembly{T}, displaypoint::SVector{3,T}, vertex
     return SMatrix{2,N,T}(projectedpoints)
 end
 
-function convertlazysets(verts::LazySets.VectorIterator)
+function convertlazysets(verts::AbstractVector)
     M = length(verts)
     T = eltype(eltype(verts))
     temp = MMatrix{3,M,T}(undef)
@@ -94,8 +94,10 @@ function beamenergy(assy::LensletAssembly{T}, displaypoint::AbstractVector{T}, p
     lensverts3D = vcat(lensverts, temp)
     beamlens = SphericalPolygon(lensverts3D, virtpoint, T(1))
 
-    projpoly = LazySets.VPolygon(projectedpoints)
-    lenspoly = LazySets.VPolygon(lensverts)
+    # build regular Matrix as a workaround until
+    # https://github.com/JuliaReach/LazySets.jl/pull/3632 is merged
+    projpoly = LazySets.VPolygon(Matrix(projectedpoints))
+    lenspoly = LazySets.VPolygon(Matrix(lensverts))
     intsct = projpoly ∩  lenspoly # this could be slow, especially multithreaded, because it will allocate. Lazysets.vertices returns Vector{SVector}, rather than SMatrix or SVector{SVector}.
 
     if isempty(intsct)
