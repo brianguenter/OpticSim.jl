@@ -10,5 +10,4 @@ CurrentModule = NotebooksUtils
 run_sample
 SetBackend
 run
-InitNotebook
 ```

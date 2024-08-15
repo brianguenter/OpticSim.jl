@@ -281,27 +281,6 @@ function SetDocsBackend(be::String)
 end
 
 
-
-"""
-    InitNotebook(; port=8449)
-
-initialize the Bonito package.
-"""
-function InitNotebook(; port=8449)
-    @eval begin
-        try
-            import Bonito
-            local port = 8449 # the port you want
-            Bonito.SERVER_CONFIGURATION.listen_port[] = port 
-            Bonito.SERVER_CONFIGURATION.external_url[] = "http://localhost:$(port)"
-            Bonito.SERVER_CONFIGURATION.content_delivery_url[] = "http://localhost:$(port)"
-            return Bonito.Page() # needs to get displayed by Pluto
-        catch e
-            @warn "Can't initialize the Bonito package\n$e"
-        end
-    end
-end
-
 function HTMLFromObj(obj)
     io = IOBuffer()
 	Base.show(io, MIME"text/html"(), obj)

@@ -18,8 +18,6 @@ begin
 	init_notebook = true
 	using OpticSim, OpticSim.Geometry, OpticSim.Emitters
 	import OpticSim.NotebooksUtils as NB
-
-	NB.InitNotebook()
 end
 
 # ╔═╡ a891a210-87bc-11eb-311d-4d020986fe19
