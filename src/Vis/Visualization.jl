@@ -329,7 +329,8 @@ function draw!(scene::Makie.LScene, ob::AbstractString; color = :gray, linewidth
             coords = [transform * (scale * p) for p in GeometryBasics.coordinates(meshdata)]
             meshdata = GeometryBasics.Mesh(coords, GeometryBasics.faces(meshdata))
         end
-        Makie.mesh!(GeometryBasics.normal_mesh(meshdata); kwargs..., color = color, shading = shaded, visible = shaded)
+        shading = default_shading(shaded)
+        Makie.mesh!(GeometryBasics.normal_mesh(meshdata); kwargs..., color = color, shading, visible = shaded)
         if wireframe
             if shaded
                 Makie.wireframe!(scene[end][1], color = (:black, 0.1), linewidth = linewidth)
@@ -373,7 +374,8 @@ Draw a [`TriangleMesh`](@ref), optionially with a visible `wireframe`. `kwargs` 
 function draw!(scene::Makie.LScene, tmesh::TriangleMesh{T}; linewidth = 3, shaded::Bool = true, wireframe::Bool = false, color = :orange, normals::Bool = false, normalcolor = :blue, transparency::Bool = false, kwargs...) where {T<:Real}
     points, indices = makiemesh(tmesh)
     if length(points) > 0 && length(indices) > 0
-        Makie.mesh!(scene, points, indices; kwargs..., color = color, shading = shaded, transparency = transparency, visible = shaded)
+        shading = default_shading(shaded)
+        Makie.mesh!(scene, points, indices; kwargs..., color = color, shading, transparency = transparency, visible = shaded)
         if wireframe
             mesh = scene.scene[end][1]
             if shaded
@@ -468,6 +470,16 @@ function draw!(scene::Makie.LScene, sys::CSGOpticalSystem{T}; kwargs...) where {
 end
 
 draw!(scene::Makie.LScene, sys::AxisymmetricOpticalSystem{T}; kwargs...) where {T<:Real} = draw!(scene, sys.system; kwargs...)
+
+
+"""
+    default_shading(shaded::Bool = true)
+
+Return a value that can be passed as a Makie `:shading` keyword argument,
+that is `Makie.automatic` if `shaded` is `true` and `NoShading` otherwise.
+"""
+default_shading(shaded::Bool = true) = shaded ? Makie.automatic : Makie.NoShading
+
 
 onlydetectorrays(system::Q, tracevalue::LensTrace{T,3}) where {T<:Real,Q<:AbstractOpticalSystem{T}} = onsurface(detector(system), point(tracevalue))
 
