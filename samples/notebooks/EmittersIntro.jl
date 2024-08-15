@@ -54,6 +54,8 @@ begin
 	import PlutoUI
 
 	using Makie
+
+	Vis.set_current_mode(:pluto)
 	
 	defs = OpticSim.NotebooksUtils.Defs("ran")
 
@@ -242,15 +244,6 @@ end
 
 # ╔═╡ 96e423a0-885a-11eb-02a3-8704e8dbdab6
 begin
-	function Vis.scene(resolution = (1000, 1000))
-		# @info "RG: Vis.Scene Replacement"
-		scene, layout = Makie.layoutscene(resolution = resolution)
-		Vis.set_current_main_scene(scene)
-		lscene = layout[1, 1] = Makie.LScene(scene, scenekw = (camera = Makie.cam3d_cad!, axis_type = Makie.axis3d!, raw = false))
-		Vis.set_current_3d_scene(lscene)
-		return scene, lscene
-	end
-	
 	function resolution()
 		if (default_resolution == "Small")
 			return (300, 300)
