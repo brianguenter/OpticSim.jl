@@ -95,7 +95,7 @@ function scene(resolution = (1000, 1000))
     # fig = Makie.Figure(resolution=resolution)
     # lscene = Makie.LScene(fig[1, 1])
 
-    scene = layout = Makie.Figure(resolution = resolution)
+    scene = layout = Makie.Figure(size = resolution)
     global current_main_scene = scene
     global current_layout_scene = layout
     lscene = layout[1, 1] = Makie.LScene(scene, scenekw = (camera = Makie.cam3d_cad!, axis_type = Makie.axis3d!, raw = false))
