@@ -135,7 +135,10 @@ end
 #-------------------------------------
 # draw optical rays
 #-------------------------------------
-function OpticSim.Vis.draw!(scene::Makie.LScene, rays::AbstractVector{OpticSim.OpticalRay{T, 3}}; kwargs...) where {T<:Real}
+function OpticSim.Vis.draw!(scene::Makie.LScene, rays::AbstractVector{OpticSim.OpticalRay{T, 3}};
+    debug::Bool = false,  # make sure debug does not end up in kwargs (Makie would error)
+    kwargs...
+) where {T<:Real}
     m = zeros(T, length(rays)*2, 3)
     for (index, optical_ray) in enumerate(rays)
         ray = OpticSim.ray(optical_ray)
