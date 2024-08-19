@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.21
+# v0.19.45
 
 using Markdown
 using InteractiveUtils
@@ -7,10 +7,20 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
-        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : missing
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
         el
     end
+end
+
+# ╔═╡ 24e4c047-c3e8-4440-855d-935a1e637f0c
+begin
+	# Until a stable release of OpticSim is made,
+	# disable the Pluto package manager
+	# and use the current project and manifest instead
+	using Pkg
+	Pkg.activate(Base.current_project())
 end
 
 # ╔═╡ 520e8300-9751-11eb-392f-65d015cad73d
@@ -18,8 +28,6 @@ begin
 	init_notebook = true
 	using OpticSim, OpticSim.Geometry, OpticSim.Emitters
 	import OpticSim.NotebooksUtils as NB
-
-	NB.InitNotebook()
 end
 
 # ╔═╡ a891a210-87bc-11eb-311d-4d020986fe19
@@ -43,6 +51,8 @@ begin
 	import PlutoUI
 
 	using Makie
+
+	Vis.set_current_mode(:pluto)
 
 	defs = OpticSim.NotebooksUtils.Defs("ran")
 
@@ -200,15 +210,6 @@ end
 
 # ╔═╡ 96e423a0-885a-11eb-02a3-8704e8dbdab6
 begin
-	function Vis.scene(resolution = (1000, 1000))
-		# @info "RG: Vis.Scene Replacement"
-		scene, layout = Makie.layoutscene(resolution = resolution)
-		Vis.set_current_main_scene(scene)
-		lscene = layout[1, 1] = Makie.LScene(scene, scenekw = (camera = Makie.cam3d_cad!, axis_type = Makie.axis3d!, raw = false))
-		Vis.set_current_3d_scene(lscene)
-		return scene, lscene
-	end
-	
 	function resolution()
 		if (default_resolution == "Small")
 			return (300, 300)
@@ -232,8 +233,9 @@ end
 # ╟─a891a210-87bc-11eb-311d-4d020986fe19
 # ╠═def239f0-87bc-11eb-2edb-2f859ac41bee
 # ╟─5f77cfd0-8854-11eb-377c-ef975f9abf63
+# ╠═24e4c047-c3e8-4440-855d-935a1e637f0c
 # ╟─520e8300-9751-11eb-392f-65d015cad73d
-# ╟─d6c83680-879e-11eb-31d4-7dbda7e93e48
+# ╠═d6c83680-879e-11eb-31d4-7dbda7e93e48
 # ╟─68e9b210-87ad-11eb-0f3a-5bb2dbf7d86c
 # ╟─3a5d3ba0-87ae-11eb-1717-93be0b802cab
 # ╟─96e423a0-885a-11eb-02a3-8704e8dbdab6
