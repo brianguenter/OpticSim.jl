@@ -531,7 +531,7 @@ drawtracerays!(system::Q; kwargs...) where {T<:Real,Q<:AbstractOpticalSystem{T}}
 function drawtracerays!(scene::Makie.LScene, system::Q; raygenerator::S = Source(transform = translation(0.0,0.0,10.0), origins = Origins.RectGrid(10.0,10.0,25,25),directions = Constant(0.0,0.0,-1.0)), test::Bool = false, trackallrays::Bool = false, colorbysourcenum::Bool = false, colorbynhits::Bool = false, rayfilter::Union{Nothing,Function} = onlydetectorrays, verbose::Bool = false, drawsys::Bool = false, drawgen::Bool = false, kwargs...) where {T<:Real,Q<:AbstractOpticalSystem{T},S<:AbstractRayGenerator{T}}
     raylines = Vector{LensTrace{T,3}}(undef, 0)
 
-    drawgen && draw!(scene, raygenerator, norays = true; kwargs...)
+    drawgen && draw!(scene, raygenerator; kwargs...)
     drawsys && draw!(scene, system; kwargs...)
 
     verbose && println("Tracing...")
