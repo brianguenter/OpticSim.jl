@@ -321,7 +321,16 @@ Base.:*(a::Transform, p::GeometryBasics.PointMeta) = a * p.main
 Base.:*(a::Real, p::GeometryBasics.PointMeta{N,S}) where {S<:Real,N} = GeometryBasics.Point{N,S}((a * SVector{N,S}(p))...)
 Base.:*(a::Transform, p::GeometryBasics.Point{N,S}) where {S<:Real,N} = GeometryBasics.Point{N,S}((a.rotation * SVector{N,S}(p) + a.translation)...)
 
-function draw!(scene::Makie.LScene, ob::AbstractString; color = :gray, linewidth = 3, shaded::Bool = true, wireframe::Bool = false, transform::Transform{Float64} = identitytransform(Float64), scale::Float64 = 1.0, kwargs...)
+function draw!(scene::Makie.LScene, ob::AbstractString;
+    color = :gray,
+    debug::Bool = false,  # make sure debug does not end up in kwargs (Makie would error)
+    linewidth = 3,
+    shaded::Bool = true,
+    wireframe::Bool = false,
+    transform::Transform{Float64} = identitytransform(Float64),
+    scale::Float64 = 1.0,
+    kwargs...
+)
     if any(endswith(lowercase(ob), x) for x in [".obj", "ply", ".2dm", ".off", ".stl"])
         meshdata = FileIO.load(ob)
         if transform != identitytransform(Float64) || scale != 1.0
@@ -370,7 +379,17 @@ end
 
 Draw a [`TriangleMesh`](@ref), optionially with a visible `wireframe`. `kwargs` are passed on to [`Makie.mesh`](http://makie.juliaplots.org/stable/plotting_functions.html#mesh).
 """
-function draw!(scene::Makie.LScene, tmesh::TriangleMesh{T}; linewidth = 3, shaded::Bool = true, wireframe::Bool = false, color = :orange, normals::Bool = false, normalcolor = :blue, transparency::Bool = false, kwargs...) where {T<:Real}
+function draw!(scene::Makie.LScene, tmesh::TriangleMesh{T};
+    debug::Bool = false,  # make sure debug does not end up in kwargs (Makie would error)
+    linewidth = 3,
+    shaded::Bool = true,
+    wireframe::Bool = false,
+    color = :orange,
+    normals::Bool = false,
+    normalcolor = :blue,
+    transparency::Bool = false,
+    kwargs...
+) where {T<:Real}
     points, indices = makiemesh(tmesh)
     if length(points) > 0 && length(indices) > 0
         shading = default_shading(shaded)
@@ -512,7 +531,7 @@ drawtracerays!(system::Q; kwargs...) where {T<:Real,Q<:AbstractOpticalSystem{T}}
 function drawtracerays!(scene::Makie.LScene, system::Q; raygenerator::S = Source(transform = translation(0.0,0.0,10.0), origins = Origins.RectGrid(10.0,10.0,25,25),directions = Constant(0.0,0.0,-1.0)), test::Bool = false, trackallrays::Bool = false, colorbysourcenum::Bool = false, colorbynhits::Bool = false, rayfilter::Union{Nothing,Function} = onlydetectorrays, verbose::Bool = false, drawsys::Bool = false, drawgen::Bool = false, kwargs...) where {T<:Real,Q<:AbstractOpticalSystem{T},S<:AbstractRayGenerator{T}}
     raylines = Vector{LensTrace{T,3}}(undef, 0)
 
-    drawgen && draw!(scene, raygenerator, norays = true; kwargs...)
+    drawgen && draw!(scene, raygenerator; kwargs...)
     drawsys && draw!(scene, system; kwargs...)
 
     verbose && println("Tracing...")
@@ -634,7 +653,12 @@ end
 Draw a [`Ray`](@ref) in a given `color` optionally scaling the size using `rayscale`.
 `kwargs` are passed to [`Makie.arrows`](http://makie.juliaplots.org/stable/plotting_functions.html#arrows).
 """
-function draw!(scene::Makie.LScene, ray::AbstractRay{T,N}; color = :yellow, rayscale = 1.0, kwargs...) where {T<:Real,N}
+function draw!(scene::Makie.LScene, ray::AbstractRay{T,N};
+    color = :yellow,
+    debug::Bool = false,  # make sure debug does not end up in kwargs (Makie would error)
+    rayscale = 1.0,
+    kwargs...
+) where {T<:Real,N}
     arrow_size = min(0.05, rayscale * 0.05)
     Makie.arrows!(scene, [Makie.Point3f(origin(ray))], [Makie.Point3f(rayscale * direction(ray))]; kwargs..., arrowsize = arrow_size, arrowcolor = color, linecolor = color, linewidth=arrow_size * 0.5)
 end
@@ -712,7 +736,11 @@ end
 
 Draw a line between two points, `kwargs` are passed to [`Makie.linesegments`](http://makie.juliaplots.org/stable/plotting_functions.html#linesegments).
 """
-function draw!(scene::Makie.LScene, line::Tuple{P,P}; color = :yellow, kwargs...) where {T<:Real,P<:AbstractVector{T}}
+function draw!(scene::Makie.LScene, line::Tuple{P,P};
+   debug::Bool = false,  # make sure debug does not end up in kwargs (Makie would error)
+   color = :yellow,
+   kwargs...
+) where {T<:Real,P<:AbstractVector{T}}
     Makie.linesegments!(scene, [line[1], line[2]]; kwargs..., color = color)
 end
 
@@ -731,7 +759,12 @@ end
 Draw a vector of points.
 `kwargs` are passed to [`Makie.scatter`](http://makie.juliaplots.org/stable/plotting_functions.html#scatter).
 """
-function draw!(scene::Makie.LScene, points::AbstractVector{P}; markersize = 20, color = :black, kwargs...) where {T<:Real,P<:AbstractVector{T}}
+function draw!(scene::Makie.LScene, points::AbstractVector{P};
+    debug::Bool = false,  # make sure debug does not end up in kwargs (Makie would error)
+    markersize = 20,
+    color = :black,
+    kwargs...
+) where {T<:Real,P<:AbstractVector{T}}
     Makie.scatter!(scene, points, markersize = markersize, color = color, strokewidth = 0; kwargs...)
 end
 
