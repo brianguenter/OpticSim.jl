@@ -178,12 +178,7 @@ end
 Save the current Makie scene to an image file.
 """
 function save(path::String)
-    # save closes the window so just display it again as a work-around
-    # for some reason the size isn't maintained automatically so we just reset it manually
-    size = Makie.size(current_main_scene)
-    Makie.save(path, current_3d_scene.scene)
-    Makie.resize!(current_main_scene, size)
-    display(current_main_scene)
+    Makie.save(path, current_main_scene; update = false)
 end
 function save(::Nothing) end
 
