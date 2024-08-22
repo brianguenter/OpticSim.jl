@@ -808,7 +808,7 @@ function tracehits(
         end
     end
     numrays = length(raygenerator)
-    tracetime = round(time() - all_start_time)
+    tracetime = round(time() - start_time)
     if printprog
         print("\rFinished tracing $numrays rays in $(tracetime)s")
         if tracetime != 0.0
