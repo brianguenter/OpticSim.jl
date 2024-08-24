@@ -8,7 +8,7 @@ Contains all complex data used for testing and benchmarking.
 module TestData
 
 using OpticSim
-using OpticSim: tobeziersegments # try to use only exported functions so this list should stay short
+using OpticSim.Core: tobeziersegments # try to use only exported functions so this list should stay short
 using OpticSim.Geometry
 using OpticSim.Emitters
 using OpticSim.GlassCat

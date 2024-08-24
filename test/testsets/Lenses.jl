@@ -73,13 +73,13 @@
         l = ParaxialLensEllipse(100.0, 10.0, 10.0, [1.0, 1.0, 0.0], [3.0, 3.0, 3.0])
         r = OpticalRay([2.0, 2.0, 3.0], [1.0, 1.0, 0.0], 1.0, 0.55)
         intsct = halfspaceintersection(surfaceintersection(l, r))
-        ref, _, _ = OpticSim.processintersection(OpticSim.interface(intsct), OpticSim.point(intsct), OpticSim.normal(intsct), r, 20.0, 1.0, true, true)
+        ref, _, _ = OpticSim.Core.processintersection(OpticSim.interface(intsct), OpticSim.point(intsct), OpticSim.normal(intsct), r, 20.0, 1.0, true, true)
         @test isapprox(ref, normalize([1.0, 1.0, 0.0]), rtol = RTOLERANCE, atol = ATOLERANCE)
         l = ParaxialLensRect(100.0, 10.0, 10.0, [1.0, 1.0, 0.0], [3.0, 3.0, 3.0])
         r = OpticalRay([2.3, 2.4, 3.1], [1.0, 1.0, 0.0], 1.0, 0.55)
         intsct = halfspaceintersection(surfaceintersection(l, r))
         fp = [3.0, 3.0, 3.0] + 100 * normalize([1.0, 1.0, 0.0])
-        ref, _, _ = OpticSim.processintersection(OpticSim.interface(intsct), OpticSim.point(intsct), OpticSim.normal(intsct), r, 20.0, 1.0, true, true)
+        ref, _, _ = OpticSim.Core.processintersection(OpticSim.interface(intsct), OpticSim.point(intsct), OpticSim.normal(intsct), r, 20.0, 1.0, true, true)
         @test isapprox(ref, normalize(fp - OpticSim.point(intsct)), rtol = RTOLERANCE, atol = ATOLERANCE)
     end # testset Paraxial
 end # testset lenses

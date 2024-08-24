@@ -16,16 +16,19 @@ using OpticSim
 # Geometry Module
 using OpticSim.Geometry
 # curve/surface imports
-using OpticSim: findspan, makemesh, knotstoinsert, coefficients, inside, quadraticroots, tobeziersegments, evalcsg, makiemesh
+using OpticSim: makemesh, inside
+using OpticSim.Core: findspan, knotstoinsert, coefficients, quadraticroots, tobeziersegments, evalcsg, makiemesh
 # interval imports
-using OpticSim: α, halfspaceintersection, positivehalfspace, lower, upper, EmptyInterval, rayorigininterval, intervalcomplement, intervalintersection, intervalunion, RayOrigin, Infinity, Intersection
+using OpticSim: EmptyInterval, RayOrigin, Infinity, Intersection
+using OpticSim.Core: α, halfspaceintersection, positivehalfspace, lower, upper, rayorigininterval, intervalcomplement, intervalintersection, intervalunion
 include("TestData/TestData.jl")
 # bounding box imports
 using OpticSim: doesintersect
 # RBT imports
-using OpticSim: rotmat, rotmatd
+using OpticSim.Core: rotmat, rotmatd
 # lens imports
-using OpticSim: reflectedray, snell, refractedray, trace, intersection, pathlength, power
+using OpticSim: trace, intersection, pathlength, power
+using OpticSim.Core: reflectedray, snell, refractedray
 #Bounding volume hierarchy imports
 # using OpticSim: partition!
 

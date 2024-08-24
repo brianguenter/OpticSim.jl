@@ -2,7 +2,8 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # See LICENSE in the project root for full license information.
 
-using OpticSim:area,Rectangle,ParaxialLensRect,virtualpoint
+using OpticSim: Rectangle, ParaxialLensRect, virtualpoint
+using OpticSim.Core: area
 using Unitful.DefaultSymbols
 
 @testset "ParaxialAnalysis" begin

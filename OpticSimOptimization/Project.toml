@@ -1,0 +1,8 @@
+name = "OpticSimOptimization"
+uuid = "8584e5bf-147c-4ef0-ac35-b00ae4578f2b"
+authors = ["Brian Guenter", "Charlie Hewitt", "Ran Gal", "Alfred Wong"]
+repository = "https://github.com/microsoft/OpticSim.jl"
+version = "0.6.0"
+
+[deps]
+OpticSimCore = "291d0a7a-039b-4338-9c21-21b16062a73f"

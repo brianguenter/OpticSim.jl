@@ -9,7 +9,8 @@ using Unitful
 using StaticArrays
 
 using OpticSim
-using OpticSim: Sphere, Ray, replprint, trace, Cylinder, AcceleratedParametricSurface, newton, Infinity, RayOrigin, NullInterface, IntervalPoint, intervalintersection, LensTrace, FresnelInterface, wavelength, mᵢandmₜ, refractedray, direction, origin, pathlength, LensAssembly, NoPower, power, snell, fresnel, reflectedray, BoundingBox
+using OpticSim: Sphere, Ray, trace, Cylinder, AcceleratedParametricSurface, Infinity, RayOrigin, NullInterface, LensTrace, FresnelInterface, wavelength, direction, origin, pathlength, LensAssembly, power, BoundingBox
+using OpticSim.Core: replprint, newton, IntervalPoint, intervalintersection, mᵢandmₜ, refractedray, NoPower, snell, fresnel, reflectedray
 using OpticSim.Examples
 
 include("../TestData/TestData.jl")
@@ -80,7 +81,7 @@ function runbenchmark(b; kwargs...)
     if f === trace
         return @eval (@benchmark($f(($args)..., test = true), $(qkwargs...)))
     else
-        return @eval (@benchmark($f(($args)...), setup = (OpticSim.emptyintervalpool!()), $(qkwargs...)))
+        return @eval (@benchmark($f(($args)...), setup = (OpticSimCore.emptyintervalpool!()), $(qkwargs...)))
     end
 end
 
