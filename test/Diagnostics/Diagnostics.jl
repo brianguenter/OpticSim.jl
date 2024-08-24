@@ -8,7 +8,7 @@
 module Diagnostics
 
 using OpticSim
-using OpticSim: replprint
+using OpticSim.Core: replprint
 using OpticSim.Vis
 using OpticSim.Optimization
 using LinearAlgebra
@@ -78,16 +78,16 @@ function visualizerefraction()
     nₛ = SVector{3,Float64}([0.0, 0.0, 1.0])
     c = 1 / sqrt(2.0)
     r = Ray([0.0, c, c], [0.0, -c, -c])
-    rray = OpticSim.refractedray(1.0, 1.5, nₛ, direction(r))
+    rray = OpticSimCore.refractedray(1.0, 1.5, nₛ, direction(r))
     Vis.draw(Ray([0.0, 0.0, 0.0], Array{Float64,1}(nₛ)), color = :black)
     Vis.draw!(r, color = :green)
     Vis.draw!(Ray([0.0, 0.0, 0.0], Array{Float64,1}(rray)), color = :red)
     Vis.draw!(Ray([0.0, 0.0, 0.0], Array{Float64,1}(-nₛ)), color = :yellow)
 
-    temp = OpticSim.refractedray(1.0, 1.5, nₛ, direction(r))
+    temp = OpticSimCore.refractedray(1.0, 1.5, nₛ, direction(r))
     temp = [0.0, temp[2], -temp[3]]
     r = Ray([0.0, -temp[2], -temp[3]], temp)
-    rray = OpticSim.refractedray(1.5, 1.0, nₛ, direction(r))
+    rray = OpticSimCore.refractedray(1.5, 1.0, nₛ, direction(r))
     Vis.draw!(Ray([0.0, 0.0, 0.0], Array{Float64,1}(nₛ)), color = :black)
     Vis.draw!(r, color = :green)
     Vis.draw!(Ray([0.0, 0.0, 0.0], Array{Float64,1}(rray)), color = :red)
@@ -114,12 +114,12 @@ function plotreflectedvsrefractedpower()
         nml = SVector{3,Float64}(0.0, 0.0, 1.0)
 
         rdir = direction(r)
-        (nᵢ, nₜ) = OpticSim.mᵢandmₜ(incidentindex, transmittedindex, nml, r)
-        reflected = OpticSim.reflectedray(nml, rdir)
-        refracted = OpticSim.refractedray(nᵢ, nₜ, nml, rdir)
+        (nᵢ, nₜ) = OpticSimCore.mᵢandmₜ(incidentindex, transmittedindex, nml, r)
+        reflected = OpticSimCore.reflectedray(nml, rdir)
+        refracted = OpticSimCore.refractedray(nᵢ, nₜ, nml, rdir)
 
-        (sinθᵢ, sinθₜ) = OpticSim.snell(nml, direction(r), nᵢ, nₜ)
-        (powᵣ, powₜ) = OpticSim.fresnel(nᵢ, nₜ, sinθᵢ, sinθₜ)
+        (sinθᵢ, sinθₜ) = OpticSimCore.snell(nml, direction(r), nᵢ, nₜ)
+        (powᵣ, powₜ) = OpticSimCore.fresnel(nᵢ, nₜ, sinθᵢ, sinθₜ)
         push!(reflectpow, powᵣ)
         push!(refractpow, powₜ)
     end
@@ -234,7 +234,7 @@ function testnlopt()
     # lens = Examples.doubleconvex()
     # lens = Examples.telephoto(6,.5)
     # Vis.drawtraceimage(lens)
-    start = OpticSim.optimizationvariables(lens)
+    start = OpticSim.Optimization.optimizationvariables(lens)
 
     optimobjective = (arg) -> RMS_spot_size(arg, lens)
     println("starting objective function $(optimobjective(start))")
@@ -414,9 +414,9 @@ end
 
 function testoptimizationvariables()
     lens = Examples.cooketriplet()
-    vars = OpticSim.optimizationvariables(lens)
+    vars = OpticSim.Optimization.optimizationvariables(lens)
     vars .= [Float64(i) for i in 1:length(vars)]
-    newlens = OpticSim.updateoptimizationvariables(lens, vars)
+    newlens = OpticSim.Optimization.updateoptimizationvariables(lens, vars)
     println("original lens")
     show(lens)
     println("updated lens")

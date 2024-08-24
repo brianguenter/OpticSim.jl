@@ -1,0 +1,16 @@
+name = "OpticSimCloud"
+uuid = "6f0d9958-be22-45bb-a311-6dee086b3869"
+authors = ["Brian Guenter", "Charlie Hewitt", "Ran Gal", "Alfred Wong"]
+repository = "https://github.com/microsoft/OpticSim.jl"
+version = "0.6.0"
+
+[deps]
+Conda = "8f4d0f93-b110-5947-807f-2305c1781a2d"
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
+PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+
+[compat]
+Conda = "1.5"
+PyCall = "1.92"
+julia = "1.10"
