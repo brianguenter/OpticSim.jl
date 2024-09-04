@@ -93,7 +93,9 @@ function scene(resolution = (1000, 1000))
     global current_main_scene = fig
     global current_layout_scene = fig.layout
 
-    ax = Makie.Axis3(fig[1, 1]; aspect = :data)
+    ax = Makie.LScene(fig[1, 1];
+        scenekw = (; camera = Makie.cam3d_cad!)
+    )
     global current_3d_scene = ax
 
     # in these modes we want to skip the creation of the utility buttons as these modes are not interactive
@@ -108,20 +110,20 @@ function scene(resolution = (1000, 1000))
     savebutton = Makie.Button(buttons_layout[1, 4], label = "Screenshot", buttoncolor = RGB(0.8, 0.8, 0.8), height = 40, width = 160)
 
     Makie.on(threedbutton.clicks) do nclicks
-        ax.azimuth[] = -π / 4
-        ax.elevation[] = π / 4
+        cam3d = Makie.cameracontrols(ax)
+        Makie.update_cam!(ax.scene, cam3d, +π / 4, π / 4)
         yield()
     end
 
     Makie.on(twodybutton.clicks) do nclicks
-        ax.azimuth[] = π / 2
-        ax.elevation[] = 0.0
+        cam3d = Makie.cameracontrols(ax)
+        Makie.update_cam!(ax.scene, cam3d, π / 2, 0.0)
         yield()
     end
 
     Makie.on(twodxbutton.clicks) do nclicks
-        ax.azimuth[] = 0.0
-        ax.elevation[] = 0.0
+        cam3d = Makie.cameracontrols(ax)
+        Makie.update_cam!(ax.scene, cam3d, 0.0, 0.0)
         yield()
     end
 
