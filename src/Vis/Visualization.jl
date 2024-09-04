@@ -273,7 +273,12 @@ Transforms `surf` into a mesh using [`makemesh`](@ref) and draws the result.
 `numdivisions` determines the resolution with which the mesh is triangulated.
 `kwargs` is passed on to the [`TriangleMesh`](@ref) drawing function.
 """
-function draw!(ax::Makie.AbstractAxis, surf::Surface{T}; numdivisions::Int = 30, normals::Bool = false, normalcolor = :blue, kwargs...) where {T<:Real}
+function draw!(ax::Makie.AbstractAxis, surf::Surface{T};
+    numdivisions::Int = 30,
+    normals::Bool = false,
+    normalcolor = :blue,
+    kwargs...
+) where {T<:Real}
     mesh = makemesh(surf, numdivisions)
     if nothing === mesh
         return
@@ -331,7 +336,10 @@ end
 Draw a series of [`TriangleMesh`](@ref) or [`Surface`](@ref) objects, if `colors` is true then each mesh will be colored automatically with a diverse series of colors.
 `kwargs` are is passed on to the drawing function for each element.
 """
-function draw!(ax::Makie.AbstractAxis, meshes::Vararg{S}; colors::Bool = false, kwargs...) where {T<:Real,S<:Union{TriangleMesh{T},Surface{T}}}
+function draw!(ax::Makie.AbstractAxis, meshes::Vararg{S};
+    colors::Bool = false,
+    kwargs...
+) where {T<:Real, S<:Union{TriangleMesh{T}, Surface{T}}}
     for i in 1:length(meshes)
         if colors
             col = indexedcolor2(i)
