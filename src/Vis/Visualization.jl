@@ -59,7 +59,6 @@ end
 # the second case draws the object in an existing Axis, draw!(obj) can also be used to draw the object in the current Axis
 
 global current_main_scene = nothing
-global current_layout_scene = nothing
 global current_3d_scene = nothing
 global current_mode = nothing           # modes:    nothing, :default  -> Original Vis behavior    
                                         #           :pluto             -> support pluto notebooks 
@@ -91,7 +90,6 @@ function scene(resolution = (1000, 1000))
 
     fig = Makie.Figure(size = resolution)
     global current_main_scene = fig
-    global current_layout_scene = fig.layout
 
     ax = Makie.LScene(fig[1, 1];
         scenekw = (; camera = Makie.cam3d_cad!)
