@@ -58,6 +58,7 @@ end
 # all functions follow the pattern draw(obj) and draw!(ax, obj) where the first case draws the object in a blank Axis and displays it, and
 # the second case draws the object in an existing Axis, draw!(obj) can also be used to draw the object in the current Axis
 
+# Those should be renamed (e.g. `scene()` returns a Figure), or removed?
 global current_main_scene = nothing
 global current_3d_scene = nothing
 global current_mode = nothing           # modes:    nothing, :default  -> Original Vis behavior    
