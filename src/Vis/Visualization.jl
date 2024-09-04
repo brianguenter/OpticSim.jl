@@ -110,20 +110,17 @@ function scene(resolution = (1000, 1000))
     savebutton = Makie.Button(buttons_layout[1, 4], label = "Screenshot", buttoncolor = RGB(0.8, 0.8, 0.8), height = 40, width = 160)
 
     Makie.on(threedbutton.clicks) do nclicks
-        cam3d = Makie.cameracontrols(ax)
-        Makie.update_cam!(ax.scene, cam3d, +π / 4, π / 4)
+        update_camera_orientation!(ax, π / 4, π / 4)
         yield()
     end
 
     Makie.on(twodybutton.clicks) do nclicks
-        cam3d = Makie.cameracontrols(ax)
-        Makie.update_cam!(ax.scene, cam3d, π / 2, 0.0)
+        update_camera_orientation!(ax, π / 2, 0.0)
         yield()
     end
 
     Makie.on(twodxbutton.clicks) do nclicks
-        cam3d = Makie.cameracontrols(ax)
-        Makie.update_cam!(ax.scene, cam3d, 0.0, 0.0)
+        update_camera_orientation!(ax, 0.0, 0.0)
         yield()
     end
 
@@ -133,6 +130,17 @@ function scene(resolution = (1000, 1000))
     end
 
     return fig, ax
+end
+
+
+"""
+    update_camera_orientation(ax::Makie.AbstractAxis, ϕ, θ)
+
+Set the camera position based on two angles 0 ≤ ϕ ≤ 2π and -pi/2 ≤ θ ≤ pi/2.
+"""
+function update_camera_orientation!(ax::Makie.AbstractAxis, ϕ, θ)
+    cam3d = Makie.cameracontrols(ax)
+    Makie.update_cam!(ax.scene, cam3d, ϕ, θ)
 end
 
 
