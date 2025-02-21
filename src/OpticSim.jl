@@ -15,10 +15,6 @@ using Base: @.
 using ForwardDiff
 using StringEncodings
 
-# this dependency is intentional! Revise allows OpticSim to reload AGFGlassCat.jl (the glass database) after calling
-# `add_agf` (src/GlassCat/sources.jl) with `rebuild = true`
-using Revise
-
 # included here to allow a call to the activate! during the initialization
 import GLMakie
 import Makie
@@ -36,7 +32,6 @@ include("RepeatingStructures/Repeat.jl")
 include("Vis/Vis.jl")
 include("Examples/Examples.jl")
 include("Optimization/Optimization.jl")
-include("Cloud/Cloud.jl")
 # define the NotebooksUtils module
 include("NotebooksUtils/NotebooksUtils.jl")
 
@@ -51,8 +46,8 @@ function __init__()
     end
 
     for _ in 1:Threads.nthreads()
-        push!(threadedtrianglepool,Dict{DataType,TrianglePool}((Float64 => TrianglePool{Float64}())))
-        push!(threadedintervalpool,Dict{DataType,IntervalPool}((Float64 => IntervalPool{Float64}())))
+        push!(threadedtrianglepool, Dict{DataType,TrianglePool}((Float64 => TrianglePool{Float64}())))
+        push!(threadedintervalpool, Dict{DataType,IntervalPool}((Float64 => IntervalPool{Float64}())))
     end
 end
 

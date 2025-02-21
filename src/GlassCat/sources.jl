@@ -16,6 +16,8 @@ is_alphabetical(s::AbstractString) = match(r"^([a-zA-Z]+)$", s) !== nothing
 
 is_duplicate(name::AbstractString, sourcefile::AbstractString) = name ∈ first.(split.(readlines(sourcefile)))
 
+
+####WARNING this function will not work as intended. It has a dependency on Revise to automatically rebuild the project after adding a new glass. Don't want this dependency anymore so this function will no longer work correctly.
 """
     add_agf(agffile; agfdir = AGF_DIR, sourcefile = SOURCES_PATH, name = nothing, rebuild = true)
 
@@ -28,11 +30,12 @@ If `rebuild` is true, Pkg.build is called at the end to install the new catalog.
 """
 function add_agf(
     agffile::AbstractString;
-    agfdir::AbstractString = AGF_DIR,
-    sourcefile::AbstractString = SOURCES_PATH,
-    name::Union{Nothing, AbstractString} = nothing,
-    rebuild::Bool = true
+    agfdir::AbstractString=AGF_DIR,
+    sourcefile::AbstractString=SOURCES_PATH,
+    name::Union{Nothing,AbstractString}=nothing,
+    rebuild::Bool=true
 )
+    throw(ErororException("this function will not work as intended. It has a dependency on Revise to automatically rebuild the project after adding a new glass. Don't want this dependency anymore so this function will no longer work correctly."))
     # check name
     if name === nothing
         name = match_agf_basename(agffile)
@@ -140,7 +143,7 @@ end
 
 Download and unzip an AGF glass catalog from a publicly available source. Supports POST requests.
 """
-function download_source(dest::AbstractString, url::AbstractString, POST_data::Union{Nothing,AbstractString} = nothing)
+function download_source(dest::AbstractString, url::AbstractString, POST_data::Union{Nothing,AbstractString}=nothing)
     @info "Downloading source file from $url"
     try
         headers = ["Content-Type" => "application/x-www-form-urlencoded"]
