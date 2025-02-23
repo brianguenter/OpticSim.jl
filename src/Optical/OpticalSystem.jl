@@ -126,7 +126,6 @@ Reset the deterctor image of `system` to zero.
 """
 resetdetector!(system::CSGOpticalSystem{T}) where {T<:Real} = reset!(system.detectorimage)
 
-Base.Float32(a::T) where {T<:ForwardDiff.Dual} = Float32(ForwardDiff.value(a))
 
 """
     trace(system::AbstractOpticalSystem{T}, ray::OpticalRay{T}; trackrays = nothing, test = false)
