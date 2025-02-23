@@ -239,9 +239,11 @@ indexedcolor2(i::Int) = ColorSchemes.hsv[1.0-rem(i / (2.1 * π), 1.0)] .* 0.5
 
 ## displaying imported meshes
 
-Base.:*(a::Transform, p::GeometryBasics.Meta{GeometryBasics.Point}) = a * p.main
-Base.:*(a::Real, p::GeometryBasics.Meta{GeometryBasics.Point{N,S}}) where {S<:Real,N} = GeometryBasics.Point{N,S}((a * SVector{N,S}(p))...)
-Base.:*(a::Transform, p::GeometryBasics.Point{N,S}) where {S<:Real,N} = GeometryBasics.Point{N,S}((a.rotation * SVector{N,S}(p) + a.translation)...)
+#These functions are preventing OpticSim from building and Vis doesn't work anyway so temporarily commenting them out until can work out how the new metadata stuff works in GeometryBasics.
+
+# Base.:*(a::Transform, p::GeometryBasics.Meta{GeometryBasics.Point{N,S}}) where {S<:Real,N} = a * p.main
+# Base.:*(a::Real, p::GeometryBasics.Meta{GeometryBasics.Point{N,S}}) where {S<:Real,N} = GeometryBasics.Point{N,S}((a * SVector{N,S}(p))...)
+# Base.:*(a::Transform, p::GeometryBasics.Point{N,S}) where {S<:Real,N} = GeometryBasics.Point{N,S}((a.rotation * SVector{N,S}(p) + a.translation)...)
 
 function draw!(ax::Makie.AbstractAxis, ob::AbstractString;
     color=:gray,
