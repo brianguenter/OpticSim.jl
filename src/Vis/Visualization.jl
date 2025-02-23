@@ -240,7 +240,7 @@ indexedcolor2(i::Int) = ColorSchemes.hsv[1.0-rem(i / (2.1 * π), 1.0)] .* 0.5
 ## displaying imported meshes
 
 Base.:*(a::Transform, p::GeometryBasics.Meta{Point}) = a * p.main
-Base.:*(a::Real, p::GeometryBasics.Merta{Point{N,S}}) where {S<:Real,N} = GeometryBasics.Point{N,S}((a * SVector{N,S}(p))...)
+Base.:*(a::Real, p::GeometryBasics.Meta{Point{N,S}}) where {S<:Real,N} = GeometryBasics.Point{N,S}((a * SVector{N,S}(p))...)
 Base.:*(a::Transform, p::GeometryBasics.Point{N,S}) where {S<:Real,N} = GeometryBasics.Point{N,S}((a.rotation * SVector{N,S}(p) + a.translation)...)
 
 function draw!(ax::Makie.AbstractAxis, ob::AbstractString;
