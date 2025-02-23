@@ -12,7 +12,7 @@ using StaticArrays
 using DataFrames: DataFrame
 
 using Base: @.
-using ForwardDiff
+
 using StringEncodings
 using AGFFileReader
 

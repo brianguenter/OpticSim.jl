@@ -101,7 +101,7 @@ function ParaxialLensConvexPoly(focallength::T, convpoly::ConvexPolygon{N,T}, lo
 end
 
 
-function ParaxialLensConvexPoly(focaldistance::T, local_frame::Transform{T}, local_polygon_points::Vector{SVector{2,T}}, local_center_point::SVector{2,T}; outsidematerial::AGFFileReader.AbstractGlass=AGFFileReader.Air) where {N,T<:Real}
+function ParaxialLensConvexPoly(focaldistance::T, local_frame::Transform{T}, local_polygon_points::Vector{SVector{2,T}}, local_center_point::SVector{2,T}; outsidematerial::AGFFileReader.AbstractGlass=AGFFileReader.Air) where {T<:Real}
     # the local frame information is stored in convpoly. The polygon points are 2D stored in the z = 0 local plane. The shape and vertices functions automatically apply local to world transformations so the points are represented in world space.
     poly = ConvexPolygon(local_frame, local_polygon_points)
     centrepoint = SVector{3,T}(local2world(local_frame) * Vec3(local_center_point[1], local_center_point[2], zero(T)))
