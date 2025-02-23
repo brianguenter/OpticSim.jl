@@ -5,12 +5,13 @@
 """Contains example usage of the features in the OpticSim.jl package."""
 module Examples
 using ..OpticSim
-using ..OpticSim.Vis
+using Vis
 using ..OpticSim.Geometry
 using ..OpticSim.Emitters
-using ..AGFFileReader
+
 using ..OpticSim.Repeat
 
+using AGFFileReader
 using StaticArrays
 using DataFrames: DataFrame
 using Images

@@ -37,10 +37,10 @@ Returns the vertices of the unit polygon that tiles the plane for the basis
 tilevertices(a::S) where{S<:AbstractBasis}
 ```
 """
-abstract type AbstractBasis{N,T <: Real} end
+abstract type AbstractBasis{N,T<:Real} end
 export AbstractBasis
 
-function Base.getindex(A::B1, indices::Vararg{Int,N}) where {N,T,B1 <: AbstractBasis{N,T}}
+function Base.getindex(A::B1, indices::Vararg{Int,N}) where {N,T,B1<:AbstractBasis{N,T}}
     return basismatrix(A) * SVector{N,Int}(indices)
 end
 
@@ -51,9 +51,9 @@ end
 Base.setindex!(A::AbstractBasis{N,T}, v, I::Vararg{Int,N}) where {T,N} = nothing # can't set lattice points. Might want to throw an exception instead.
 
 """computes the tile vertices at the offset lattice coordinate."""
-tilevertices(latticecoords::Union{AbstractVector,NTuple},lattice::AbstractBasis) = lattice[latticecoords...] .+ tilevertices(lattice)
+tilevertices(latticecoords::Union{AbstractVector,NTuple}, lattice::AbstractBasis) = lattice[latticecoords...] .+ tilevertices(lattice)
 
-struct LatticeBasis{N,T <: Real} <: AbstractBasis{N,T}
+struct LatticeBasis{N,T<:Real} <: AbstractBasis{N,T}
     basisvectors::SMatrix{N,N,T}
 
     """ Convenience constructor that lets you use tuple arguments to describe the basis instead of SVector 
@@ -64,23 +64,23 @@ struct LatticeBasis{N,T <: Real} <: AbstractBasis{N,T}
     ```
     This allocates 48 bytes for a 2D basis in Julia 1.6.2. It  shouldn't allocate anything but not performance critical.
     """
-    function LatticeBasis(vectors::Vararg{NTuple{N,T},N}) where {T,N}  
+    function LatticeBasis(vectors::Vararg{NTuple{N,T},N}) where {T,N}
         temp = MMatrix{N,N,T}(undef)
-        
+
         for (j, val) in pairs(vectors)
             for i in 1:N
-                temp[i,j] = val[i]
+                temp[i, j] = val[i]
             end
         end
-        
+
         return new{N,T}(SMatrix{N,N,T}(temp))
     end
 
-     LatticeBasis(vectors::SMatrix{N,N,T}) where {N,T <: Real} = new{N,T}(vectors)
+    LatticeBasis(vectors::SMatrix{N,N,T}) where {N,T<:Real} = new{N,T}(vectors)
 end
 export LatticeBasis
 
-function basismatrix(a::LatticeBasis{N,T})::SMatrix{N,N,T,N * N} where {N,T} 
+function basismatrix(a::LatticeBasis{N,T})::SMatrix{N,N,T,N * N} where {N,T}
     return a.basisvectors
 end
 
@@ -95,7 +95,7 @@ end
 basisnormalization(a::Repeat.AbstractBasis) = Matrix(inv(Repeat.basismatrix(a))) # unfortunately LazySets doesn't work with StaticArrays. If you return a static Array is messes with their functions.
 
 """warp the matrix into a coordinate frame where the basis vectors are canonical, eᵢ"""
-function normalizedshape(a::Repeat.AbstractBasis, shape::LazySets.VPolygon) 
+function normalizedshape(a::Repeat.AbstractBasis, shape::LazySets.VPolygon)
     normalizer = basisnormalization(a)
     return normalizer * shape
 end
@@ -117,19 +117,19 @@ function tilesinside(containingshape::LazySets.VPolygon, lattice::Repeat.Abstrac
     coordtype = Int64
 
     box = latticebox(containingshape, lattice)
-    
+
     coords = coordtype.(box.radius)
     tilevertices = LazySets.VPolygon(Matrix(Repeat.tilevertices(lattice))) # VPolygon will accept StaticArrays but other LazySets function will barf.
     result = Matrix{coordtype}(undef, 2, 0)
-    
+
     for i in -coords[1]:coords[1]
-        for j in -coords[2]:coords[2] 
-            offsetcoords =   (Int64.(box.center) + [i,j])    
+        for j in -coords[2]:coords[2]
+            offsetcoords = (Int64.(box.center) + [i, j])
             center = Vector(lattice[offsetcoords...]) #[] indexer for lattices returns SVector which LazySets doesn't handle. Convert to conventional Vector.
             offsethex = LazySets.translate(tilevertices, center)
 
             if !isempty(offsethex ∩ containingshape)
-                 result = hcat(result, offsetcoords)
+                result = hcat(result, offsetcoords)
             end
         end
     end
@@ -138,28 +138,11 @@ end
 export tilesinside
 
 """The vertices of the containing shape are the columns of the matrix containingshape"""
-tilesinside(containingshape::AbstractMatrix,lattice::Repeat.AbstractBasis) = tilesinside(LazySets.VPolygon(containingshape), lattice)
+tilesinside(containingshape::AbstractMatrix, lattice::Repeat.AbstractBasis) = tilesinside(LazySets.VPolygon(containingshape), lattice)
 
-tilesinside(xmin::T,ymin::T,xmax::T,ymax::T,lattice::Repeat.AbstractBasis) where {T <: AbstractFloat} = tilesinside(SMatrix{2,4,T}(xmin, ymin, xmin, ymax, xmax, ymax, xmax, ymin), lattice)
+tilesinside(xmin::T, ymin::T, xmax::T, ymax::T, lattice::Repeat.AbstractBasis) where {T<:AbstractFloat} = tilesinside(SMatrix{2,4,T}(xmin, ymin, xmin, ymax, xmax, ymax, xmax, ymin), lattice)
 
-using Plots
 
-""" to see what the objects look like in the warped coordinate frame use inv(basismatrix(lattice)) as the transform"""
-function plotall(containingshape, lattice, transform=[1.0 0.0;0.0 1.0])
-    temp = Vector{SMatrix}(undef, 0)
-
-    for coordinate in eachcol(tilesinside(containingshape, lattice))
-        println(typeof(coordinate))
-        push!(temp, tilevertices(coordinate, lattice))
-    end
-
-    tiles = LazySets.VPolygon.(temp)
-    for tile in tiles
-        plot!(transform * tile, aspectratio=1)
-    end
-    plot!(containingshape, aspectratio=1)
-end
-export plotall
 
 
 function testtilesinside()
@@ -167,26 +150,26 @@ function testtilesinside()
     hex = HexBasis1()
     poly = LazySets.VPolygon(3 * tilevertices(hex))
     tilecoords = tilesinside(poly, hex)
-     insidetiles = LazySets.VPolygon.([tilevertices(x,hex) for x in eachcol(tilecoords)])
+    insidetiles = LazySets.VPolygon.([tilevertices(x, hex) for x in eachcol(tilecoords)])
     # plotall(poly, hex)
     for tile in insidetiles
         plot!(tile)
-end
+    end
 end
 export testtilesinside
 
 
 """This function returns the radius of the longest basis vector of the lattice cluster. Most lattices defined in this project have symmetric basis vectors so the radii of all basis vectors will be identical. This function is used in determing which clusters "fit" within the eye pupil."""
 function euclideandiameter(basismatrix::SMatrix)
-    maximum(norm.([basismatrix[:,i] for i in 1:size(basismatrix)[2]]))
+    maximum(norm.([basismatrix[:, i] for i in 1:size(basismatrix)[2]]))
 end
 export euclideandiameter
 
 """ Lattic bases can have real basis vectors. This returns the maximum Euclidean distance between lattice basis center points."""
-euclideandiameter(a::Repeat.AbstractBasis) =  euclideandiameter(Repeat.basismatrix(a))
+euclideandiameter(a::Repeat.AbstractBasis) = euclideandiameter(Repeat.basismatrix(a))
 
 """Only will work properly if lattice basis matrix contains only integer or rational terms. Returns the integer lattice coords of point in the given basis if the point is in the span of latticebasis. Otherwise returns nothing"""
-function latticepoint(lattice_basis_matrix::AbstractMatrix, origin, point) 
+function latticepoint(lattice_basis_matrix::AbstractMatrix, origin, point)
     Ainv = inv(Rational.(lattice_basis_matrix))
     b = [(point .- origin)...]
     x = Ainv * b
@@ -198,4 +181,4 @@ function latticepoint(lattice_basis_matrix::AbstractMatrix, origin, point)
 end
 export latticepoint
 
-latticepoint(latticebasis::AbstractBasis,origin,point) = latticepoint(basismatrix(latticebasis),origin,point)
+latticepoint(latticebasis::AbstractBasis, origin, point) = latticepoint(basismatrix(latticebasis), origin, point)

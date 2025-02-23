@@ -7,14 +7,13 @@ module Repeat
 export basismatrix
 
 using Base: offset_if_vec
-using StaticArrays:SVector,MVector,SMatrix,MMatrix
-using DataFrames:DataFrame
-using Colors
+using StaticArrays: SVector, MVector, SMatrix, MMatrix
+using DataFrames: DataFrame
 import LazySets
-using LinearAlgebra:norm
+using LinearAlgebra: norm
 import ..OpticSim #only LensletAssembly uses OpticSim. This doesn't seem like a great idea. Probably should move LensletAssembly somewhere else or at least remove the dependency.
 import OpticSim: surfaceintersection
-using OpticSim: virtualpoint,SphericalPolygon,processintersection,point
+using OpticSim: virtualpoint, SphericalPolygon, processintersection, point
 import Unitful
 
 include("Lattice.jl")

@@ -10,15 +10,14 @@ import LinearAlgebra
 
 using StaticArrays
 using DataFrames: DataFrame
-using Images
+
 using Base: @.
 using ForwardDiff
 using StringEncodings
 using AGFFileReader
 
 # included here to allow a call to the activate! during the initialization
-import GLMakie
-import Makie
+
 
 include("constants.jl")
 include("utilities.jl")
@@ -30,19 +29,10 @@ include("Data/Data.jl")
 include("Geometry/Geometry.jl")
 include("Optical/Optical.jl")
 include("RepeatingStructures/Repeat.jl")
-include("Vis/Vis.jl")
 include("Examples/Examples.jl")
 
 #initialize these caches here so they will get the correct number of threads from the load time environment, rather than the precompile environment. The latter happens if the initialization happens in the const definition. If the precompile and load environments have different numbers of threads this will cause an error.
 function __init__()
-
-    # this call is to try and keep the original behevior of Makie's default backend after adding the WGLMakie backend to the package
-    try
-        GLMakie.activate!()
-    catch e
-        @warn "Unable to activate! the GLMakie backend\n$e"
-    end
-
     for _ in 1:Threads.nthreads()
         push!(threadedtrianglepool, Dict{DataType,TrianglePool}((Float64 => TrianglePool{Float64}())))
         push!(threadedintervalpool, Dict{DataType,IntervalPool}((Float64 => IntervalPool{Float64}())))
