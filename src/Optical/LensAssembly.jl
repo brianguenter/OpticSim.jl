@@ -83,19 +83,21 @@ macro lensassembly_intersection(N)
     # generates the _closestintersection() function for a lens assembly of size N, this should never be called directly, instead call closestintersection() in all cases
     type = :($(Symbol("LensAssembly$(N)")))
     fieldnames = [Symbol("E$(i)") for i in 1:N]
-    checks = [quote
-        intvl = surfaceintersection(obj.$(fieldnames[i]), r)
-        if !(intvl isa EmptyInterval)
-            intsct = closestintersection(intvl::Union{Interval{T},DisjointUnion{T}})
-            if intsct !== nothing
-                αcurr = α(intsct)
-                if αcurr < αmin
-                    αmin = αcurr
-                    closest = intsct
+    checks = [
+        quote
+            intvl = surfaceintersection(obj.$(fieldnames[i]), r)
+            if !(intvl isa EmptyInterval)
+                intsct = closestintersection(intvl::Union{Interval{T},DisjointUnion{T}})
+                if intsct !== nothing
+                    αcurr = α(intsct)
+                    if αcurr < αmin
+                        αmin = αcurr
+                        closest = intsct
+                    end
                 end
             end
-        end
-    end for i in 1:N]
+        end for i in 1:N
+    ]
     return esc(quote
         function _closestintersection(obj::$(type){T}, r::AbstractRay{T,N})::Union{Nothing,Intersection{T,N}} where {T<:Real,N}
             αmin = typemax(T)
@@ -180,7 +182,7 @@ for N in 1:PREGENERATED_LENS_ASSEMBLY_SIZE
     end
 end
 
-function LensAssembly(elements::Vararg{Union{Surface{T},CSGTree{T},LensAssembly{T}}}; axis::SVector{3,T} = SVector{3,T}(0.0, 0.0, 1.0)) where {T<:Real}
+function LensAssembly(elements::Vararg{Union{Surface{T},CSGTree{T},LensAssembly{T}}}; axis::SVector{3,T}=SVector{3,T}(0.0, 0.0, 1.0)) where {T<:Real}
     # make the actual object
     actual_elements = []
     rectangles = Vector{Rectangle{T}}(undef, 0)
@@ -324,7 +326,7 @@ Recursive rays are offset by a small amount (`RAY_OFFSET`) to prevent it from im
 
 `trackrays` can be passed an empty vector to accumulate the `LensTrace` objects at each intersection of `ray` with a surface in the assembly.
 """
-function trace(assembly::LensAssembly{T}, r::OpticalRay{T,N}, temperature::T = T(OpticSim.GlassCat.TEMP_REF), pressure::T = T(OpticSim.GlassCat.PRESSURE_REF); trackrays::Union{Nothing,Vector{LensTrace{T,N}}} = nothing, test::Bool = false, recursion::Int = 0)::Union{Nothing,NoPower,LensTrace{T,N}} where {T<:Real,N}
+function trace(assembly::LensAssembly{T}, r::OpticalRay{T,N}, temperature::T=T(AGFFileReader.TEMP_REF), pressure::T=T(AGFFileReader.PRESSURE_REF); trackrays::Union{Nothing,Vector{LensTrace{T,N}}}=nothing, test::Bool=false, recursion::Int=0)::Union{Nothing,NoPower,LensTrace{T,N}} where {T<:Real,N}
     if power(r) < POWER_THRESHOLD || recursion > TRACE_RECURSION_LIMIT
         return nopower
     end
@@ -352,12 +354,12 @@ function trace(assembly::LensAssembly{T}, r::OpticalRay{T,N}, temperature::T = T
             if trackrays !== nothing
                 # we want the power that is hitting the surface, i.e. power on incident ray, but the path length at this intersection
                 # i.e. with the path length for this intersection added and power modulated by absorption only
-                push!(trackrays, LensTrace(OpticalRay(ray(r), raypower, λ, opl = raypathlength, nhits = nhits(r), sourcenum = sourcenum(r), sourcepower = sourcepower(r)), intsct))
+                push!(trackrays, LensTrace(OpticalRay(ray(r), raypower, λ, opl=raypathlength, nhits=nhits(r), sourcenum=sourcenum(r), sourcepower=sourcepower(r)), intsct))
             end
-            offsetray = OpticalRay(surfintsct + RAY_OFFSET * raydirection, raydirection, raypower, λ, opl = raypathlength, nhits = nhits(r) + 1, sourcenum = sourcenum(r), sourcepower = sourcepower(r))
-            res = trace(assembly, offsetray, temperature, pressure, trackrays = trackrays, test = test, recursion = recursion + 1)
+            offsetray = OpticalRay(surfintsct + RAY_OFFSET * raydirection, raydirection, raypower, λ, opl=raypathlength, nhits=nhits(r) + 1, sourcenum=sourcenum(r), sourcepower=sourcepower(r))
+            res = trace(assembly, offsetray, temperature, pressure, trackrays=trackrays, test=test, recursion=recursion + 1)
             if res === nothing
-                return LensTrace(OpticalRay(surfintsct, raydirection, raypower, λ, opl = raypathlength, nhits = nhits(r), sourcenum = sourcenum(r), sourcepower = sourcepower(r)), intsct)
+                return LensTrace(OpticalRay(surfintsct, raydirection, raypower, λ, opl=raypathlength, nhits=nhits(r), sourcenum=sourcenum(r), sourcepower=sourcepower(r)), intsct)
             else
                 return res
             end

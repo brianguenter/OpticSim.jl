@@ -123,19 +123,19 @@ The values returned are the normalized direction of the ray after the intersecti
 `nothing` is returned if the ray should stop here, in order to obtain the correct intensity on the detector through monte carlo integration `nothing` should be returned proportionally to create the correct power distribution.
 i.e. If the interface should modulate power to 76% then 24% of calls to this function should return `nothing`.
 """
-function processintersection(opticalinterface::FresnelInterface{T}, point::SVector{N,T}, normal::SVector{N,T}, incidentray::OpticalRay{T,N}, temperature::T, pressure::T, test::Bool, firstray::Bool = false) where {T<:Real,N}
+function processintersection(opticalinterface::FresnelInterface{T}, point::SVector{N,T}, normal::SVector{N,T}, incidentray::OpticalRay{T,N}, temperature::T, pressure::T, test::Bool, firstray::Bool=false) where {T<:Real,N}
     λ = wavelength(incidentray)
     mᵢ, mₜ = mᵢandmₜ(outsidematerialid(opticalinterface), insidematerialid(opticalinterface), normal, incidentray)
     nᵢ = one(T)
     nₜ = one(T)
     α = zero(T)
     if !isair(mᵢ)
-        mat = glassforid(mᵢ)::OpticSim.GlassCat.Glass
-        nᵢ = index(mat, λ, temperature = temperature, pressure = pressure)::T
-        α = absorption(mat, λ, temperature = temperature, pressure = pressure)::T
+        mat = glassforid(mᵢ)::AGFFileReader.Glass
+        nᵢ = index(mat, λ, temperature=temperature, pressure=pressure)::T
+        α = absorption(mat, λ, temperature=temperature, pressure=pressure)::T
     end
     if !isair(mₜ)
-        nₜ = index(glassforid(mₜ)::OpticSim.GlassCat.Glass, λ, temperature = temperature, pressure = pressure)::T
+        nₜ = index(glassforid(mₜ)::AGFFileReader.Glass, λ, temperature=temperature, pressure=pressure)::T
     end
     (sinθᵢ, sinθₜ) = snell(normal, direction(incidentray), nᵢ, nₜ)
     (powᵣ, powₜ) = fresnel(nᵢ, nₜ, sinθᵢ, sinθₜ)

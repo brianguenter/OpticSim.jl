@@ -4,7 +4,7 @@
 
 using DataFrames: nrow
 using Unitful.DefaultSymbols
-using .OpticSim.GlassCat: AbstractGlass, TEMP_REF, PRESSURE_REF, Glass, Air
+using .AGFFileReader: AbstractGlass, TEMP_REF, PRESSURE_REF, Glass, Air
 
 export AbstractOpticalSystem
 export CSGOpticalSystem, temperature, pressure, detectorimage, resetdetector!, assembly
@@ -38,8 +38,8 @@ CSGOpticalSystem(
     detector::Surface,
     detectorpixelsx = 1000,
     detectorpixelsy = 1000, ::Type{D} = Float32;
-    temperature = OpticSim.GlassCat.TEMP_REF,
-    pressure = OpticSim.GlassCat.PRESSURE_REF
+    temperature = AGFFileReader.TEMP_REF,
+    pressure = AGFFileReader.PRESSURE_REF
 )
 ```
 """
@@ -53,11 +53,11 @@ struct CSGOpticalSystem{T,D<:Number,S<:Surface{T},L<:LensAssembly{T}} <: Abstrac
     function CSGOpticalSystem(
         assembly::L,
         detector::S,
-        detectorpixelsx::Int = 1000,
-        detectorpixelsy::Int = 1000,
-        ::Type{D} = Float32;
-        temperature::Union{T,Unitful.Temperature} = convert(T, TEMP_REF),
-        pressure::T = convert(T, PRESSURE_REF)
+        detectorpixelsx::Int=1000,
+        detectorpixelsy::Int=1000,
+        ::Type{D}=Float32;
+        temperature::Union{T,Unitful.Temperature}=convert(T, TEMP_REF),
+        pressure::T=convert(T, PRESSURE_REF)
     ) where {T<:Real,S<:Surface{T},L<:LensAssembly{T},D<:Number}
         @assert hasmethod(uv, (S, SVector{3,T})) "Detector must implement uv()"
         @assert hasmethod(uvtopix, (S, SVector{2,T}, Tuple{Int,Int})) "Detector must implement uvtopix()"
@@ -77,8 +77,8 @@ Base.copy(a::CSGOpticalSystem) = CSGOpticalSystem(
     a.assembly,
     a.detector,
     size(a.detectorimage)...,
-    temperature = (a.temperature)°C,
-    pressure = a.pressure
+    temperature=(a.temperature)°C,
+    pressure=a.pressure
 )
 
 # added this show method because the type of CSGOpticalSystem is gigantic and printing it in the REPL can crash the
@@ -140,14 +140,14 @@ surface in the system.
 function trace(
     system::CSGOpticalSystem{T,D},
     r::OpticalRay{T,N};
-    trackrays::Union{Nothing,Vector{LensTrace{T,N}}} = nothing,
-    test::Bool = false
+    trackrays::Union{Nothing,Vector{LensTrace{T,N}}}=nothing,
+    test::Bool=false
 ) where {T<:Real,N,D<:Number}
     if power(r) < POWER_THRESHOLD
         return nothing
     end
 
-    result = trace(system.assembly, r, temperature(system), pressure(system), trackrays = trackrays, test = test)
+    result = trace(system.assembly, r, temperature(system), pressure(system), trackrays=trackrays, test=test)
 
     if result === nothing || result === nopower
         emptyintervalpool!(T)
@@ -182,8 +182,8 @@ function trace(
             # not in air, in which case this is necessary
             if !isair(m)
                 mat::Glass = glassforid(m)
-                nᵢ = index(mat, λ, temperature = temperature(system), pressure = pressure(system))::T
-                α = absorption(mat, λ, temperature = temperature(system), pressure = pressure(system))::T
+                nᵢ = index(mat, λ, temperature=temperature(system), pressure=pressure(system))::T
+                α = absorption(mat, λ, temperature=temperature(system), pressure=pressure(system))::T
                 if α > zero(T)
                     internal_trans = exp(-α * geometricpathlength)
                     if rand() >= internal_trans
@@ -199,10 +199,10 @@ function trace(
                     ray(ray(result)),
                     pow,
                     wavelength(result),
-                    opl = pathlength(result) + opticalpathlength,
-                    nhits = nhits(result) + 1,
-                    sourcenum = sourcenum(r),
-                    sourcepower = sourcepower(r)),
+                    opl=pathlength(result) + opticalpathlength,
+                    nhits=nhits(result) + 1,
+                    sourcenum=sourcenum(r),
+                    sourcepower=sourcepower(r)),
                 detintsct
             )
             if trackrays !== nothing
@@ -212,7 +212,7 @@ function trace(
             # increment the detector image
             pixu, pixv = uvtopix(detector(system), uv(detintsct), size(system.detectorimage))
             system.detectorimage[pixv, pixu] += convert(D, sourcepower(r)) # TODO will need to handle different detector
-                                                                           #      image types a bit better than this
+            #      image types a bit better than this
 
             # should be okay to assume intersection will not be a DisjointUnion for all the types of detectors we will
             # be using
@@ -252,8 +252,8 @@ function validate_axisymmetricopticalsystem_dataframe(prescription::DataFrame)
     @assert isempty(unsupported_cols) "unsupported columns: $(comma_join(unsupported_cols))"
 
     col_type_errors = ["$col: $T1 should be $T2" for (col, T1, T2) in
-        [(col, eltype(prescription[!, col]), supported_col_types[col]) for col in cols]
-        if !(T1 <: Union{Missing, T2})
+                       [(col, eltype(prescription[!, col]), supported_col_types[col]) for col in cols]
+                       if !(T1 <: Union{Missing,T2})
     ]
     @assert isempty(col_type_errors) "incorrect column types: $(comma_join(col_type_errors))"
 
@@ -261,25 +261,25 @@ function validate_axisymmetricopticalsystem_dataframe(prescription::DataFrame)
     @assert isempty(unsupported_surface_types) "unsupported surface types: $(comma_join(unsupported_surface_types))"
 
     @assert(
-        findall(s->s==="Object", surface_types) == [1],
+        findall(s -> s === "Object", surface_types) == [1],
         "there should only be one Object surface and it should be the first row"
     )
 
     @assert(
-        findall(s->s==="Image", surface_types) == [nrow(prescription)],
-         "there should only be one Image surface and it should be the last row"
+        findall(s -> s === "Image", surface_types) == [nrow(prescription)],
+        "there should only be one Image surface and it should be the last row"
     )
 end
 
 function get_front_back_property(prescription::DataFrame, rownum::Int, property::String, default=nothing)
     properties = (
         property ∈ names(prescription) ?
-        [prescription[rownum, property], prescription[rownum + 1, property]] : repeat([missing], 2)
+        [prescription[rownum, property], prescription[rownum+1, property]] : repeat([missing], 2)
     )
     return replace(properties, missing => default)
 end
 
-turnEmptyIntoNothing(list) = length(list)==0 ? nothing : list
+turnEmptyIntoNothing(list) = length(list) == 0 ? nothing : list
 
 """
     AxisymmetricOpticalSystem{T,C<:CSGOpticalSystem{T}} <: AbstractOpticalSystem{T}
@@ -300,8 +300,8 @@ AxisymmetricOpticalSystem{T}(
     detectorpixelsx = 1000,
     detectorpixelsy:: = 1000,
     ::Type{D} = Float32;
-    temperature = OpticSim.GlassCat.TEMP_REF,
-    pressure = OpticSim.GlassCat.PRESSURE_REF
+    temperature = AGFFileReader.TEMP_REF,
+    pressure = AGFFileReader.PRESSURE_REF
 )
 ```
 """
@@ -312,11 +312,11 @@ struct AxisymmetricOpticalSystem{T,C<:CSGOpticalSystem{T}} <: AbstractOpticalSys
 
     function AxisymmetricOpticalSystem{T}(
         prescription::DataFrame,
-        detectorpixelsx::Int = 1000,
-        detectorpixelsy::Int = 1000,
-        ::Type{D} = Float32;
-        temperature::Union{T,Unitful.Temperature} = convert(T, TEMP_REF),
-        pressure::T = convert(T, PRESSURE_REF)
+        detectorpixelsx::Int=1000,
+        detectorpixelsy::Int=1000,
+        ::Type{D}=Float32;
+        temperature::Union{T,Unitful.Temperature}=convert(T, TEMP_REF),
+        pressure::T=convert(T, PRESSURE_REF)
     ) where {T<:Real,D<:Number}
         validate_axisymmetricopticalsystem_dataframe(prescription)
 
@@ -376,7 +376,7 @@ struct AxisymmetricOpticalSystem{T,C<:CSGOpticalSystem{T}} <: AbstractOpticalSys
                 frontaspherics::Vector{Pair{Int,T}}, backaspherics::Vector{Pair{Int,T}} = [
                     [parse(Int, k) => v for (k, v) in params] for params in [frontparams, backparams]
                 ]
-                
+
                 fa = turnEmptyIntoNothing(frontaspherics)
                 ba = turnEmptyIntoNothing(backaspherics)
                 if fa === nothing && ba === nothing  #it should be a CONIC. Note: if aspheric terms are present but all zero then an AshpericLens will be created
@@ -384,7 +384,7 @@ struct AxisymmetricOpticalSystem{T,C<:CSGOpticalSystem{T}} <: AbstractOpticalSys
                         material, vertices[i-1], frontradius, frontconic, backradius, backconic, thickness,
                         semidiameter; lastmaterial, nextmaterial, frontsurfacereflectance, backsurfacereflectance
                     )()
-                else    
+                else
                     newelement = AsphericLens(
                         material, vertices[i-1], frontradius, frontconic, fa, backradius, backconic,
                         ba, thickness, semidiameter; lastmaterial, nextmaterial, frontsurfacereflectance,
@@ -415,7 +415,7 @@ struct AxisymmetricOpticalSystem{T,C<:CSGOpticalSystem{T}} <: AbstractOpticalSys
                 NaNsafeasin(imagesize / abs(imagerad)),
                 imagerad < 0 ? SVector{3,T}(0, 0, 1) : SVector{3,T}(0, 0, -1),
                 SVector{3,T}(0, 0, vertices[end-1]),
-                interface = opaqueinterface(T)
+                interface=opaqueinterface(T)
             )
         else
             det = Rectangle(
@@ -423,7 +423,7 @@ struct AxisymmetricOpticalSystem{T,C<:CSGOpticalSystem{T}} <: AbstractOpticalSys
                 imagesize,
                 SVector{3,T}(0, 0, 1),
                 SVector{3,T}(0, 0, vertices[end-1]),
-                interface = opaqueinterface(T)
+                interface=opaqueinterface(T)
             )
         end
 
@@ -446,10 +446,10 @@ end
 function trace(
     system::AxisymmetricOpticalSystem{T,C},
     r::OpticalRay{T,N};
-    trackrays::Union{Nothing,Vector{LensTrace{T,N}}} = nothing,
-    test::Bool = false
+    trackrays::Union{Nothing,Vector{LensTrace{T,N}}}=nothing,
+    test::Bool=false
 ) where {T<:Real,N,C<:CSGOpticalSystem{T}}
-    trace(system.system, r, trackrays = trackrays, test = test)
+    trace(system.system, r, trackrays=trackrays, test=test)
 end
 
 """
@@ -471,9 +471,9 @@ pressure(system::AxisymmetricOpticalSystem) = pressure(system.system)
 function trace(
     system::AxisymmetricOpticalSystem{T},
     raygenerator::OpticalRayGenerator{T};
-    printprog::Bool = true,
-    test::Bool = false,
-    outpath::Union{Nothing,String} = nothing
+    printprog::Bool=true,
+    test::Bool=false,
+    outpath::Union{Nothing,String}=nothing
 ) where {T<:Real}
     trace(system.system, raygenerator; printprog, test, outpath)
 end
@@ -491,9 +491,9 @@ Returns the detector image of the system.
 function trace(
     system::CSGOpticalSystem{T},
     raygenerator::OpticalRayGenerator{T};
-    printprog::Bool = true,
-    test::Bool = false,
-    outpath::Union{Nothing,String} = nothing
+    printprog::Bool=true,
+    test::Bool=false,
+    outpath::Union{Nothing,String}=nothing
 ) where {T<:Real}
     start_time = time()
     update_timesteps = 1000
@@ -501,13 +501,13 @@ function trace(
     for (k, r) in enumerate(raygenerator)
         if k % update_timesteps == 0
             total_traced += update_timesteps
-            dif = round(time() - start_time, digits = 1)
-            left = round((time() - start_time) * (length(raygenerator) / total_traced - 1), digits = 1)
+            dif = round(time() - start_time, digits=1)
+            left = round((time() - start_time) * (length(raygenerator) / total_traced - 1), digits=1)
             if printprog
                 print("\rTraced: ~ $k / $(length(raygenerator))        Elapsed: $(dif)s        Left: $(left)s           ")
             end
         end
-        trace(system, r, test = test)
+        trace(system, r, test=test)
     end
     numrays = length(raygenerator)
     tracetime = round(time() - start_time)
@@ -531,11 +531,11 @@ end
 function traceMT(
     system::AxisymmetricOpticalSystem{T},
     raygenerator::OpticalRayGenerator{T};
-    printprog::Bool = true,
-    test::Bool = false,
-    outpath::Union{Nothing,String} = nothing
+    printprog::Bool=true,
+    test::Bool=false,
+    outpath::Union{Nothing,String}=nothing
 ) where {T<:Real}
-    traceMT(system.system, raygenerator, printprog = printprog, test = test, outpath = outpath)
+    traceMT(system.system, raygenerator, printprog=printprog, test=test, outpath=outpath)
 end
 
 """
@@ -551,9 +551,9 @@ Returns the accumulated detector image from all threads.
 function traceMT(
     system::CSGOpticalSystem{T,S},
     raygenerator::OpticalRayGenerator{T};
-    printprog::Bool = true,
-    test::Bool = false,
-    outpath::Union{Nothing,String} = nothing
+    printprog::Bool=true,
+    test::Bool=false,
+    outpath::Union{Nothing,String}=nothing
 ) where {T<:Real,S<:Number}
     if printprog
         println("Initialising...")
@@ -600,9 +600,9 @@ function traceMT(
             for k in f:l
                 if k % update_timesteps == 0
                     Threads.atomic_add!(total_traced, update_timesteps)
-                    dif = round(time() - start_time, digits = 1)
+                    dif = round(time() - start_time, digits=1)
                     t = total_traced[]
-                    left = round((time() - start_time) * (length(sources) / t - 1), digits = 1)
+                    left = round((time() - start_time) * (length(sources) / t - 1), digits=1)
                     if printprog
                         print("\rTraced: ~ $t / $(length(sources))        Elapsed: $(dif)s        Left: $(left)s           ")
                     end
@@ -649,9 +649,9 @@ end
 function tracehitsMT(
     system::AxisymmetricOpticalSystem{T},
     raygenerator::OpticalRayGenerator{T};
-    printprog::Bool = true, test::Bool = false
+    printprog::Bool=true, test::Bool=false
 ) where {T<:Real}
-    tracehitsMT(system.system, raygenerator, printprog = printprog, test = test)
+    tracehitsMT(system.system, raygenerator, printprog=printprog, test=test)
 end
 
 """
@@ -666,8 +666,8 @@ Returns a list of [`LensTrace`](@ref)s which hit the detector, accumulated from 
 function tracehitsMT(
     system::CSGOpticalSystem{T},
     raygenerator::OpticalRayGenerator{T};
-    printprog::Bool = true,
-    test::Bool = false
+    printprog::Bool=true,
+    test::Bool=false
 ) where {T<:Real}
     if printprog
         println("Initialising...")
@@ -716,9 +716,9 @@ function tracehitsMT(
             for k in f:l
                 if k % update_timesteps == 0
                     Threads.atomic_add!(total_traced, update_timesteps)
-                    dif = round(time() - start_time, digits = 1)
+                    dif = round(time() - start_time, digits=1)
                     t = total_traced[]
-                    left = round((time() - start_time) * (length(sources) / t - 1), digits = 1)
+                    left = round((time() - start_time) * (length(sources) / t - 1), digits=1)
                     if printprog
                         print("\rTraced: ~ $t / $(length(sources))        Elapsed: $(dif)s        Left: $(left)s           ")
                     end
@@ -768,8 +768,8 @@ end
 function tracehits(
     system::AxisymmetricOpticalSystem{T},
     raygenerator::OpticalRayGenerator{T};
-    printprog::Bool = true,
-    test::Bool = false
+    printprog::Bool=true,
+    test::Bool=false
 ) where {T<:Real}
     tracehits(system.system, raygenerator; printprog, test)
 end
@@ -786,8 +786,8 @@ Returns a list of [`LensTrace`](@ref)s which hit the detector.
 function tracehits(
     system::CSGOpticalSystem{T},
     raygenerator::OpticalRayGenerator{T};
-    printprog::Bool = true,
-    test::Bool = false
+    printprog::Bool=true,
+    test::Bool=false
 ) where {T<:Real}
     start_time = time()
     update_timesteps = 1000
@@ -796,13 +796,13 @@ function tracehits(
     for (k, r) in enumerate(raygenerator)
         if k % update_timesteps == 0
             total_traced += update_timesteps
-            dif = round(time() - start_time, digits = 1)
-            left = round((time() - start_time) * (length(sources) / total_traced - 1), digits = 1)
+            dif = round(time() - start_time, digits=1)
+            left = round((time() - start_time) * (length(sources) / total_traced - 1), digits=1)
             if printprog
                 print("\rTraced: ~ $t / $(length(sources))        Elapsed: $(dif)s        Left: $(left)s           ")
             end
         end
-        lt = trace(system, r, test = test)
+        lt = trace(system, r, test=test)
         if lt !== nothing
             push!(res, lt)
         end

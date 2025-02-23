@@ -14,6 +14,7 @@ using Images
 using Base: @.
 using ForwardDiff
 using StringEncodings
+using AGFFileReader
 
 # included here to allow a call to the activate! during the initialization
 import GLMakie
@@ -22,8 +23,8 @@ import Makie
 include("constants.jl")
 include("utilities.jl")
 
-include("GlassCat/GlassCat.jl")
-import .GlassCat: plot_indices, index, polyfit_indices, absairindex, absorption, info, glassid, glassname, glassforid, isair, findglass, modelglass, glassfromMIL, GlassID
+
+
 
 include("Data/Data.jl")
 include("Geometry/Geometry.jl")

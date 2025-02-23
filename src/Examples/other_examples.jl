@@ -29,48 +29,48 @@ example the hemisphere object had optical properties of Air, which is the defaul
 or reflect light.
 """
 function opticalhemisphere()::CSGOpticalSystem
-    sph = Sphere(10.0, interface = FresnelInterface{Float64}(Examples_N_BK7, Air))
-    pln = Plane(0.0, 0.0, -1.0, 0.0, 0.0, 0.0, interface = FresnelInterface{Float64}(Examples_N_BK7, Air))
+    sph = Sphere(10.0, interface=FresnelInterface{Float64}(Examples_N_BK7, Air))
+    pln = Plane(0.0, 0.0, -1.0, 0.0, 0.0, 0.0, interface=FresnelInterface{Float64}(Examples_N_BK7, Air))
     assy = LensAssembly{Float64}((sph ∩ pln)())
     return CSGOpticalSystem(assy, Rectangle(1.0, 1.0, SVector{3,Float64}(0.0, 0.0, 1.0), SVector{3,Float64}(0.0, 0.0, -11.0)))
 end
 
-function cooketriplet(::Type{T} = Float64, detpix::Int = 1000) where {T<:Real}
+function cooketriplet(::Type{T}=Float64, detpix::Int=1000) where {T<:Real}
     AxisymmetricOpticalSystem{T}(
         DataFrame(
-            SurfaceType = ["Object", "Standard", "Standard", "Standard", "Stop", "Standard", "Standard", "Image"],
-            Radius = [Inf, 26.777, 66.604, -35.571, 35.571, 35.571, -26.777, Inf],
+            SurfaceType=["Object", "Standard", "Standard", "Standard", "Stop", "Standard", "Standard", "Image"],
+            Radius=[Inf, 26.777, 66.604, -35.571, 35.571, 35.571, -26.777, Inf],
             # OptimizeRadius = [false, true, true, true, true, true, true, false],
-            Thickness = [Inf, 4.0, 2.0, 4.0, 2.0, 4.0, 44.748, missing],
+            Thickness=[Inf, 4.0, 2.0, 4.0, 2.0, 4.0, 44.748, missing],
             # OptimizeThickness = [false, true, true, true, true, true, true, false],
-            Material = [Air, Examples_N_SK16, Air, Examples_N_SF2, Air, Examples_N_SK16, Air, missing],
-            SemiDiameter = [Inf, 8.580, 7.513, 7.054, 6.033, 7.003, 7.506, 15.0]
+            Material=[Air, Examples_N_SK16, Air, Examples_N_SF2, Air, Examples_N_SK16, Air, missing],
+            SemiDiameter=[Inf, 8.580, 7.513, 7.054, 6.033, 7.003, 7.506, 15.0]
         ),
         detpix,
         detpix
     )
 end
 
-function cooketripletfirstelement(::Type{T} = Float64) where {T<:Real}
+function cooketripletfirstelement(::Type{T}=Float64) where {T<:Real}
     AxisymmetricOpticalSystem(
         DataFrame(
-            SurfaceType = ["Object", "Standard", "Standard", "Image"],
-            Radius = [Inf, -35.571, 35.571, Inf],
-            Thickness = [Inf, 4.0, 44.748, missing],
-            Material = [Air, Examples_N_SK16, Air, missing],
-            SemiDiameter = [Inf, 7.054, 6.033, 15.0]
+            SurfaceType=["Object", "Standard", "Standard", "Image"],
+            Radius=[Inf, -35.571, 35.571, Inf],
+            Thickness=[Inf, 4.0, 44.748, missing],
+            Material=[Air, Examples_N_SK16, Air, missing],
+            SemiDiameter=[Inf, 7.054, 6.033, 15.0]
         )
     )
 end
 
-function convexplano(::Type{T} = Float64) where {T<:Real}
+function convexplano(::Type{T}=Float64) where {T<:Real}
     AxisymmetricOpticalSystem{T}(
         DataFrame(
-            SurfaceType = ["Object", "Standard", "Standard", "Image"],
-            Radius = [Inf, 60.0, Inf, Inf],
-            Thickness = [Inf, 10.0, 57.8, missing],
-            Material = [Air, Examples_N_BK7, Air, missing],
-            SemiDiameter = [Inf, 9.0, 9.0, 15.0]
+            SurfaceType=["Object", "Standard", "Standard", "Image"],
+            Radius=[Inf, 60.0, Inf, Inf],
+            Thickness=[Inf, 10.0, 57.8, missing],
+            Material=[Air, Examples_N_BK7, Air, missing],
+            SemiDiameter=[Inf, 9.0, 9.0, 15.0]
         )
     )
 end
@@ -80,113 +80,113 @@ end
 function doubleconvex(frontradius::T, rearradius::T) where {T<:Real}
     AxisymmetricOpticalSystem{T}(
         DataFrame(
-            SurfaceType = ["Object", "Standard", "Standard", "Image"],
-            Radius = [convert(T, Inf64), frontradius, rearradius, convert(T, Inf64)],
+            SurfaceType=["Object", "Standard", "Standard", "Image"],
+            Radius=[convert(T, Inf64), frontradius, rearradius, convert(T, Inf64)],
             # OptimizeRadius = [false, true, true, false],
-            Thickness = [convert(T, Inf64), convert(T, 10.0), convert(T, 57.8), missing],
+            Thickness=[convert(T, Inf64), convert(T, 10.0), convert(T, 57.8), missing],
             # OptimizeThickness = [false, false, false, false],
 
-            Material = [Air, Examples_N_BK7, Air, missing],
-            SemiDiameter = [convert(T, Inf64), convert(T, 9.0), convert(T, 9.0), convert(T, 15.0)]
+            Material=[Air, Examples_N_BK7, Air, missing],
+            SemiDiameter=[convert(T, Inf64), convert(T, 9.0), convert(T, 9.0), convert(T, 15.0)]
         )
     )
 end
 
-function doubleconvexconic(::Type{T} = Float64) where {T<:Real}
+function doubleconvexconic(::Type{T}=Float64) where {T<:Real}
     AxisymmetricOpticalSystem{T}(
         DataFrame(
-            SurfaceType = ["Object", "Standard", "Standard", "Image"],
-            Radius = [Inf64, 60, -60, Inf64],
+            SurfaceType=["Object", "Standard", "Standard", "Image"],
+            Radius=[Inf64, 60, -60, Inf64],
             # OptimizeRadius = [false, true, true, false],
-            Thickness = [Inf64, 10.0, 57.8, missing],
+            Thickness=[Inf64, 10.0, 57.8, missing],
             # OptimizeThickness = [false, false, false, false],
-            Conic = [missing, 0.01, 0.01, missing],
+            Conic=[missing, 0.01, 0.01, missing],
             # OptimizeConic = [false, true, true, false],
-            Material = [Air, Examples_N_BK7, Air, missing],
-            SemiDiameter = [Inf64, 9.0, 9.0, 15.0]
+            Material=[Air, Examples_N_BK7, Air, missing],
+            SemiDiameter=[Inf64, 9.0, 9.0, 15.0]
         )
     )
 end
 
-function doubleconvexlensonly(frontradius::T,rearradius::T) where{T<:Real}
+function doubleconvexlensonly(frontradius::T, rearradius::T) where {T<:Real}
     AxisymmetricLens{T}(
         DataFrame(
-            SurfaceType = ["Object", "Standard", "Standard", "Image"],
-            Radius = [convert(T, Inf64), frontradius, rearradius, convert(T, Inf64)],
+            SurfaceType=["Object", "Standard", "Standard", "Image"],
+            Radius=[convert(T, Inf64), frontradius, rearradius, convert(T, Inf64)],
             # OptimizeRadius = [false, true, true, false],
-            Thickness = [convert(T, Inf64), convert(T, 10.0), convert(T, 57.8), missing],
+            Thickness=[convert(T, Inf64), convert(T, 10.0), convert(T, 57.8), missing],
             # OptimizeThickness = [false, false, false, false],
-            Material = [Air, Examples_N_BK7, Air, missing],
-            SemiDiameter = [convert(T, Inf64), convert(T, 9.0), convert(T, 9.0), convert(T, 15.0)]
+            Material=[Air, Examples_N_BK7, Air, missing],
+            SemiDiameter=[convert(T, Inf64), convert(T, 9.0), convert(T, 9.0), convert(T, 15.0)]
         )
     )
 end
 
 function doubleconvex(
-    ::Type{T} = Float64;
-    temperature::Unitful.Temperature = GlassCat.TEMP_REF_UNITFUL,
-    pressure::T = convert(T, PRESSURE_REF)
+    ::Type{T}=Float64;
+    temperature::Unitful.Temperature=AGFFileReader.TEMP_REF_UNITFUL,
+    pressure::T=convert(T, PRESSURE_REF)
 ) where {T<:Real}
     AxisymmetricOpticalSystem{T}(
         DataFrame(
-            SurfaceType = ["Object", "Standard", "Standard", "Image"],
-            Radius = [Inf64, 60, -60, Inf64],
+            SurfaceType=["Object", "Standard", "Standard", "Image"],
+            Radius=[Inf64, 60, -60, Inf64],
             # OptimizeRadius = [false, true, true, false],
-            Thickness = [Inf64, 10.0, 57.8, missing],
+            Thickness=[Inf64, 10.0, 57.8, missing],
             # OptimizeThickness = [false, true, true, false],
-            Material = [Air, Examples_N_BK7, Air, missing],
-            SemiDiameter = [Inf64, 9.0, 9.0, 15.0]
+            Material=[Air, Examples_N_BK7, Air, missing],
+            SemiDiameter=[Inf64, 9.0, 9.0, 15.0]
         );
         temperature,
         pressure
     )
 end
 
-function doubleconcave(::Type{T} = Float64) where {T<:Real}
+function doubleconcave(::Type{T}=Float64) where {T<:Real}
     AxisymmetricOpticalSystem{T}(
         DataFrame(
-            SurfaceType = ["Object", "Standard", "Standard", "Image"],
-            Radius = [Inf64, -41.0, 41.0, Inf64],
-            Thickness = [Inf64, 10.0, 57.8, missing],
-            Material = [Air, Examples_N_BK7, Air, missing],
-            SemiDiameter = [Inf64, 9.0, 9.0, 15.0]
+            SurfaceType=["Object", "Standard", "Standard", "Image"],
+            Radius=[Inf64, -41.0, 41.0, Inf64],
+            Thickness=[Inf64, 10.0, 57.8, missing],
+            Material=[Air, Examples_N_BK7, Air, missing],
+            SemiDiameter=[Inf64, 9.0, 9.0, 15.0]
         )
     )
 end
 
-function planoconcaverefl(::Type{T} = Float64) where {T<:Real}
+function planoconcaverefl(::Type{T}=Float64) where {T<:Real}
     AxisymmetricOpticalSystem{T}(
         DataFrame(
-            SurfaceType = ["Object", "Standard", "Standard", "Image"],
-            Radius = [Inf64, Inf64, -41.0, Inf64],
-            Thickness = [Inf64, 10.0, -57.8, missing],
-            Material = [Air, Examples_N_BK7, Air, missing],
-            SemiDiameter = [Inf64, 9.0, 9.0, 25.0],
-            Reflectance = [missing, missing, 1.0, missing]
+            SurfaceType=["Object", "Standard", "Standard", "Image"],
+            Radius=[Inf64, Inf64, -41.0, Inf64],
+            Thickness=[Inf64, 10.0, -57.8, missing],
+            Material=[Air, Examples_N_BK7, Air, missing],
+            SemiDiameter=[Inf64, 9.0, 9.0, 25.0],
+            Reflectance=[missing, missing, 1.0, missing]
         )
     )
 end
 
-function concaveplano(::Type{T} = Float64) where {T<:Real}
+function concaveplano(::Type{T}=Float64) where {T<:Real}
     AxisymmetricOpticalSystem{T}(
         DataFrame(
-            SurfaceType = ["Object", "Standard", "Standard", "Image"],
-            Radius = [Inf64, -41.0, Inf64, Inf64],
-            Thickness = [Inf64, 10.0, 57.8, missing],
-            Material = [Air, Examples_N_BK7, Air, missing],
-            SemiDiameter = [Inf64, 9.0, 9.0, 15.0]
+            SurfaceType=["Object", "Standard", "Standard", "Image"],
+            Radius=[Inf64, -41.0, Inf64, Inf64],
+            Thickness=[Inf64, 10.0, 57.8, missing],
+            Material=[Air, Examples_N_BK7, Air, missing],
+            SemiDiameter=[Inf64, 9.0, 9.0, 15.0]
         )
     )
 end
 
-function planoplano(::Type{T} = Float64) where {T<:Real}
+function planoplano(::Type{T}=Float64) where {T<:Real}
     AxisymmetricOpticalSystem{T}(
         DataFrame(
-            SurfaceType = ["Object", "Standard", "Standard", "Image"],
-            Radius = [Inf64, Inf64, Inf64, Inf64],
-            Thickness = [Inf64, 10.0, 57.8, missing],
-            Material = [Air, Examples_N_BK7, Air, missing],
-            SemiDiameter = [Inf64, 9.0, 9.0, 15.0]
+            SurfaceType=["Object", "Standard", "Standard", "Image"],
+            Radius=[Inf64, Inf64, Inf64, Inf64],
+            Thickness=[Inf64, 10.0, 57.8, missing],
+            Material=[Air, Examples_N_BK7, Air, missing],
+            SemiDiameter=[Inf64, 9.0, 9.0, 15.0]
         )
     )
 end
@@ -194,32 +194,32 @@ end
 """This example no longer works correctly. The visualization code needs to be updated to support RayListSource"""
 function prism_refraction()
     # build the triangular prism
-    int = FresnelInterface{Float64}(Examples_N_SF14, Air)
+    int = FresnelInterface{Float64}(Examples_N_SF14, AGFFileReader.Air)
     s = 2.0
     prism = (
         Plane(
             SVector(0.0, -1.0, 0.0),
             SVector(0.0, -s, 0.0),
-            interface = int,
-            vishalfsizeu = 2 * s,
-            vishalfsizev = 2 * s
+            interface=int,
+            vishalfsizeu=2 * s,
+            vishalfsizev=2 * s
         ) ∩
         Plane(
             SVector(0.0, sind(30), cosd(30)),
             SVector(0.0, s * sind(30), s * cosd(30)),
-            interface = int,
-            vishalfsizeu = 2 * s,
-            vishalfsizev = 2 * s
+            interface=int,
+            vishalfsizeu=2 * s,
+            vishalfsizev=2 * s
         ) ∩
         Plane(
             SVector(0.0, sind(30), -cosd(30)),
             SVector(0.0, s * sind(30), -s * cosd(30)),
-            interface = int,
-            vishalfsizeu = 2 * s,
-            vishalfsizev = 2 * s
+            interface=int,
+            vishalfsizeu=2 * s,
+            vishalfsizev=2 * s
         )
     )
-    sys = CSGOpticalSystem(LensAssembly(prism()), Rectangle(15.0, 15.0, SVector(0.0, 0.0, 1.0), SVector(0.0, 0.0, -20.0), interface = opaqueinterface()))
+    sys = CSGOpticalSystem(LensAssembly(prism()), Rectangle(15.0, 15.0, SVector(0.0, 0.0, 1.0), SVector(0.0, 0.0, -20.0), interface=opaqueinterface()))
     # create some 'white' light
     rays = Vector{OpticalRay{Float64,3}}(undef, 0)
     for i in 0:7
@@ -229,17 +229,17 @@ function prism_refraction()
     end
     raygen = Emitters.Sources.RayListSource(rays)
     # draw the result
-    Vis.drawtracerays(sys, raygenerator = raygen, test = true, trackallrays = true)
+    Vis.drawtracerays(sys, raygenerator=raygen, test=true, trackallrays=true)
 end
 
-function fresnel(convex = true; kwargs...)
-    lens = FresnelLens(Examples_N_BK7, 0.0, convex ? 15.0 : -15.0, 1.0, 8.0, 0.8, conic = 0.1)
-    sys = CSGOpticalSystem(LensAssembly(lens()), Rectangle(15.0, 15.0, SVector(0.0, 0.0, 1.0), SVector(0.0, 0.0, -25.0), interface = opaqueinterface()))
-    Vis.drawtracerays(sys; test = true, trackallrays = true, numdivisions = 30, kwargs...)
+function fresnel(convex=true; kwargs...)
+    lens = FresnelLens(Examples_N_BK7, 0.0, convex ? 15.0 : -15.0, 1.0, 8.0, 0.8, conic=0.1)
+    sys = CSGOpticalSystem(LensAssembly(lens()), Rectangle(15.0, 15.0, SVector(0.0, 0.0, 1.0), SVector(0.0, 0.0, -25.0), interface=opaqueinterface()))
+    Vis.drawtracerays(sys; test=true, trackallrays=true, numdivisions=30, kwargs...)
 end
 
 """This example no longer works correctly. The visualization code needs to be updated to support RayListSource"""
-function eyetrackHOE(nrays = 5000, det = false, showhead = true, zeroorder = false; kwargs...)
+function eyetrackHOE(nrays=5000, det=false, showhead=true, zeroorder=false; kwargs...)
     # TODO update for new specs from Chris
     hoehalfwidth = 50.0 #25.0
     hoehalfheight = 50.0 #22.5
@@ -272,7 +272,7 @@ function eyetrackHOE(nrays = 5000, det = false, showhead = true, zeroorder = fal
 
     mint = MultiHologramInterface(interfaces...)
     obj = MultiHologramSurface(rect, mint)
-    cornea = leaf(Sphere(cornea_rad, interface = FresnelInterface{Float64}(EYE.CORNEA, Air, reflectance = 1.0, transmission = 0.0)), translation(0.0, er + cornea_rad, 0.0))()
+    cornea = leaf(Sphere(cornea_rad, interface=FresnelInterface{Float64}(EYE.CORNEA, Air, reflectance=1.0, transmission=0.0)), translation(0.0, er + cornea_rad, 0.0))()
 
     # cam settings
     fnum = 2.0
@@ -293,9 +293,9 @@ function eyetrackHOE(nrays = 5000, det = false, showhead = true, zeroorder = fal
     cambarrel = (
         barrelbot ∩
         barreltop ∩
-        leaf(Cylinder(camrad, barrellength, interface = opaqueinterface(Float64)), Transform(barrelrot, barrelloc))
+        leaf(Cylinder(camrad, barrellength, interface=opaqueinterface(Float64)), Transform(barrelrot, barrelloc))
     )()
-    camdet = Circle(sensorrad, camdir_norm, camloc - barrellength * camdir_norm, interface = opaqueinterface(Float64))
+    camdet = Circle(sensorrad, camdir_norm, camloc - barrellength * camdir_norm, interface=opaqueinterface(Float64))
 
     # sourceleft = hoecenter[1] + hoehalfwidth - sourceloc[1]
     # sourceright = hoecenter[1] - hoehalfwidth - sourceloc[1]
@@ -317,18 +317,18 @@ function eyetrackHOE(nrays = 5000, det = false, showhead = true, zeroorder = fal
     if det
         Vis.show(OpticSim.traceMT(sys, source))
     else
-        Vis.drawtracerays(sys; raygenerator = source, trackallrays = true, kwargs...)
+        Vis.drawtracerays(sys; raygenerator=source, trackallrays=true, kwargs...)
         # for θ in 0:(π / 6):(2π)
         #     ledloc = SVector(20 * cos(θ) + offset[1], 0 + offset[2], 15 * sin(θ) + offset[3])
         #     Vis.draw!(leaf(Sphere(1.0), translation(ledloc...)), color = :red)
         # end
         for d in dirs
             # Vis.draw!(leaf(Sphere(1.0), translation((corneavertex - 10 * d)...)), color = :red)
-            Vis.draw!((corneavertex - 50 * d, corneavertex), color = :red)
+            Vis.draw!((corneavertex - 50 * d, corneavertex), color=:red)
         end
         if showhead
-            Vis.draw!(joinpath(@__DIR__, "../../OBJ/glasses.obj"), scale = 100.0, transform = Transform(OpticSim.rotmatd(90, 0, 0), [27.0, 45.0, -8.0]), color = :black)
-            Vis.draw!(joinpath(@__DIR__, "../../OBJ/femalehead.obj"), scale = 13.0, transform = Transform(OpticSim.rotmatd(0, 0, 180), [27.0, 105.0, -148.0]), color = :white)
+            Vis.draw!(joinpath(@__DIR__, "../../OBJ/glasses.obj"), scale=100.0, transform=Transform(OpticSim.rotmatd(90, 0, 0), [27.0, 45.0, -8.0]), color=:black)
+            Vis.draw!(joinpath(@__DIR__, "../../OBJ/femalehead.obj"), scale=13.0, transform=Transform(OpticSim.rotmatd(0, 0, 180), [27.0, 105.0, -148.0]), color=:white)
         end
         Vis.display()
     end

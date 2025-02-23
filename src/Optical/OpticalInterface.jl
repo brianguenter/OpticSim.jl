@@ -15,8 +15,8 @@ See documentation for [`processintersection`](@ref) for details.
 
 These methods are also commonly implemented, but not essential:
 ```julia
-insidematerialid(i::OpticalInterface{T}) -> OpticSim.GlassCat.AbstractGlass
-outsidematerialid(i::OpticalInterface{T}) -> OpticSim.GlassCat.AbstractGlass
+insidematerialid(i::OpticalInterface{T}) -> AGFFileReader.AbstractGlass
+outsidematerialid(i::OpticalInterface{T}) -> AGFFileReader.AbstractGlass
 reflectance(i::OpticalInterface{T}) -> T
 transmission(i::OpticalInterface{T}) -> T
 ```
@@ -43,12 +43,12 @@ NullInterface{T}()
 ```
 """
 struct NullInterface{T} <: OpticalInterface{T}
-    NullInterface(::Type{T} = Float64) where {T<:Real} = new{T}()
+    NullInterface(::Type{T}=Float64) where {T<:Real} = new{T}()
     NullInterface{T}() where {T<:Real} = new{T}()
 end
 
-insidematerialid(::NullInterface{T}) where {T<:Real} = glassid(OpticSim.GlassCat.Air)
-outsidematerialid(::NullInterface{T}) where {T<:Real} = glassid(OpticSim.GlassCat.Air)
+insidematerialid(::NullInterface{T}) where {T<:Real} = glassid(AGFFileReader.Air)
+outsidematerialid(::NullInterface{T}) where {T<:Real} = glassid(AGFFileReader.Air)
 reflectance(::NullInterface{T}) where {T<:Real} = zero(T)
 transmission(::NullInterface{T}) where {T<:Real} = one(T)
 
@@ -69,10 +69,10 @@ ParaxialInterface(focallength::T, centroid::SVector{3,T}, outsidematerial::Y)
 """
 struct ParaxialInterface{T} <: OpticalInterface{T}
     focallength::T
-    outsidematerial::GlassID
+    outsidematerial::Glass
     centroid::SVector{3,T}
-    function ParaxialInterface(focallength::T, centroid::SVector{3,T}, outsidematerial::Y) where {Y<:OpticSim.GlassCat.AbstractGlass,T<:Real}
-        return new{T}(focallength, glassid(outsidematerial), centroid)
+    function ParaxialInterface(focallength::T, centroid::SVector{3,T}, outsidematerial::Y) where {Y<:AGFFileReader.AbstractGlass,T<:Real}
+        return new{T}(focallength, outsidematerial, centroid)
     end
 end
 export ParaxialInterface
@@ -107,24 +107,18 @@ In all cases the power recorded with the ray is correctly updated. This can be u
 example a beamsplitter surface may be set to either Reflect or Transmit to switch between the two outgoing ray paths.
 
 """
-struct FresnelInterface{T} <: OpticalInterface{T}
+struct FresnelInterface{T,Y<:AGFFileReader.AbstractGlass,Z<:AGFFileReader.AbstractGlass} <: OpticalInterface{T}
     # storing glasses as IDs (integer) rather than the whole thing seems to improve performance significantly, even when the Glass type is a fixed size (i.e. the interface is pointer-free)
-    insidematerial::GlassID
-    outsidematerial::GlassID
+    insidematerial::Y
+    outsidematerial::Z
     reflectance::T
     transmission::T
     interfacemode::InterfaceMode
 
-    function FresnelInterface{T}(insidematerial::Z, outsidematerial::Y; reflectance::T = zero(T), transmission::T = one(T), interfacemode = ReflectOrTransmit) where {Z<:OpticSim.GlassCat.AbstractGlass,Y<:OpticSim.GlassCat.AbstractGlass,T<:Real}
-        return FresnelInterface{T}(glassid(insidematerial), glassid(outsidematerial), reflectance = reflectance, transmission = transmission, interfacemode = interfacemode)
+    function FresnelInterface{T}(insidematerial::Z, outsidematerial::Y; reflectance::T=zero(T), transmission::T=one(T), interfacemode=ReflectOrTransmit) where {Z<:AGFFileReader.AbstractGlass,Y<:AGFFileReader.AbstractGlass,T<:Real}
+        return new{T,Z,Y}(insidematerial, outsidematerial, reflectance, transmission, interfacemode)
     end
 
-    function FresnelInterface{T}(insidematerialid::GlassID, outsidematerialid::GlassID; reflectance::T = zero(T), transmission::T = one(T), interfacemode = ReflectOrTransmit) where {T<:Real}
-        @assert zero(T) <= reflectance <= one(T)
-        @assert zero(T) <= transmission <= one(T)
-        @assert reflectance + transmission <= one(T)
-        return new{T}(insidematerialid, outsidematerialid, reflectance, transmission, interfacemode)
-    end
 end
 export FresnelInterface
 
@@ -138,9 +132,9 @@ reflectance(a::FresnelInterface{T}) where {T<:Real} = a.reflectance
 transmission(a::FresnelInterface{T}) where {T<:Real} = a.transmission
 interfacemode(a::FresnelInterface{T}) where {T<:Real} = a.interfacemode
 
-transmissiveinterface(::Type{T}, insidematerial::X, outsidematerial::Y) where {T<:Real,X<:OpticSim.GlassCat.AbstractGlass,Y<:OpticSim.GlassCat.AbstractGlass} = FresnelInterface{T}(insidematerial, outsidematerial, reflectance = zero(T), transmission = one(T))
-reflectiveinterface(::Type{T}, insidematerial::X, outsidematerial::Y) where {T<:Real,X<:OpticSim.GlassCat.AbstractGlass,Y<:OpticSim.GlassCat.AbstractGlass} = FresnelInterface{T}(insidematerial, outsidematerial, reflectance = one(T), transmission = zero(T))
-opaqueinterface(::Type{T} = Float64) where {T<:Real} = FresnelInterface{T}(OpticSim.GlassCat.Air, OpticSim.GlassCat.Air, reflectance = zero(T), transmission = zero(T))
+transmissiveinterface(::Type{T}, insidematerial::X, outsidematerial::Y) where {T<:Real,X<:AGFFileReader.AbstractGlass,Y<:AGFFileReader.AbstractGlass} = FresnelInterface{T}(insidematerial, outsidematerial, reflectance=zero(T), transmission=one(T))
+reflectiveinterface(::Type{T}, insidematerial::X, outsidematerial::Y) where {T<:Real,X<:AGFFileReader.AbstractGlass,Y<:AGFFileReader.AbstractGlass} = FresnelInterface{T}(insidematerial, outsidematerial, reflectance=one(T), transmission=zero(T))
+opaqueinterface(::Type{T}=Float64) where {T<:Real} = FresnelInterface{T}(AGFFileReader.Air, AGFFileReader.Air, reflectance=zero(T), transmission=zero(T))
 export opaqueinterface
 
 ######################################################################
@@ -157,8 +151,8 @@ ThinGratingInterface(vector, period, insidematerial, outsidematerial; maxorder =
 ```
 """
 struct ThinGratingInterface{T} <: OpticalInterface{T}
-    insidematerial::GlassID
-    outsidematerial::GlassID
+    insidematerial::Glass
+    outsidematerial::Glass
     vector::SVector{3,T}
     period::T
     maxorder::Int
@@ -166,7 +160,7 @@ struct ThinGratingInterface{T} <: OpticalInterface{T}
     transmission::SVector{GRATING_MAX_ORDERS,T}
     reflectance::SVector{GRATING_MAX_ORDERS,T}
 
-    function ThinGratingInterface(vector::SVector{3,T}, period::T, insidematerial::Z, outsidematerial::Y; maxorder::Int = 1, minorder::Int = -1, reflectance::Union{Nothing,AbstractVector{T}} = nothing, transmission::Union{Nothing,AbstractVector{T}} = nothing) where {T<:Real,Z<:OpticSim.GlassCat.AbstractGlass,Y<:OpticSim.GlassCat.AbstractGlass}
+    function ThinGratingInterface(vector::SVector{3,T}, period::T, insidematerial::Z, outsidematerial::Y; maxorder::Int=1, minorder::Int=-1, reflectance::Union{Nothing,AbstractVector{T}}=nothing, transmission::Union{Nothing,AbstractVector{T}}=nothing) where {T<:Real,Z<:AGFFileReader.AbstractGlass,Y<:AGFFileReader.AbstractGlass}
         @assert maxorder >= minorder
         norders = maxorder - minorder + 1
         @assert norders <= GRATING_MAX_ORDERS "Thin grating is limited to $GRATING_MAX_ORDERS orders"
@@ -191,8 +185,8 @@ export ThinGratingInterface
 
 insidematerialid(a::ThinGratingInterface{T}) where {T<:Real} = a.insidematerial
 outsidematerialid(a::ThinGratingInterface{T}) where {T<:Real} = a.outsidematerial
-reflectance(a::ThinGratingInterface{T}, order::Int) where {T<:Real} = a.reflectance[order - a.minorder + 1]
-transmission(a::ThinGratingInterface{T}, order::Int) where {T<:Real} = a.transmission[order - a.minorder + 1]
+reflectance(a::ThinGratingInterface{T}, order::Int) where {T<:Real} = a.reflectance[order-a.minorder+1]
+transmission(a::ThinGratingInterface{T}, order::Int) where {T<:Real} = a.transmission[order-a.minorder+1]
 
 function Base.show(io::IO, a::ThinGratingInterface{R}) where {R<:Real}
     print(io, "ThinGratingInterface($(glassname(a.insidematerial)), $(glassname(a.outsidematerial)), $(a.vector), $(a.period), $(a.transmission), $(a.reflectance))")
@@ -225,22 +219,22 @@ HologramInterface(signalpointordir::SVector{3,T}, signalbeamstate::BeamState, re
 ```
 """
 struct HologramInterface{T} <: OpticalInterface{T}
-    beforematerial::GlassID
-    substratematerial::GlassID
-    aftermaterial::GlassID
+    beforematerial::Glass
+    substratematerial::Glass
+    aftermaterial::Glass
     signalpointordir::SVector{3,T}
     signalbeamstate::BeamState
     referencepointordir::SVector{3,T}
     referencebeamstate::BeamState
     recordingλ::T
-    signalrecordingmaterial::GlassID
-    referencerecordingmaterial::GlassID
+    signalrecordingmaterial::Glass
+    referencerecordingmaterial::Glass
     thickness::T
     RImodulation::T
     include0order::Bool
 
-    function HologramInterface(signalpointordir::SVector{3,T}, signalbeamstate::BeamState, referencepointordir::SVector{3,T}, referencebeamstate::BeamState, recordingλ::T, thickness::T, beforematerial::Z, substratematerial::X, aftermaterial::Y, signalrecordingmaterial::P, referencerecordingmaterial::Q, RImodulation::T, include0order::Bool = false) where {T<:Real,X<:OpticSim.GlassCat.AbstractGlass,Z<:OpticSim.GlassCat.AbstractGlass,Y<:OpticSim.GlassCat.AbstractGlass,P<:OpticSim.GlassCat.AbstractGlass,Q<:OpticSim.GlassCat.AbstractGlass}
-        @assert substratematerial !== OpticSim.GlassCat.Air "Substrate can't be air"
+    function HologramInterface(signalpointordir::SVector{3,T}, signalbeamstate::BeamState, referencepointordir::SVector{3,T}, referencebeamstate::BeamState, recordingλ::T, thickness::T, beforematerial::Z, substratematerial::X, aftermaterial::Y, signalrecordingmaterial::P, referencerecordingmaterial::Q, RImodulation::T, include0order::Bool=false) where {T<:Real,X<:AGFFileReader.AbstractGlass,Z<:AGFFileReader.AbstractGlass,Y<:AGFFileReader.AbstractGlass,P<:AGFFileReader.AbstractGlass,Q<:AGFFileReader.AbstractGlass}
+        @assert substratematerial !== AGFFileReader.Air "Substrate can't be air"
         if signalbeamstate === CollimatedBeam
             signalpointordir = normalize(signalpointordir)
         end
