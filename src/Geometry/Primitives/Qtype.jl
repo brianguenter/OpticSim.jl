@@ -10,7 +10,6 @@ Module to enclose QType polynomial specific functionality. For reference see:
 """
 module QType
 using StaticArrays
-using Plots
 using ..OpticSim: QTYPE_PRECOMP
 
 function F(m::Int, n::Int)::Float64
@@ -55,11 +54,11 @@ function factorial2(n::I)::I where {I<:Signed}
     end
 end
 
-function f(m::Int, n::Int, force::Bool = false)::Float64
+function f(m::Int, n::Int, force::Bool=false)::Float64
     # 2 eq A.18b
     @assert m > 0
     if m <= QTYPE_PRECOMP && n < QTYPE_PRECOMP && !force
-        return @inbounds PRECOMP_f[m, n + 1]
+        return @inbounds PRECOMP_f[m, n+1]
     else
         if n === 0
             return sqrt(F(m, 0))
@@ -69,21 +68,21 @@ function f(m::Int, n::Int, force::Bool = false)::Float64
     end
 end
 
-function g(m::Int, n::Int, force::Bool = false)::Float64
+function g(m::Int, n::Int, force::Bool=false)::Float64
     # 2 eq A.18a
     @assert m > 0
     if m <= QTYPE_PRECOMP && n < QTYPE_PRECOMP && !force
-        return @inbounds PRECOMP_g[m, n + 1]
+        return @inbounds PRECOMP_g[m, n+1]
     else
         return G(m, n) / f(m, n, force)
     end
 end
 
-@inline function A(m::Int, n::Int, force::Bool = false)::Float64
+@inline function A(m::Int, n::Int, force::Bool=false)::Float64
     # 2 eq A.3a
     @assert m > 0
     if m <= QTYPE_PRECOMP && n < QTYPE_PRECOMP && !force
-        return @inbounds PRECOMP_A[m, n + 1]
+        return @inbounds PRECOMP_A[m, n+1]
     else
         if m === 1 && n === 0
             return 2.0
@@ -97,11 +96,11 @@ end
     end
 end
 
-@inline function B(m::Int, n::Int, force::Bool = false)::Float64
+@inline function B(m::Int, n::Int, force::Bool=false)::Float64
     # 2 eq A.3b
     @assert m > 0
     if m <= QTYPE_PRECOMP && n < QTYPE_PRECOMP && !force
-        return @inbounds PRECOMP_B[m, n + 1]
+        return @inbounds PRECOMP_B[m, n+1]
     else
         if n === 1 && m === 1
             return -8.0 / 3.0
@@ -117,13 +116,13 @@ end
     end
 end
 
-@inline function C(m::Int, n::Int, force::Bool = false)::Float64
+@inline function C(m::Int, n::Int, force::Bool=false)::Float64
     # 2 eq A.3c
     @assert m > 0
     if n === 0
         return NaN
     elseif m <= QTYPE_PRECOMP && n < QTYPE_PRECOMP && !force
-        return @inbounds PRECOMP_C[m, n + 1]
+        return @inbounds PRECOMP_C[m, n+1]
     else
         if m === 1 && n === 1
             return -11.0 / 3.0
@@ -141,11 +140,11 @@ end
     return Float64((4n^2 - 1) * (m + n - 2) * (m + 2n - 3))
 end
 
-const PRECOMP_g = Matrix{Float64}(reshape(collect(g(m, n, true) for n in 0:(QTYPE_PRECOMP - 1) for m in 1:QTYPE_PRECOMP), (QTYPE_PRECOMP, QTYPE_PRECOMP)))
-const PRECOMP_f = Matrix{Float64}(reshape(collect(f(m, n, true) for n in 0:(QTYPE_PRECOMP - 1) for m in 1:QTYPE_PRECOMP), (QTYPE_PRECOMP, QTYPE_PRECOMP)))
-const PRECOMP_A = Matrix{Float64}(reshape(collect(A(m, n, true) for n in 0:(QTYPE_PRECOMP - 1) for m in 1:QTYPE_PRECOMP), (QTYPE_PRECOMP, QTYPE_PRECOMP)))
-const PRECOMP_B = Matrix{Float64}(reshape(collect(B(m, n, true) for n in 0:(QTYPE_PRECOMP - 1) for m in 1:QTYPE_PRECOMP), (QTYPE_PRECOMP, QTYPE_PRECOMP)))
-const PRECOMP_C = Matrix{Float64}(reshape(collect(C(m, n, true) for n in 0:(QTYPE_PRECOMP - 1) for m in 1:QTYPE_PRECOMP), (QTYPE_PRECOMP, QTYPE_PRECOMP)))
+const PRECOMP_g = Matrix{Float64}(reshape(collect(g(m, n, true) for n in 0:(QTYPE_PRECOMP-1) for m in 1:QTYPE_PRECOMP), (QTYPE_PRECOMP, QTYPE_PRECOMP)))
+const PRECOMP_f = Matrix{Float64}(reshape(collect(f(m, n, true) for n in 0:(QTYPE_PRECOMP-1) for m in 1:QTYPE_PRECOMP), (QTYPE_PRECOMP, QTYPE_PRECOMP)))
+const PRECOMP_A = Matrix{Float64}(reshape(collect(A(m, n, true) for n in 0:(QTYPE_PRECOMP-1) for m in 1:QTYPE_PRECOMP), (QTYPE_PRECOMP, QTYPE_PRECOMP)))
+const PRECOMP_B = Matrix{Float64}(reshape(collect(B(m, n, true) for n in 0:(QTYPE_PRECOMP-1) for m in 1:QTYPE_PRECOMP), (QTYPE_PRECOMP, QTYPE_PRECOMP)))
+const PRECOMP_C = Matrix{Float64}(reshape(collect(C(m, n, true) for n in 0:(QTYPE_PRECOMP-1) for m in 1:QTYPE_PRECOMP), (QTYPE_PRECOMP, QTYPE_PRECOMP)))
 
 """
     S(coeffs::SVector{NP1,T}, m::Int x::T) -> T
@@ -166,7 +165,7 @@ function S(coeffs::SVector{NP1,T}, m::Int, x::T)::T where {T<:Real,NP1}
     αₙ = zero(T)
     @inbounds for n in N:-1:0
         # 2 eq B.6
-        αₙ = coeffs[n + 1] + (A(m, n) + B(m, n) * x) * αₙ₊₁ - C(m, n + 1) * αₙ₊₂
+        αₙ = coeffs[n+1] + (A(m, n) + B(m, n) * x) * αₙ₊₁ - C(m, n + 1) * αₙ₊₂
         if n > 0
             αₙ₊₂ = αₙ₊₁
             αₙ₊₁ = αₙ
@@ -214,7 +213,7 @@ function dSdx(coeffs::SVector{NP1,T}, m::Int, x::T)::T where {T<:Real,NP1}
         end
         # calculate height for use in next iter deriv
         # 2 eq B.6
-        αₙ = coeffs[n + 1] + k * αₙ₊₁ - Cmnp1 * αₙ₊₂
+        αₙ = coeffs[n+1] + k * αₙ₊₁ - Cmnp1 * αₙ₊₂
         αₙ₊₂ = αₙ₊₁
         αₙ₊₁ = αₙ
     end
@@ -228,9 +227,9 @@ end
 
 # for cases where m == 0 below:
 
-function f0(n::Int, force::Bool = false)::Float64
+function f0(n::Int, force::Bool=false)::Float64
     if n < QTYPE_PRECOMP && !force
-        return @inbounds PRECOMP_f0[n + 1]
+        return @inbounds PRECOMP_f0[n+1]
     elseif n === 0
         return 2.0
     elseif n === 1
@@ -241,9 +240,9 @@ function f0(n::Int, force::Bool = false)::Float64
     end
 end
 
-function g0(n::Int, force::Bool = false)::Float64
+function g0(n::Int, force::Bool=false)::Float64
     if n < QTYPE_PRECOMP && !force
-        return @inbounds PRECOMP_g0[n + 1]
+        return @inbounds PRECOMP_g0[n+1]
     elseif n === 0
         return -0.5
     else
@@ -252,18 +251,18 @@ function g0(n::Int, force::Bool = false)::Float64
     end
 end
 
-function h0(n::Int, force::Bool = false)::Float64
+function h0(n::Int, force::Bool=false)::Float64
     if n < QTYPE_PRECOMP && !force
-        return @inbounds PRECOMP_h0[n + 1]
+        return @inbounds PRECOMP_h0[n+1]
     else
         # 1 eq A.14
         return -(n + 2) * (n + 1) / (2 * f0(n, force))
     end
 end
 
-const PRECOMP_g0 = Vector{Float64}(collect(g0(n, true) for n in 0:(QTYPE_PRECOMP - 1)))
-const PRECOMP_f0 = Vector{Float64}(collect(f0(n, true) for n in 0:(QTYPE_PRECOMP - 1)))
-const PRECOMP_h0 = Vector{Float64}(collect(h0(n, true) for n in 0:(QTYPE_PRECOMP - 1)))
+const PRECOMP_g0 = Vector{Float64}(collect(g0(n, true) for n in 0:(QTYPE_PRECOMP-1)))
+const PRECOMP_f0 = Vector{Float64}(collect(f0(n, true) for n in 0:(QTYPE_PRECOMP-1)))
+const PRECOMP_h0 = Vector{Float64}(collect(h0(n, true) for n in 0:(QTYPE_PRECOMP-1)))
 
 """
     S0(coeffs::SVector{NP1,T}, x::T) -> T
@@ -280,12 +279,12 @@ function S0(coeffs::SVector{NP1,T}, x::T)::T where {T<:Real,NP1}
     end
     k = T(2) - 4 * x
     # 1 eq 3.7a
-    αₙ₊₂ = coeffs[N + 1]
+    αₙ₊₂ = coeffs[N+1]
     # 1 eq 3.7b
     αₙ₊₁ = coeffs[N] + k * αₙ₊₂
-    for n in (N - 2):-1:0
+    for n in (N-2):-1:0
         # 1 eq 3.8
-        αₙ = coeffs[n + 1] + k * αₙ₊₁ - αₙ₊₂
+        αₙ = coeffs[n+1] + k * αₙ₊₁ - αₙ₊₂
         αₙ₊₂ = αₙ₊₁
         αₙ₊₁ = αₙ
     end
@@ -307,18 +306,18 @@ function dS0dx(coeffs::SVector{NP1,T}, x::T)::T where {T<:Real,NP1}
         return zero(T)
     end
     k = T(2) - 4 * x
-    αₙ₊₂ = coeffs[N + 1]
+    αₙ₊₂ = coeffs[N+1]
     αₙ₊₁ = coeffs[N] + k * αₙ₊₂
     # 1 eq 3.10a
     dαₙ₊₂ = zero(T)
     # 1 eq 3.10b
     dαₙ₊₁ = -4 * αₙ₊₂
-    for n in (N - 2):-1:0
+    for n in (N-2):-1:0
         # 1 eq 3.11
         dαₙ = k * dαₙ₊₁ - dαₙ₊₂ - 4 * αₙ₊₁
         dαₙ₊₂ = dαₙ₊₁
         dαₙ₊₁ = dαₙ
-        αₙ = coeffs[n + 1] + k * αₙ₊₁ - αₙ₊₂
+        αₙ = coeffs[n+1] + k * αₙ₊₁ - αₙ₊₂
         αₙ₊₂ = αₙ₊₁
         αₙ₊₁ = αₙ
     end
@@ -388,7 +387,7 @@ function plot!(m::Int, n::Int)
             push!(vs, u^m * Q(m, n, u^2))
         end
     end
-    Plots.plot!(us, vs, label = m === 0 ? "\$u^2(1-u^2)Q^{$m}_{$n}(u^2)\$" : "\$u^mQ^{$m}_{$n}(u^2)\$")
+    Plots.plot!(us, vs, label=m === 0 ? "\$u^2(1-u^2)Q^{$m}_{$n}(u^2)\$" : "\$u^mQ^{$m}_{$n}(u^2)\$")
 end
 
 end # module QType
@@ -432,7 +431,7 @@ struct QTypeSurface{T,D,M,N} <: ParametricSurface{T,D}
     normradius::T
     maxheight::T
 
-    function QTypeSurface(semidiameter::T; radius::T = typemax(T), conic::T = zero(T), αcoeffs::Union{Nothing,Vector{Tuple{Int,Int,T}}} = nothing, βcoeffs::Union{Nothing,Vector{Tuple{Int,Int,T}}} = nothing, normradius::T = semidiameter) where {T<:Real}
+    function QTypeSurface(semidiameter::T; radius::T=typemax(T), conic::T=zero(T), αcoeffs::Union{Nothing,Vector{Tuple{Int,Int,T}}}=nothing, βcoeffs::Union{Nothing,Vector{Tuple{Int,Int,T}}}=nothing, normradius::T=semidiameter) where {T<:Real}
         @assert !isnan(semidiameter) && !isnan(radius) && !isnan(conic)
         @assert semidiameter > zero(T)
         @assert one(T) - (1 / radius)^2 * (conic + one(T)) * semidiameter^2 > 0 "Invalid surface (conic/radius combination: $radius, $conic)"
@@ -472,9 +471,9 @@ struct QTypeSurface{T,D,M,N} <: ParametricSurface{T,D}
                 m, n, v = α
                 @assert m >= 0 && n >= 0
                 if m == 0
-                    α0coeffs[n + 1] = v
+                    α0coeffs[n+1] = v
                 else
-                    αcoeffsproc[m, n + 1] = v
+                    αcoeffsproc[m, n+1] = v
                 end
             end
         end
@@ -482,24 +481,24 @@ struct QTypeSurface{T,D,M,N} <: ParametricSurface{T,D}
             for β in βcoeffs
                 m, n, v = β
                 @assert m >= 0 && n >= 0
-                βcoeffsproc[m, n + 1] = v
+                βcoeffsproc[m, n+1] = v
             end
         end
         # calculate the α term coefficients for m = 0
         b0coeffs = zeros(MVector{N + 1,T})
         if N >= 0
             # 1 eq 3.4a
-            bₙp2 = α0coeffs[N + 1] / QType.f0(N)
-            b0coeffs[N + 1] = bₙp2
+            bₙp2 = α0coeffs[N+1] / QType.f0(N)
+            b0coeffs[N+1] = bₙp2
             if N > 0
                 #1 eq 3.4b
                 bₙp1 = (α0coeffs[N] - QType.g0(N - 1) * bₙp2) / QType.f0(N - 1)
                 b0coeffs[N] = bₙp1
                 if N > 1
-                    for n in (N - 2):-1:0
+                    for n in (N-2):-1:0
                         # 1 eq 3.5
-                        bₙ = (α0coeffs[n + 1] - QType.g0(n) * bₙp1 - QType.h0(n) * bₙp2) / QType.f0(n)
-                        b0coeffs[n + 1] = bₙ
+                        bₙ = (α0coeffs[n+1] - QType.g0(n) * bₙp1 - QType.h0(n) * bₙp2) / QType.f0(n)
+                        b0coeffs[n+1] = bₙ
                         bₙp2 = bₙp1
                         bₙp1 = bₙ
                     end
@@ -522,27 +521,27 @@ struct QTypeSurface{T,D,M,N} <: ParametricSurface{T,D}
             thisβ = zeros(MVector{N + 1,T})
             if N >= 0
                 fmN = QType.f(m, N)
-                lastdαₙ = αcoeffsproc[m, N + 1] / fmN
-                thisα[N + 1] = lastdαₙ
-                lastdβₙ = βcoeffsproc[m, N + 1] / fmN
-                thisβ[N + 1] = lastdβₙ
-                for n in (N - 1):-1:0
+                lastdαₙ = αcoeffsproc[m, N+1] / fmN
+                thisα[N+1] = lastdαₙ
+                lastdβₙ = βcoeffsproc[m, N+1] / fmN
+                thisβ[N+1] = lastdβₙ
+                for n in (N-1):-1:0
                     gmn = QType.g(m, n)
                     fmn = QType.f(m, n)
                     # 2 eq B.4
-                    dαₙ = (αcoeffsproc[m, n + 1] - gmn * lastdαₙ) / fmn
-                    dβₙ = (βcoeffsproc[m, n + 1] - gmn * lastdβₙ) / fmn
+                    dαₙ = (αcoeffsproc[m, n+1] - gmn * lastdαₙ) / fmn
+                    dβₙ = (βcoeffsproc[m, n+1] - gmn * lastdβₙ) / fmn
                     lastdαₙ = dαₙ
                     lastdβₙ = dβₙ
-                    thisα[n + 1] = dαₙ
-                    thisβ[n + 1] = dβₙ
+                    thisα[n+1] = dαₙ
+                    thisβ[n+1] = dβₙ
                 end
             end
             dαcoeffs[m] = SVector{N + 1,T}(thisα)
             dβcoeffs[m] = SVector{N + 1,T}(thisβ)
         end
         NP1 = N + 1
-        new{T,3,M,NP1}(semidiameter, 1 / radius, conic, Cylinder(semidiameter, interface = opaqueinterface(T)), SVector{NP1,T}(b0coeffs), SVector{M,SVector{NP1,T}}(dαcoeffs), SVector{M,SVector{NP1,T}}(dβcoeffs), normradius, maxheight) # TODO!! incorrect interface on cylinder
+        new{T,3,M,NP1}(semidiameter, 1 / radius, conic, Cylinder(semidiameter, interface=opaqueinterface(T)), SVector{NP1,T}(b0coeffs), SVector{M,SVector{NP1,T}}(dαcoeffs), SVector{M,SVector{NP1,T}}(dβcoeffs), normradius, maxheight) # TODO!! incorrect interface on cylinder
     end
 end
 export QTypeSurface
@@ -712,9 +711,9 @@ function surfaceintersection(surf::AcceleratedParametricSurface{T,3,QTypeSurface
     end
 end
 
-function AcceleratedParametricSurface(surf::S, numsamples::Int = 17; interface::NullOrFresnel{T} = NullInterface(T)) where {T<:Real,N,S<:QTypeSurface{T,N}}
+function AcceleratedParametricSurface(surf::S, numsamples::Int=17; interface::NullOrFresnel{T}=NullInterface(T)) where {T<:Real,N,S<:QTypeSurface{T,N}}
     # Zernike users ρ, ϕ uv space so need to modify extension of triangulation
-    a = AcceleratedParametricSurface(surf, triangulate(surf, numsamples, true, false, true, false), interface = interface)
+    a = AcceleratedParametricSurface(surf, triangulate(surf, numsamples, true, false, true, false), interface=interface)
     emptytrianglepool!(T)
     return a
 end

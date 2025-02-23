@@ -2,27 +2,25 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # See LICENSE in the project root for full license information.
 
-"""
-Contains all complex data used for testing and benchmarking.
-"""
-module TestData
+"""Contains example usage of the features in the OpticSim.jl package."""
+module Examples
+using ..OpticSim
+using Vis
+using ..OpticSim.Geometry
+using ..OpticSim.Emitters
 
-using OpticSim
-using OpticSim: tobeziersegments # try to use only exported functions so this list should stay short
-using OpticSim.Geometry
-using OpticSim.Emitters
+using ..OpticSim.Repeat
+
 using AGFFileReader
-
 using StaticArrays
 using DataFrames: DataFrame
-using Unitful
 using Images
-using Base: @.
+using Unitful
+using Plots
 using LinearAlgebra
+import Luxor
 
-#define glasses locally rather than relying on AGFFileReader. These tests used to rely on downloaded glasses which made the tests brittle.
-#If a glass didn't download the test would fail.
-
+#Hardcode these glass types so this code will work even if it is not possible to download the glasses at build time.
 const Examples_N_BK7 = AGFFileReader.Glass(2, 1.03961212, 0.00600069867, 0.231792344, 0.0200179144, 1.01046945, 103.560653, 0.0, 0.0, NaN, NaN, 0.3, 2.5, 1.86e-6, 1.31e-8, -1.37e-11, 4.34e-7, 6.27e-10, 0.17, 20.0, -0.0009, 2.3, 1.0, 7.1, 1.0, 1, 1.0, [(0.3, 0.05, 25.0), (0.31, 0.25, 25.0), (0.32, 0.52, 25.0), (0.334, 0.78, 25.0), (0.35, 0.92, 25.0), (0.365, 0.971, 25.0), (0.37, 0.977, 25.0), (0.38, 0.983, 25.0), (0.39, 0.989, 25.0), (0.4, 0.992, 25.0), (0.405, 0.993, 25.0), (0.42, 0.993, 25.0), (0.436, 0.992, 25.0), (0.46, 0.993, 25.0), (0.5, 0.994, 25.0), (0.546, 0.996, 25.0), (0.58, 0.995, 25.0), (0.62, 0.994, 25.0), (0.66, 0.994, 25.0), (0.7, 0.996, 25.0), (1.06, 0.997, 25.0), (1.53, 0.98, 25.0), (1.97, 0.84, 25.0), (2.325, 0.56, 25.0), (2.5, 0.36, 25.0)], 1.5168, 2.3, 0.0, 0, 64.17, 0, 2.51, 0.0)
 
 const Examples_N_SK16 = AGFFileReader.Glass(2, 1.34317774, 0.00704687339, 0.241144399, 0.0229005, 0.994317969, 92.7508526, 0.0, 0.0, NaN, NaN, 0.31, 2.5, -2.37e-8, 1.32e-8, -1.29e-11, 4.09e-7, 5.17e-10, 0.17, 20.0, -0.0011, 3.2, 1.4, 6.3, 4.0, 1, 53.3, [(0.31, 0.02, 25.0), (0.32, 0.11, 25.0), (0.334, 0.4, 25.0), (0.35, 0.7, 25.0), (0.365, 0.86, 25.0), (0.37, 0.89, 25.0), (0.38, 0.93, 25.0), (0.39, 0.956, 25.0), (0.4, 0.97, 25.0), (0.405, 0.974, 25.0), (0.42, 0.979, 25.0), (0.436, 0.981, 25.0), (0.46, 0.984, 25.0), (0.5, 0.991, 25.0), (0.546, 0.994, 25.0), (0.58, 0.994, 25.0), (0.62, 0.993, 25.0), (0.66, 0.994, 25.0), (0.7, 0.996, 25.0), (1.06, 0.995, 25.0), (1.53, 0.973, 25.0), (1.97, 0.88, 25.0), (2.325, 0.54, 25.0), (2.5, 0.26, 25.0)], 1.62041, 3.3, 4.0, 0, 60.32, 0, 3.58, 0.0)
@@ -32,11 +30,11 @@ const Examples_N_SF2 = AGFFileReader.Glass(2, 1.47343127, 0.0109019098, 0.163681
 
 const Examples_N_SF14 = AGFFileReader.Glass(2, 1.69022361, 0.0130512113, 0.288870052, 0.061369188, 1.7045187, 149.517689, 0.0, 0.0, NaN, NaN, 0.365, 2.5, -5.56e-6, 7.09e-9, -1.09e-11, 9.85e-7, 1.39e-9, 0.287, 20.0, 0.013, 1.0, 2.2, 9.41, 1.0, 1, 1.0, [(0.365, 0.004, 25.0), (0.37, 0.04, 25.0), (0.38, 0.33, 25.0), (0.39, 0.61, 25.0), (0.4, 0.75, 25.0), (0.405, 0.79, 25.0), (0.42, 0.87, 25.0), (0.436, 0.91, 25.0), (0.46, 0.938, 25.0), (0.5, 0.964, 25.0), (0.546, 0.983, 25.0), (0.58, 0.987, 25.0), (0.62, 0.987, 25.0), (0.66, 0.987, 25.0), (0.7, 0.985, 25.0), (1.06, 0.998, 25.0), (1.53, 0.98, 25.0), (1.97, 0.88, 25.0), (2.325, 0.64, 25.0), (2.5, 0.57, 25.0)], 1.76182, 1.0, 0.0, 0, 26.53, 0, 3.118, 0.0)
 
-include("curves.jl")
-include("surfaces.jl")
-include("lenses.jl")
-include("systems.jl")
-include("other.jl")
 
-end # module TestData
-export TestData
+include("docs_examples.jl")
+include("other_examples.jl")
+include("repeating_structure_examples.jl")
+include("eyemodels.jl")
+
+end #module Examples
+export Examples

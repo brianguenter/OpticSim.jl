@@ -12,14 +12,14 @@
 
 function draw(tilebasis::AbstractBasis, tilesize, i, j, color, name)
     vertices = Repeat.tilevertices(tilebasis)
-    tile = tilesize * [Luxor.Point(vertices[:,i]...) for i in 1:size(vertices)[2]]
-    pt = tilesize * tilebasis[i,j]
+    tile = tilesize * [Luxor.Point(vertices[:, i]...) for i in 1:size(vertices)[2]]
+    pt = tilesize * tilebasis[i, j]
     offset = Luxor.Point(pt[1], -pt[2]) # flip y so indices show up correctly
-    
+
     Luxor.translate(offset)
-    
+
     Luxor.sethue(color)
-   
+
     Luxor.poly(tile, :fill, close=true)
     Luxor.sethue("lightgrey")
     Luxor.poly(tile, :stroke, close=true)
@@ -35,14 +35,14 @@ function draw(tilebasis::AbstractBasis, tilesize, i, j, color, name)
     Luxor.translate(-offset)
 end
 
-function drawcells(clstr::Repeat.ClusterWithProperties,scale,points) 
-    _,npts = size(points)
+function drawcells(clstr::Repeat.ClusterWithProperties, scale, points)
+    _, npts = size(points)
     repeats = npts ÷ clustersize(clstr)
     props = repeat(Repeat.properties(clstr), repeats)
-    drawcells(elementbasis(clstr), scale, points, color=props[:,:Color], name=props[:,:Name])
+    drawcells(elementbasis(clstr), scale, points, color=props[:, :Color], name=props[:, :Name])
 end
 
-drawcells(clstr::Repeat.LatticeCluster,scale,points) = drawcells(elementbasis(clstr),scale,points)
+drawcells(clstr::Repeat.LatticeCluster, scale, points) = drawcells(elementbasis(clstr), scale, points)
 
 """Draws a list of hexagonal cells, represented by their lattice coordinates, which are represented as a 2D matrix, with each column being one lattice coordinate."""
 function drawcells(tilebasis::AbstractBasis, tilesize, cells::AbstractMatrix; color::Union{AbstractArray,Nothing}=nothing, name::Union{AbstractArray{String},Nothing}=nothing, format=:png, resolution=(1000, 1000))
@@ -56,7 +56,7 @@ function drawcells(tilebasis::AbstractBasis, tilesize, cells::AbstractMatrix; co
     end
 
     for i in 1:numcells
-        cell = cells[:,i]
+        cell = cells[:, i]
         cellname = name === nothing ? nothing : name[i]
         draw(tilebasis, tilesize, cell[1], cell[2], color[i], cellname)
     end
@@ -72,16 +72,32 @@ function drawcells(tilebasis::AbstractBasis, tilesize, cells::AbstractMatrix; co
 end
 
 """ draw the ClusterWithProperties at coordinates specified by lattice_coordinate_offset """
-function draw(clstr::Repeat.AbstractLatticeCluster, cluster_coordinate_offset::AbstractMatrix{T} = [0;0;;] , scale=50.0) where{T}
+function draw(clstr::Repeat.AbstractLatticeCluster, cluster_coordinate_offset::AbstractMatrix{T}=[0; 0;;], scale=50.0) where {T}
     dims = size(cluster_coordinate_offset)
     clstrsize = clustersize(clstr)
     points = Matrix{Int64}(undef, dims[1], dims[2] * clstrsize)
     for i in 1:dims[2]
-        points[:,(i - 1) * clstrsize + 1:i * clstrsize] = clustercoordinates(clstr, cluster_coordinate_offset[:,i]...)
+        points[:, (i-1)*clstrsize+1:i*clstrsize] = clustercoordinates(clstr, cluster_coordinate_offset[:, i]...)
     end
 
-    drawcells(clstr,scale,points)
+    drawcells(clstr, scale, points)
 end
-    
 
+
+""" to see what the objects look like in the warped coordinate frame use inv(basismatrix(lattice)) as the transform"""
+function plotall(containingshape, lattice, transform=[1.0 0.0; 0.0 1.0])
+    temp = Vector{SMatrix}(undef, 0)
+
+    for coordinate in eachcol(tilesinside(containingshape, lattice))
+        println(typeof(coordinate))
+        push!(temp, tilevertices(coordinate, lattice))
+    end
+
+    tiles = LazySets.VPolygon.(temp)
+    for tile in tiles
+        plot!(transform * tile, aspectratio=1)
+    end
+    plot!(containingshape, aspectratio=1)
+end
+export plotall
 

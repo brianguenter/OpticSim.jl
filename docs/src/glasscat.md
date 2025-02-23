@@ -1,8 +1,8 @@
-# GlassCat
+# AGFFileReader
 
 This submodule is used to download, parse, install and manage AGF glass specifications for use in OpticSim.
 
-The central configuration file for GlassCat is located at `src/GlassCat/data/sources.txt`, which ships with the
+The central configuration file for AGFFileReader is located at `src/AGFFileReader/data/sources.txt`, which ships with the
 following default entries.
 
 ```
@@ -14,7 +14,7 @@ SUMITA c1093e42a1d08acbe30698aba730161e3b43f8f0d50533f65de8b6b11100fdc8 https://
 ```
 
 Each line corresponds to one AGF source, which is described by 2 to 4 space-delimited columns. The first column provides
-the installed module name for the catalog, e.g. `GlassCat.NIKON`. The second column is the expected SHA256 checksum for
+the installed module name for the catalog, e.g. `AGFFileReader.NIKON`. The second column is the expected SHA256 checksum for
 the AGF file.
 
 The final two columns are optional, specifying download instructions for acquiring the zipped AGF files
@@ -29,32 +29,32 @@ included in OpticSim via `AGFGlassCat.jl`. These steps are run automatically whe
 convenience function for adding a locally downloaded AGF file to the source list.
 
 ```@docs
-OpticSim.GlassCat.add_agf
+AGFFileReader.add_agf
 ```
 
 ## Using installed glasses
 
-Glass types are accessed like so: `OpticSim.GlassCat.CATALOG_NAME.GLASS_NAME`, e.g.
+Glass types are accessed like so: `AGFFileReader.CATALOG_NAME.GLASS_NAME`, e.g.
 
 ```julia
-OpticSim.GlassCat.SUMITA.LAK7
-OpticSim.GlassCat.SCHOTT.PK3
+AGFFileReader.SUMITA.LAK7
+AGFFileReader.SCHOTT.PK3
 ```
 
 All glasses and catalogs are exported in their respective modules, so it is possible to invoke `using` calls for convenience, e.g.
 
 ```julia
 using OpticSim
-GlassCat.SUMITA.LAK7
-using OpticSim.GlassCat
+AGFFileReader.SUMITA.LAK7
+using AGFFileReader
 SCHOTT.PK3
-using OpticsSim.GlassCat.SCHOTT
+using OpticsSim.AGFFileReader.SCHOTT
 N_BK7
 ```
 
-Autocompletion can be used to see available catalogs and glasses. All catalog glasses are of type [`OpticSim.GlassCat.Glass`](@ref).
+Autocompletion can be used to see available catalogs and glasses. All catalog glasses are of type [`AGFFileReader.Glass`](@ref).
 Note that special characters in glass/catalog names are replaced with `_`.
-There is a special type and constant value for air: [`OpticSim.GlassCat.Air`](@ref).
+There is a special type and constant value for air: [`AGFFileReader.Air`](@ref).
 
 [Unitful.jl](https://github.com/PainterQubits/Unitful.jl) is used to manage units, meaning any valid unit can be used for all arguments, e.g., wavelength can be passed in as μm or nm (or cm, mm, m, etc.).
 Non-unitful options are also available, in which case units are assumed to be μm, °C and Atm for length, temperature and pressure respectively.
@@ -69,57 +69,57 @@ const PRESSURE_REF = 1.0 # Atm
 ## Types
 
 ```@docs
-OpticSim.GlassCat.AbstractGlass
-OpticSim.GlassCat.Glass
-OpticSim.GlassCat.Air
-OpticSim.GlassCat.GlassID
+AGFFileReader.AbstractGlass
+AGFFileReader.Glass
+AGFFileReader.Air
+AGFFileReader.Glass
 ```
 
 ## Functions
 
 ```@docs
-OpticSim.GlassCat.index
-OpticSim.GlassCat.absairindex
-OpticSim.GlassCat.absorption
+AGFFileReader.index
+AGFFileReader.absairindex
+AGFFileReader.absorption
 ```
 
 ---
 
 ```@docs
-OpticSim.GlassCat.glassfromMIL
-OpticSim.GlassCat.modelglass
+AGFFileReader.glassfromMIL
+AGFFileReader.modelglass
 ```
 
 ---
 
 ```@docs
-OpticSim.GlassCat.glasscatalogs
-OpticSim.GlassCat.glassnames
-OpticSim.GlassCat.info
-OpticSim.GlassCat.findglass
-OpticSim.GlassCat.isair
+AGFFileReader.glasscatalogs
+AGFFileReader.glassnames
+AGFFileReader.info
+AGFFileReader.findglass
+AGFFileReader.isair
 ```
 
 ---
 
 ```@docs
-OpticSim.GlassCat.glassname
-OpticSim.GlassCat.glassid
-OpticSim.GlassCat.glassforid
+AGFFileReader.glassname
+AGFFileReader.glassid
+AGFFileReader.glassforid
 ```
 
 ---
 
 ```@docs
-OpticSim.GlassCat.polyfit_indices
-OpticSim.GlassCat.plot_indices
-OpticSim.GlassCat.drawglassmap
+AGFFileReader.polyfit_indices
+AGFFileReader.plot_indices
+AGFFileReader.drawglassmap
 ```
 
 ---
 
 ```@docs
-OpticSim.GlassCat.verify_sources!
-OpticSim.GlassCat.verify_source
-OpticSim.GlassCat.download_source
+AGFFileReader.verify_sources!
+AGFFileReader.verify_source
+AGFFileReader.download_source
 ```

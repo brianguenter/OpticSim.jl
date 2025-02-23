@@ -4,7 +4,7 @@ OpticSim.jl is a [Julia](https://julialang.org/) package for geometric optics (r
 
 It is designed to allow optical engineers to create optical systems procedurally and then to simulate them. Unlike Zemax, Code V, or other interactive optical design systems OpticSim.jl has limited support for interactivity.
 
-A large variety of surface types are supported, and these can be composed into complex 3D objects through the use of constructive solid geometry (CSG). A complete catalog of optical materials is provided through the complementary GlassCat submodule.
+A large variety of surface types are supported, and these can be composed into complex 3D objects through the use of constructive solid geometry (CSG). A complete catalog of optical materials is provided through the complementary AGFFileReader submodule.
 
 This software provides extensive control over the modelling, simulation, visualization and optimization of optical systems. It is especially suited for designs that have a procedural architecture.
 
@@ -25,7 +25,7 @@ Here are links to several publicly available glass files:
 * [SUMITA](https://www.sumita-opt.co.jp/en/download/) (automatically downloaded)
 * [SCHOTT](https://www.schott.com/advanced_optics/english/download/index.html) (automatically downloaded)
 
-OpticSim.jl will generate a glass database from the available files in `deps/downloads/glasscat/` and store it in the file `AGFClassCat.jl`. See [GlassCat](@ref) for a detailed description, including instructions on how to add more catalogs.
+OpticSim.jl will generate a glass database from the available files in `deps/downloads/glasscat/` and store it in the file `AGFClassCat.jl`. See [AGFFileReader](@ref) for a detailed description, including instructions on how to add more catalogs.
 
 Run this example to check that everything installed properly:
 
@@ -38,25 +38,4 @@ nothing # hide
 
 ![install test image](assets/test_install.png)
 
-## System Image
 
-If you are using Julia 1.5, we recommend compiling a custom [Julia system image](https://julialang.github.io/PackageCompiler.jl/dev/sysimages) for the OpticSim.jl package to reduce startup time and improve first-time performance.
-
-With VSCode, you can create a sysimage by opening the command palette (CTRL-shift-P) and selecting `Tasks: Run Build Task, julia: Build custom sysimage for current environment`.
-
-Alternatively, we provide a Julia script that will build the sysimage using a representative workload. To do this, activate a Julia environment which has OpticSim installed and run
-
-```julia
-include("deps/sysimage.jl")
-compile()
-```
-
-By default, the sysimage is located in the current working directory. On Linux, it will be called `JuliaSysimage.so`; on Windows, the extension will be `.dll`. A custom path can be used instead which is passed as an argument to `compile()`.
-
-To use the generated system image, run Julia with the `--sysimage` flag:
-
-```bash
-julia --project=[your_project] --sysimage=[path_to_sysimage]
-```
-
-If OpticSim.jl is installed in the base project, then there is no need for the `--project` flag in the above command. If your current working directory is OpticSim.jl, then you can use the `--project` flag without needing to specify an argument.

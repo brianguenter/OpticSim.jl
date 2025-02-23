@@ -10,7 +10,7 @@ using StaticArrays
 
 using OpticSim
 using OpticSim: Sphere, Ray, replprint, trace, Cylinder, AcceleratedParametricSurface, newton, Infinity, RayOrigin, NullInterface, IntervalPoint, intervalintersection, LensTrace, FresnelInterface, wavelength, mᵢandmₜ, refractedray, direction, origin, pathlength, LensAssembly, NoPower, power, snell, fresnel, reflectedray, BoundingBox
-using OpticSim.Examples
+
 
 include("../TestData/TestData.jl")
 
@@ -78,7 +78,7 @@ function runbenchmark(b; kwargs...)
     f, args = b()
     qkwargs = [:($(keys(kwargs)[i]) = $(values(kwargs)[i])) for i in 1:length(kwargs)]
     if f === trace
-        return @eval (@benchmark($f(($args)..., test = true), $(qkwargs...)))
+        return @eval (@benchmark($f(($args)..., test=true), $(qkwargs...)))
     else
         return @eval (@benchmark($f(($args)...), setup = (OpticSim.emptyintervalpool!()), $(qkwargs...)))
     end
@@ -99,13 +99,13 @@ function runforpipeline(ismaster::Bool)
     for f in all_benchmarks()
         b = runbenchmark(f)
         join(io, [
-            "$f",
-            "$(BenchmarkTools.prettymemory(b.memory))",
-            "$(b.allocs)",
-            "$(BenchmarkTools.prettytime(minimum(b.times)))",
-            "$(BenchmarkTools.prettytime(BenchmarkTools.mean(b.times)))",
-            "$(BenchmarkTools.prettytime(maximum(b.times)))\n"
-        ], ", ")
+                "$f",
+                "$(BenchmarkTools.prettymemory(b.memory))",
+                "$(b.allocs)",
+                "$(BenchmarkTools.prettytime(minimum(b.times)))",
+                "$(BenchmarkTools.prettytime(BenchmarkTools.mean(b.times)))",
+                "$(BenchmarkTools.prettytime(maximum(b.times)))\n"
+            ], ", ")
     end
     close(io)
 end

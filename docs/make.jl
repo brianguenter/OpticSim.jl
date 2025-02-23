@@ -11,13 +11,13 @@ OpticSim.Vis.set_current_mode(:docs)
 
 
 makedocs(
-    sitename = "OpticSim.jl",
-    format = Documenter.HTML(
+    sitename="OpticSim.jl",
+    format=Documenter.HTML(
         # prettyurls = get(ENV, "CI", nothing) == "true",
-        assets = [asset("assets/logo.svg", class = :ico, islocal = true)],
+        assets=[asset("assets/logo.svg", class=:ico, islocal=true)],
     ),
-    modules = [OpticSim],
-    pages = [
+    modules=[OpticSim],
+    pages=[
         "Home" => "index.md",
         "Examples" => "examples.md",
         "Geometry" => [
@@ -34,19 +34,18 @@ makedocs(
         ],
         "Visualization" => "vis.md",
         "Glass Functions" => "glasscat.md",
-        "Optimization" => "optimization.md",
         "Cloud Execution" => "cloud.md",
         "Notebook utilities" => "notebooksutils.md",
         "Reference" => "ref.md",
         "Roadmap" => "roadmap.md"
     ],
-    expandfirst = ["glasscat.md", "systems.md", "vis.md"]
+    expandfirst=["glasscat.md", "systems.md", "vis.md"]
 )
 
 deploydocs(
-    repo = "github.com/brianguenter/OpticSim.jl.git",
-    devbranch = "main",
-    push_preview = true,
+    repo="github.com/brianguenter/OpticSim.jl.git",
+    devbranch="main",
+    push_preview=true,
 )
 
 # function children(m::Module)
