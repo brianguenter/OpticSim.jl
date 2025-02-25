@@ -33,9 +33,9 @@ function testbigfloat()
         r4 = OpticalRay(Vector{T}([0.0, -5.0, 1.0]), Vector{T}([0.0, sind(5.0), -cosd(5.0)]), one(T), T(0.55))
         r5 = OpticalRay(Vector{T}([-5.0, -5.0, 1.0]), Vector{T}([sind(5.0), sind(2.0), -cosd(2.0) * cosd(5.0)]), one(T), T(0.55))
 
-        a = TestData.doubleconvex(T, temperature = temp)
+        a = TestData.doubleconvex(T, temperature=temp)
         for r in (r1, r2, r3, r4, r5)
-            println(point(OpticSim.intersection(OpticSim.trace(a, r, test = true))))
+            println(point(OpticSim.intersection(OpticSim.trace(a, r, test=true))))
         end
         println()
     end
@@ -48,10 +48,10 @@ function testbigfloat()
     r3 = OpticalRay(Vector{BigFloat}([5.0, 5.0, 1.0]), Vector{BigFloat}([0.0, 0.0, -1.0]), one(BigFloat), BigFloat(0.55))
     r4 = OpticalRay(Vector{BigFloat}([0.0, -5.0, 1.0]), Vector{BigFloat}([0.0, sind(5.0), -cosd(5.0)]), one(BigFloat), BigFloat(0.55))
     r5 = OpticalRay(Vector{BigFloat}([-5.0, -5.0, 1.0]), Vector{BigFloat}([sind(5.0), sind(2.0), -cosd(2.0) * cosd(5.0)]), one(BigFloat), BigFloat(0.55))
-    @assert isapprox(point(OpticSim.intersection(OpticSim.trace(a, r2, test = true))), [-0.06191521590711035, -0.06191521590711035, -67.8], atol = TOLERANCE)
-    @assert isapprox(point(OpticSim.intersection(OpticSim.trace(a, r3, test = true))), [-0.2491105067897657, -0.2491105067897657, -67.8], atol = TOLERANCE)
-    @assert isapprox(point(OpticSim.intersection(OpticSim.trace(a, r4, test = true))), [0.0, 5.639876913179362, -67.8], atol = TOLERANCE)
-    @assert isapprox(point(OpticSim.intersection(OpticSim.trace(a, r5, test = true))), [5.75170097290395, 2.504152441922817, -67.8], atol = TOLERANCE)
+    @assert isapprox(point(OpticSim.intersection(OpticSim.trace(a, r2, test=true))), [-0.06191521590711035, -0.06191521590711035, -67.8], atol=TOLERANCE)
+    @assert isapprox(point(OpticSim.intersection(OpticSim.trace(a, r3, test=true))), [-0.2491105067897657, -0.2491105067897657, -67.8], atol=TOLERANCE)
+    @assert isapprox(point(OpticSim.intersection(OpticSim.trace(a, r4, test=true))), [0.0, 5.639876913179362, -67.8], atol=TOLERANCE)
+    @assert isapprox(point(OpticSim.intersection(OpticSim.trace(a, r5, test=true))), [5.75170097290395, 2.504152441922817, -67.8], atol=TOLERANCE)
 end
 
 function vistest(sys::AbstractOpticalSystem{Float64}; kwargs...)
@@ -62,9 +62,9 @@ function vistest(sys::AbstractOpticalSystem{Float64}; kwargs...)
     r4 = OpticalRay([0.0, -5.0, 1.0], [0.0, 0.08715574274765818, -0.9961946980917454], 1.0, λ)
     r5 = OpticalRay([-5.0, -5.0, 1.0], [0.08715574274765818, -0.01738599476176408, -0.9960429728140486], 1.0, λ)
     raygen = Emitters.Sources.RayListSource([r1, r2, r3, r4, r5])
-    Vis.drawtracerays(sys, raygenerator = raygen, trackallrays = true, test = true; kwargs...)
+    Vis.drawtracerays(sys, raygenerator=raygen, trackallrays=true, test=true; kwargs...)
     for (i, r) in enumerate(raygen)
-        t = OpticSim.trace(sys, r, test = true)
+        t = OpticSim.trace(sys, r, test=true)
         if t !== nothing
             println("=== RAY $i ===")
             println(OpticSim.point(t))
@@ -79,19 +79,19 @@ function visualizerefraction()
     c = 1 / sqrt(2.0)
     r = Ray([0.0, c, c], [0.0, -c, -c])
     rray = OpticSim.refractedray(1.0, 1.5, nₛ, direction(r))
-    Vis.draw(Ray([0.0, 0.0, 0.0], Array{Float64,1}(nₛ)), color = :black)
-    Vis.draw!(r, color = :green)
-    Vis.draw!(Ray([0.0, 0.0, 0.0], Array{Float64,1}(rray)), color = :red)
-    Vis.draw!(Ray([0.0, 0.0, 0.0], Array{Float64,1}(-nₛ)), color = :yellow)
+    Vis.draw(Ray([0.0, 0.0, 0.0], Array{Float64,1}(nₛ)), color=:black)
+    Vis.draw!(r, color=:green)
+    Vis.draw!(Ray([0.0, 0.0, 0.0], Array{Float64,1}(rray)), color=:red)
+    Vis.draw!(Ray([0.0, 0.0, 0.0], Array{Float64,1}(-nₛ)), color=:yellow)
 
     temp = OpticSim.refractedray(1.0, 1.5, nₛ, direction(r))
     temp = [0.0, temp[2], -temp[3]]
     r = Ray([0.0, -temp[2], -temp[3]], temp)
     rray = OpticSim.refractedray(1.5, 1.0, nₛ, direction(r))
-    Vis.draw!(Ray([0.0, 0.0, 0.0], Array{Float64,1}(nₛ)), color = :black)
-    Vis.draw!(r, color = :green)
-    Vis.draw!(Ray([0.0, 0.0, 0.0], Array{Float64,1}(rray)), color = :red)
-    Vis.draw!(Ray([0.0, 0.0, 0.0], Array{Float64,1}(-nₛ)), color = :yellow)
+    Vis.draw!(Ray([0.0, 0.0, 0.0], Array{Float64,1}(nₛ)), color=:black)
+    Vis.draw!(r, color=:green)
+    Vis.draw!(Ray([0.0, 0.0, 0.0], Array{Float64,1}(rray)), color=:red)
+    Vis.draw!(Ray([0.0, 0.0, 0.0], Array{Float64,1}(-nₛ)), color=:yellow)
 end
 
 function plotreflectedvsrefractedpower()
@@ -102,9 +102,9 @@ function plotreflectedvsrefractedpower()
     glass = OpticSim.GlassCat.SCHOTT.BAK50
 
     incidentindex = OpticSim.GlassCat.index(glass, green)
-    transmittedindex = OpticSim.GlassCat.index(OpticSim.GlassCat.Air, green)
+    transmittedindex = OpticSim.GlassCat.index(AGFFileReader.Air, green)
 
-    for θ in 0.0:0.01:(π / 2.0)
+    for θ in 0.0:0.01:(π/2.0)
         origin = [0.0, tan(θ), 1.0]
         dir = -origin
         r = Ray(origin, dir)
@@ -124,7 +124,7 @@ function plotreflectedvsrefractedpower()
         push!(refractpow, powₜ)
     end
 
-    Plots.plot((0.0:0.01:(π / 2.0)), [reflectpow, refractpow], label = ["reflected" "refracted"])
+    Plots.plot((0.0:0.01:(π/2.0)), [reflectpow, refractpow], label=["reflected" "refracted"])
 end
 
 ### OPTIMIZATION TESTING
@@ -138,9 +138,9 @@ using Ipopt
 using Zygote
 using NLopt
 
-doubleconvexprescription() = DataFrame(SurfaceType = ["Object", "Standard", "Standard", "Image"], Radius = [(Inf64), 60.0, -60.0, (Inf64)], Thickness = [(Inf64), (10.0), (77.8), missing], Material = [OpticSim.GlassCat.Air, OpticSim.Examples.Examples_N_BK7, OpticSim.GlassCat.Air, missing], SemiDiameter = [(Inf64), (9.0), (9.0), (15.0)])
+doubleconvexprescription() = DataFrame(SurfaceType=["Object", "Standard", "Standard", "Image"], Radius=[(Inf64), 60.0, -60.0, (Inf64)], Thickness=[(Inf64), (10.0), (77.8), missing], Material=[AGFFileReader.Air, AGFFileReader.Examples_N_BK7, AGFFileReader.Air, missing], SemiDiameter=[(Inf64), (9.0), (9.0), (15.0)])
 
-function doubleconvex(a::AbstractVector{T}; detpix::Int = 100) where {T<:Real}
+function doubleconvex(a::AbstractVector{T}; detpix::Int=100) where {T<:Real}
     frontradius = a[1]
     rearradius = a[2]
     #! format: off
@@ -149,7 +149,7 @@ function doubleconvex(a::AbstractVector{T}; detpix::Int = 100) where {T<:Real}
         Radius = [T(Inf64), frontradius, rearradius, T(Inf64)],
         Conic = [missing, -1.0, 1.0, missing],
         Thickness = [T(Inf64), T(10.0), T(77.8), missing],
-        Material = [OpticSim.GlassCat.Air, OpticSim.Examples.Examples_N_BK7, OpticSim.GlassCat.Air, missing],
+        Material = [AGFFileReader.Air, AGFFileReader.Examples_N_BK7, AGFFileReader.Air, missing],
         SemiDiameter = [T(Inf64), T(9.0), T(9.0), T(15.0)],
     ), detpix, detpix, T, temperature = OpticSim.GlassCat.TEMP_REF_UNITFUL, pressure = OpticSim.GlassCat.PRESSURE_REF)
     #! format: on
@@ -171,7 +171,7 @@ function testfinitedifferences()
 end
 export testfinitedifferences
 
-function testoptimization(; lens = Examples.cooketriplet(), constrained = false, algo = constrained ? IPNewton() : LBFGS(), chunk_size = 1, samples = 3)
+function testoptimization(; lens=Examples.cooketriplet(), constrained=false, algo=constrained ? IPNewton() : LBFGS(), chunk_size=1, samples=3)
     @info "NaN safe: $(ForwardDiff.NANSAFE_MODE_ENABLED)"
 
     start, lower, upper = Optimization.optimizationvariables(lens)
@@ -198,12 +198,12 @@ function testoptimization(; lens = Examples.cooketriplet(), constrained = false,
         @info "Constraints: $lower, $upper"
         df = TwiceDifferentiable(optimobjective, g!, h!, start)
         dfc = TwiceDifferentiableConstraints(lower, upper)
-        res = optimize(df, dfc, start, algo, Optim.Options(show_trace = true, iterations = 100, allow_f_increases = true))
+        res = optimize(df, dfc, start, algo, Optim.Options(show_trace=true, iterations=100, allow_f_increases=true))
     else
         if constrained
             @warn "No constraints to apply, using unconstrained optimization"
         end
-        res = optimize(optimobjective, g!, h!, start, algo, Optim.Options(show_trace = true, iterations = 100, allow_f_increases = true))
+        res = optimize(optimobjective, g!, h!, start, algo, Optim.Options(show_trace=true, iterations=100, allow_f_increases=true))
     end
 
     # println("== Computing gradient")
@@ -224,9 +224,9 @@ function testoptimization(; lens = Examples.cooketriplet(), constrained = false,
     newlens = Optimization.updateoptimizationvariables(lens, final)
     @info "Result: $final"
 
-    field = HexapolarField(newlens, collimated = true, samples = samples)
-    Vis.drawtraceimage(newlens, raygenerator = field)
-    Vis.drawtracerays(newlens, raygenerator = field, trackallrays = true, test = true)
+    field = HexapolarField(newlens, collimated=true, samples=samples)
+    Vis.drawtraceimage(newlens, raygenerator=field)
+    Vis.drawtracerays(newlens, raygenerator=field, trackallrays=true, test=true)
 end
 
 function testnlopt()
@@ -242,7 +242,7 @@ function testnlopt()
     model = Model(NLopt.optimizer)
     @variable(model, rad1, start = 60.0)
     @variable(model, rad2, start = -60.0)
-    register(model, :f, 2, f, autodiff = true)
+    register(model, :f, 2, f, autodiff=true)
     @NLconstraint(model, 30.0 <= rad1 <= 85.0)
     @NLconstraint(model, -100.0 <= rad1 <= -55.0)
     @NLobjective(model, Min, f(rad1, rad2))
@@ -257,11 +257,11 @@ function testJuMP()
 
         lens = Examples.doubleconvex(radius1, radius2)
 
-        field = HexapolarField(lens, collimated = true, samples = 10)
+        field = HexapolarField(lens, collimated=true, samples=10)
         error = zero(T)
         hits = 0
         for r in field
-            traceres = OpticSim.trace(lens, r, test = true)
+            traceres = OpticSim.trace(lens, r, test=true)
 
             if !(nothing === traceres)
                 hitpoint = point(traceres)
@@ -298,14 +298,14 @@ function testJuMP()
 
     model = Model(Ipopt.Optimizer)
     set_time_limit_sec(model, 10.0)
-    register(model, :f, 2, f, autodiff = true)
+    register(model, :f, 2, f, autodiff=true)
     @variable(model, 10.0 <= rad1 <= 85.0, start = 60.0)
     @variable(model, -150 <= rad2 <= 20.0, start = -10.0)
     @NLobjective(model, Min, f(rad1, rad2))
     optimize!(model)
 
     println("rad1 $(value(rad1)) rad2 $(value(rad2))")
-    Vis.drawtracerays(Examples.doubleconvex(value(rad1), value(rad2)), trackallrays = true, test = true)
+    Vis.drawtracerays(Examples.doubleconvex(value(rad1), value(rad2)), trackallrays=true, test=true)
 end
 
 function simpletest()
@@ -316,11 +316,11 @@ end
 
 function RMS_spot_size(lens, x::T...) where {T}
     lens = Optimization.updateoptimizationvariables(lens, collect(x))
-    field = HexapolarField(lens, collimated = true, samples = 10)
+    field = HexapolarField(lens, collimated=true, samples=10)
     error = zero(T)
     hits = 0
     for r in field
-        traceres = OpticSim.trace(lens, r, test = true)
+        traceres = OpticSim.trace(lens, r, test=true)
 
         if !(nothing === traceres)
             hitpoint = point(traceres)
@@ -352,9 +352,9 @@ function testgenericoptimization(lens::S, objective::Function) where {S<:Abstrac
     numvars = length(vars)
     model = Model(Ipopt.Optimizer)
     set_time_limit_sec(model, 10.0)
-    register(model, :newobjective, numvars, newobjective, autodiff = true)
+    register(model, :newobjective, numvars, newobjective, autodiff=true)
     # @variable(model, bounds[i][1] <= x[i=1:numvars] <= bounds[i][2],start = vars)
-    @variable(model, x[i = 1:numvars], start = vars[i])
+    @variable(model, x[i=1:numvars], start = vars[i])
 
     @NLobjective(model, Min, newobjective(x...))
     # d = NLPEvaluator(model)
@@ -383,7 +383,7 @@ function testgenericoptimization(lens::S, objective::Function) where {S<:Abstrac
     # optimize!(model)
     lens = Optimization.updateoptimizationvariables(lens, value.(x))
 
-    Vis.drawtracerays(lens, trackallrays = true, test = true)
+    Vis.drawtracerays(lens, trackallrays=true, test=true)
 end
 
 function testIpopt()
@@ -397,7 +397,7 @@ function testIpopt()
 
     f(x1, x2, x3, x4) = x1 * x4 * (x1 + x2 + x3) + x3
 
-    register(model, :f, 4, f, autodiff = true)
+    register(model, :f, 4, f, autodiff=true)
     @NLobjective(model, Min, f(x1, x2, x3, x4))
     @NLconstraint(model, x1 * x2 * x3 * x4 >= 25)
     @NLconstraint(model, x1^2 + x2^2 + x3^2 + x4^2 == 40)
