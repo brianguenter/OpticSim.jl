@@ -42,7 +42,7 @@ end
 
 function doubleconvex(
     frontradius::T, rearradius::T;
-    temperature::Unitful.Temperature=GlassCat.TEMP_REF_UNITFUL, pressure::T=T(PRESSURE_REF)
+    temperature::Unitful.Temperature=AGFFileReader.TEMP_REF_UNITFUL, pressure::T=T(PRESSURE_REF)
 ) where {T<:Real}
     return AxisymmetricOpticalSystem{T}(
         DataFrame(
@@ -58,7 +58,7 @@ function doubleconvex(
 end
 
 function doubleconvex(
-    ::Type{T}=Float64; temperature::Unitful.Temperature=GlassCat.TEMP_REF_UNITFUL, pressure::T=T(PRESSURE_REF)
+    ::Type{T}=Float64; temperature::Unitful.Temperature=AGFFileReader.TEMP_REF_UNITFUL, pressure::T=T(PRESSURE_REF)
 ) where {T<:Real}
     return AxisymmetricOpticalSystem{T}(
         DataFrame(

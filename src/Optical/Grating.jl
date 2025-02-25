@@ -78,12 +78,11 @@ function processintersection(opticalinterface::ThinGratingInterface{T}, point::S
     nₜ = one(T)
     α = zero(T)
     if !isair(mᵢ)
-        mat = glassforid(mᵢ)::AGFFileReader.Glass
-        nᵢ = index(mat, λ, temperature=temperature, pressure=pressure)::T
-        α = absorption(mat, λ, temperature=temperature, pressure=pressure)::T
+        nᵢ = index(mᵢ, λ, temperature=temperature, pressure=pressure)::T
+        α = absorption(mᵢ, λ, temperature=temperature, pressure=pressure)::T
     end
     if !isair(mₜ)
-        nₜ = index(glassforid(mₜ)::AGFFileReader.Glass, λ, temperature=temperature, pressure=pressure)::T
+        nₜ = index(mₜ, λ, temperature=temperature, pressure=pressure)::T
     end
 
     incident_pow = power(incidentray)
@@ -193,7 +192,7 @@ function processintersection(opticalinterface::HologramInterface{T}, point::SVec
     end
 
     λ = wavelength(incidentray)
-    mat = glassforid(opticalinterface.substratematerial)::AGFFileReader.Glass
+    mat = opticalinterface.substratematerial
     # get the index of the playback ray in the substrate
     nₛ = index(mat, λ, temperature=temperature, pressure=pressure)::T
     # get the index of the recording ray in the substrate
@@ -201,8 +200,7 @@ function processintersection(opticalinterface::HologramInterface{T}, point::SVec
 
     # get the index of the recording ray in the material of the signal beam
     if !isair(opticalinterface.signalrecordingmaterial)
-        signalbeammaterial = glassforid(opticalinterface.signalrecordingmaterial)::AGFFileReader.Glass
-        nsig = index(signalbeammaterial, opticalinterface.recordingλ, temperature=temperature, pressure=pressure)::T
+        nsig = index(opticalinterface.signalrecordingmaterial, opticalinterface.recordingλ, temperature=temperature, pressure=pressure)::T
     else
         nsig = one(T)
     end
@@ -228,8 +226,7 @@ function processintersection(opticalinterface::HologramInterface{T}, point::SVec
 
     # get the index of the recording ray in the material of the reference beam
     if !isair(opticalinterface.referencerecordingmaterial)
-        referencebeammaterial = glassforid(opticalinterface.referencerecordingmaterial)::AGFFileReader.Glass
-        nref = index(referencebeammaterial, opticalinterface.recordingλ, temperature=temperature, pressure=pressure)::T
+        nref = index(opticalinterface.referencerecordingmaterial, opticalinterface.recordingλ, temperature=temperature, pressure=pressure)::T
     else
         nref = one(T)
     end

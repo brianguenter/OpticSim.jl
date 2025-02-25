@@ -149,8 +149,7 @@ function processintersection(opticalinterface::ParaxialInterface{T}, point::SVec
     m = outsidematerialid(opticalinterface) # necessarily both the same
     n = one(T)
     if !isair(m)
-        mat = glassforid(m)::AGFFileReader.Glass
-        n = index(mat, wavelength(incidentray), temperature=temperature, pressure=pressure)::T
+        n = index(m, wavelength(incidentray), temperature=temperature, pressure=pressure)::T
     end
     geometricpathlength = norm(point - origin(incidentray)) + (firstray ? zero(T) : T(RAY_OFFSET))
     thisraypathlength = n * geometricpathlength

@@ -27,14 +27,15 @@ using OpticSim: rotmat, rotmatd
 # lens imports
 using OpticSim: reflectedray, snell, refractedray, trace, intersection, pathlength, power
 #Bounding volume hierarchy imports
-# using OpticSim: partition!
-
-const COMP_TOLERANCE = 25 * eps(Float64)
-const RTOLERANCE = 1e-10
-const ATOLERANCE = 10 * eps(Float64)
-const SEED = 12312487
-const ALL_TESTS = isempty(ARGS) || "all" in ARGS || "All" in ARGS || "ALL" in ARGS
-const TESTSET_DIR = "testsets"
+# 
+@testsnippet TestConstants begin
+    const COMP_TOLERANCE = 25 * eps(Float64)
+    const RTOLERANCE = 1e-10
+    const ATOLERANCE = 10 * eps(Float64)
+    const SEED = 12312487
+    const ALL_TESTS = isempty(ARGS) || "all" in ARGS || "All" in ARGS || "ALL" in ARGS
+    const TESTSET_DIR = "testsets"
+end
 
 """Evaluate all functions not requiring arguments in a given module and test they don't throw anything"""
 macro test_all_no_arg_functions(m)

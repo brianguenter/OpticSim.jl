@@ -214,15 +214,13 @@ using Unitful.DefaultSymbols
         @test (@wrappedallocs index(g, 533nm)) == 0
         @test (@allocated AGFFileReader.Examples_N_BK7) == 0
 
-        @test glassforid(glassid(AGFFileReader.Examples_N_BK7)) == AGFFileReader.Examples_N_BK7
-
         @test isair(Air) == true
         @test isair(AGFFileReader.Examples_N_BK7) == false
 
         # test MIL and model glasses
         fit_acc = 0.001
         bk7 = glassfromMIL(517642)
-        @test glassforid(glassid(bk7)) == bk7
+
         @test index(bk7, 0.5875618) ≈ 1.517 atol = fit_acc
         @test index(bk7, 0.533) ≈ 1.519417351519283 atol = fit_acc
         @test index(bk7, 0.743) ≈ 1.511997032563557 atol = fit_acc
@@ -233,7 +231,7 @@ using Unitful.DefaultSymbols
 
         fit_acc = 0.0001
         bk7 = modelglass(1.5168, 64.167336, -0.0009)
-        @test glassforid(glassid(bk7)) == bk7
+
         @test index(bk7, 0.5875618) ≈ 1.5168 atol = fit_acc
         @test index(bk7, 0.533) ≈ 1.519417351519283 atol = fit_acc
         @test index(bk7, 0.743) ≈ 1.511997032563557 atol = fit_acc
@@ -274,8 +272,6 @@ using Unitful.DefaultSymbols
         @test repr(GlassCat.Glass(GlassID(GlassCat.OTHER, 1), empty_args...)) === "CARGILLE.OG0607"
         @test repr(GlassCat.Glass(GlassID(GlassCat.AIR, 1), empty_args...)) === "GlassCat.Air" # repeated code
 
-        @test glassforid(GlassID(GlassCat.AIR, 1)) === Air
-        @test glassforid(GlassID(GlassCat.OTHER, 1)) === CARGILLE.OG0607
 
         info_lines = [
             "ID:                                                OTHER:2",

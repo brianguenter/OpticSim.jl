@@ -5,7 +5,7 @@
     include("../TestData/TestData.jl")
 end
 
-@testitem "Refraction" setup = [TestData] begin
+@testitem "Refraction" setup = [TestData, TestConstants] begin
     λ = 0.550
     r1 = OpticalRay([0.0, 0.0, 1.0], [0.0, 0.0, -1.0], 1.0, λ)
     r2 = OpticalRay([2.0, 2.0, 1.0], [0.0, 0.0, -1.0], 1.0, λ)
@@ -100,7 +100,8 @@ end
     @test isapprox(pathlength(res), 74.6175821043825, rtol=COMP_TOLERANCE)
 end # testset Refraction
 
-@testitem "Temperature/Pressure" setup = [TestData] begin
+@testitem "Temperature/Pressure" setup = [TestData, TestConstants] begin
+    using Unitful
     λ = 0.550
     r1 = OpticalRay([0.0, 0.0, 1.0], [0.0, 0.0, -1.0], 1.0, λ)
     r2 = OpticalRay([2.0, 2.0, 1.0], [0.0, 0.0, -1.0], 1.0, λ)
@@ -125,7 +126,7 @@ end # testset Refraction
     r5 = OpticalRay([-5.0, -5.0, 1.0], [0.08715574274765818, -0.01738599476176408, -0.9960429728140486], 1.0, λ2)
 end # testset Temperature/Pressure
 
-@testitem "Reflection" setup = [TestData] begin
+@testitem "Reflection" setup = [TestData, TestConstants] begin
     λ = 0.550
     r1 = OpticalRay([0.0, 0.0, 1.0], [0.0, 0.0, -1.0], 1.0, λ)
     r2 = OpticalRay([2.0, 2.0, 1.0], [0.0, 0.0, -1.0], 1.0, λ)
@@ -151,7 +152,7 @@ end # testset Temperature/Pressure
     @test isapprox(pathlength(res), 87.4033932087711, rtol=COMP_TOLERANCE)
 end # testset Reflection
 
-@testitem "Complex Lenses" setup = [TestData] begin
+@testitem "Complex Lenses" setup = [TestData, TestConstants] begin
     λ = 0.550
     r1 = OpticalRay([0.0, 0.0, 1.0], [0.0, 0.0, -1.0], 1.0, λ)
     r2 = OpticalRay([2.0, 2.0, 1.0], [0.0, 0.0, -1.0], 1.0, λ)
