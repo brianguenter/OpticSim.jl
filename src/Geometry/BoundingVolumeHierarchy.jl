@@ -77,10 +77,10 @@ function partition!(a::Vector{S}, valfunc::Function, value::T) where {S,T<:Real}
     upper = lastindex(a) + 1
 
     while true
-        while upper - 1 >= 1 && valfunc(a[upper - 1]) > value
+        while upper - 1 >= 1 && valfunc(a[upper-1]) > value
             upper = upper - 1
         end
-        while lower + 1 <= lastindex(a) && valfunc(a[lower + 1]) <= value
+        while lower + 1 <= lastindex(a) && valfunc(a[lower+1]) <= value
             lower = lower + 1
         end
 
@@ -96,9 +96,9 @@ function partition!(a::Vector{S}, valfunc::Function, value::T) where {S,T<:Real}
             end
         end
 
-        temp = a[upper - 1]
-        a[upper - 1] = a[lower + 1]
-        a[lower + 1] = temp
+        temp = a[upper-1]
+        a[upper-1] = a[lower+1]
+        a[lower+1] = temp
         upper = upper - 1
         lower = lower + 1
     end
@@ -132,3 +132,41 @@ function surfaceintersection(a::BVHNode{T,S}, r::Ray{T,N}) where {T<:Real,S<:Pri
 # end
 
 export PrimitiveData
+
+
+#tests for BoundingVolumeHierarchy
+
+
+@testitem "partition!" begin
+    split = 0.5
+
+    for i in 1:100000
+        a = rand(5)
+        b = copy(a)
+        badresult::Bool = false
+
+        lower, upper = OpticSim.Geometry.partition!(a, (x) -> x, split)
+
+        if lower !== nothing
+            for i in lower
+                if i >= split
+                    badresult = true
+                    break
+                end
+            end
+        end
+
+        if upper !== nothing
+            for i in upper
+                if i <= split
+                    badresult = true
+                end
+            end
+        end
+
+        if badresult
+            throw(ErrorException("array didn't partition: $(b)"))
+        end
+
+    end
+end
