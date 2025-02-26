@@ -130,12 +130,11 @@ function processintersection(opticalinterface::FresnelInterface{T}, point::SVect
     nₜ = one(T)
     α = zero(T)
     if !isair(mᵢ)
-        mat = glassforid(mᵢ)::AGFFileReader.Glass
-        nᵢ = index(mat, λ, temperature=temperature, pressure=pressure)::T
-        α = absorption(mat, λ, temperature=temperature, pressure=pressure)::T
+        nᵢ = index(mᵢ, λ, temperature=temperature, pressure=pressure)::T
+        α = absorption(mᵢ, λ, temperature=temperature, pressure=pressure)::T
     end
     if !isair(mₜ)
-        nₜ = index(glassforid(mₜ)::AGFFileReader.Glass, λ, temperature=temperature, pressure=pressure)::T
+        nₜ = index(mₜ, λ, temperature=temperature, pressure=pressure)::T
     end
     (sinθᵢ, sinθₜ) = snell(normal, direction(incidentray), nᵢ, nₜ)
     (powᵣ, powₜ) = fresnel(nᵢ, nₜ, sinθᵢ, sinθₜ)

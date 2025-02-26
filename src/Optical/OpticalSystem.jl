@@ -180,9 +180,8 @@ function trace(
             # this will almost always not apply as the detector will be in air, but it's possible that the detector is
             # not in air, in which case this is necessary
             if !isair(m)
-                mat::Glass = glassforid(m)
-                nᵢ = index(mat, λ, temperature=temperature(system), pressure=pressure(system))::T
-                α = absorption(mat, λ, temperature=temperature(system), pressure=pressure(system))::T
+                nᵢ = index(m, λ, temperature=temperature(system), pressure=pressure(system))::T
+                α = absorption(m, λ, temperature=temperature(system), pressure=pressure(system))::T
                 if α > zero(T)
                     internal_trans = exp(-α * geometricpathlength)
                     if rand() >= internal_trans

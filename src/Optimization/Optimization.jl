@@ -2,6 +2,9 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # See LICENSE in the project root for full license information.
 
+###############################
+# This is not currently loaded as part of OpticSim but leaving it as a template in case add optimization later
+###############################
 """
 Optimization interface consists of two functions `optimizationvariables` and `updateoptimizationvariables`.
 `optimizationvariables` packs variables to be optimized into a vector.
@@ -101,7 +104,7 @@ function updateoptimizationvariables(a::AxisymmetricOpticalSystem{T}, optimizati
         newprescription.Conic = newconic
     end
 
-    return AxisymmetricOpticalSystem{S}(newprescription, detectorsize(a)..., S, temperature = S(temperature(a)), pressure = S(pressure(a)))
+    return AxisymmetricOpticalSystem{S}(newprescription, detectorsize(a)..., S, temperature=S(temperature(a)), pressure=S(pressure(a)))
 end
 
 end #module

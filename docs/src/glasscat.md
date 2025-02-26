@@ -105,7 +105,6 @@ AGFFileReader.isair
 ```@docs
 AGFFileReader.glassname
 AGFFileReader.glassid
-AGFFileReader.glassforid
 ```
 
 ---
