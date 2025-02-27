@@ -2,8 +2,9 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # See LICENSE in the project root for full license information.
 
-@testset "Visualization" begin
-    if get(ENV, "CI", nothing) == "true" && Sys.iswindows() return #OpenGL is unreliable on headless Windows VMs on github. This fails unpredictably and prevents pull requests from being approved. These tests are not essential, so turn them off when running on windows.
+@testitem "Visualization" begin
+    if get(ENV, "CI", nothing) == "true" && Sys.iswindows()
+        return #OpenGL is unreliable on headless Windows VMs on github. This fails unpredictably and prevents pull requests from being approved. These tests are not essential, so turn them off when running on windows.
     else
         # empty Vis.draw() call to clear Makie @info message:
         # "Info: Makie/Makie is caching fonts, this may take a while. Needed only on first run!"
@@ -37,7 +38,7 @@
         m = (Cylinder(0.5, 3.0) - Sphere(1.0))()
         @test_nowarn Vis.draw(m)
 
-        @test_nowarn Vis.draw(Repeat.Multilens.hex3RGB(),[0 1 0;0 0 1])
+        @test_nowarn Vis.draw(Repeat.Multilens.hex3RGB(), [0 1 0; 0 0 1])
         @test_nowarn Examples.drawhexrect()
         @test_nowarn Examples.drawhexneighbors()
     end

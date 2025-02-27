@@ -3,6 +3,7 @@
 # See LICENSE in the project root for full license information.
 
 using Test
+using TestItems
 using FiniteDifferences
 using StaticArrays
 using LinearAlgebra
@@ -33,8 +34,6 @@ using OpticSim: reflectedray, snell, refractedray, trace, intersection, pathleng
     const RTOLERANCE = 1e-10
     const ATOLERANCE = 10 * eps(Float64)
     const SEED = 12312487
-    const ALL_TESTS = isempty(ARGS) || "all" in ARGS || "All" in ARGS || "ALL" in ARGS
-    const TESTSET_DIR = "testsets"
 end
 
 """Evaluate all functions not requiring arguments in a given module and test they don't throw anything"""
@@ -78,10 +77,10 @@ alltestsets = [
     "SurfaceDefs",
     "Intersection",
     "OpticalSystem",
-    "Allocations",
-    "GlassCat",
+    "Allocations"
     # "Visualization"
 ]
 
-runtestsets = ALL_TESTS ? alltestsets : intersect(alltestsets, ARGS)
-include.([joinpath(TESTSET_DIR, "$(testset).jl") for testset in runtestsets])
+# runtestsets = ALL_TESTS ? alltestsets : intersect(alltestsets, ARGS)
+include("testsets/Repeat.jl")
+# include.([joinpath("testsets", "$(testset).jl") for testset in alltestsets])

@@ -67,12 +67,12 @@ Interface describing an idealized planar lens, i.e. one that is thin and with no
 ParaxialInterface(focallength::T, centroid::SVector{3,T}, outsidematerial::Y)
 ```
 """
-struct ParaxialInterface{T} <: OpticalInterface{T}
+struct ParaxialInterface{T,S} <: OpticalInterface{T}
     focallength::T
-    outsidematerial::Glass
+    outsidematerial::S
     centroid::SVector{3,T}
     function ParaxialInterface(focallength::T, centroid::SVector{3,T}, outsidematerial::Y) where {Y<:AGFFileReader.AbstractGlass,T<:Real}
-        return new{T}(focallength, outsidematerial, centroid)
+        return new{T,Y}(focallength, outsidematerial, centroid)
     end
 end
 export ParaxialInterface
