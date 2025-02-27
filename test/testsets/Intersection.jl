@@ -2,7 +2,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # See LICENSE in the project root for full license information.
 
-@testset "Intersection" begin
+@testitem "Intersection" setup = [TestConstants] begin
     function samplepoints(numsamples, lowu, highu, lowv, highv)
         samples = Array{Tuple{Float64,Float64},1}(undef, 0)
 
@@ -41,12 +41,12 @@
         pt2 = [-xy, -xy, 0.0]
         cpt1 = point(lower(intscts))
         cpt2 = point(upper(intscts))
-        @test isapprox(pt1, cpt1, rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(pt2, cpt2, rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test isapprox(pt1, cpt1, rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(pt2, cpt2, rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # starting inside
         r = Ray([0.0, 0.0, 0.0], [1.0, 1.0, 0.0])
         intscts = surfaceintersection(cyl, r)
-        @test lower(intscts) isa RayOrigin && isapprox(pt1, point(upper(intscts)), rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test lower(intscts) isa RayOrigin && isapprox(pt1, point(upper(intscts)), rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # inside infinite
         r = Ray([0.0, 0.0, 0.0], [0.0, 0.0, 1.0])
@@ -65,7 +65,7 @@
         cpt2 = point(upper(intscts))
         pt1 = [xy, xy, xy]
         pt2 = [-xy, -xy, -xy]
-        @test isapprox(pt1, cpt1, rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(pt2, cpt2, rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test isapprox(pt1, cpt1, rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(pt2, cpt2, rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # missing
         r = Ray([5.0, 5.0, 5.0], [0.0, 0.0, -1.0])
@@ -98,12 +98,12 @@
         pt2 = [-xy, -xy, 0.0]
         cpt1 = point(lower(intscts))
         cpt2 = point(upper(intscts))
-        @test isapprox(pt1, cpt1, rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(pt2, cpt2, rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test isapprox(pt1, cpt1, rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(pt2, cpt2, rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # starting inside
         r = Ray([0.0, 0.0, 0.0], [1.0, 1.0, 0.0])
         intscts = surfaceintersection(sph, r)
-        @test lower(intscts) isa RayOrigin && isapprox(pt1, point(upper(intscts)), rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test lower(intscts) isa RayOrigin && isapprox(pt1, point(upper(intscts)), rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # on diagonal
         r = Ray([1.0, 1.0, 1.0], [-1.0, -1.0, -1.0])
@@ -113,7 +113,7 @@
         xyz = sqrt(3) / 6.0
         pt1 = [xyz, xyz, xyz]
         pt2 = [-xyz, -xyz, -xyz]
-        @test isapprox(pt1, cpt1, rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(pt2, cpt2, rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test isapprox(pt1, cpt1, rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(pt2, cpt2, rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # missing
         r = Ray([5.0, 5.0, 5.0], [0.0, 0.0, -1.0])
@@ -134,11 +134,11 @@
 
         r = Ray([10.0, 10.0, 1.0], [-1.0, -1.0, 0.0])
         int = surfaceintersection(sph, r)
-        @test isapprox(point(lower(int)), [1.0, 1.0, 1.0], rtol = RTOLERANCE, atol = ATOLERANCE) && upper(int) isa Infinity
+        @test isapprox(point(lower(int)), [1.0, 1.0, 1.0], rtol=RTOLERANCE, atol=ATOLERANCE) && upper(int) isa Infinity
 
         r = Ray([0.8, 1.4, 1.2], [1.0, -1.0, 0.0])
         int = surfaceintersection(sph, r)
-        @test isapprox(point(lower(int)), [0.898231126982741, 1.301768873017259, 1.2], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(upper(int)), [1.301768873017259, 0.8982311269827411, 1.2], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test isapprox(point(lower(int)), [0.898231126982741, 1.301768873017259, 1.2], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(upper(int)), [1.301768873017259, 0.8982311269827411, 1.2], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         r = Ray([2.0, 2.0, 1.5], [-1.0, -1.0, 0.0])
         @test surfaceintersection(sph, r) isa EmptyInterval
@@ -159,7 +159,7 @@
             halfspace = surfaceintersection(tri, r)
             @test !(halfspace isa EmptyInterval) && upper(halfspace) isa Infinity
             t = α(lower(halfspace))
-            @test isapprox(point(r, t), point(lower(halfspace)), rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(pointontri, point(lower(halfspace)), rtol = RTOLERANCE, atol = ATOLERANCE)
+            @test isapprox(point(r, t), point(lower(halfspace)), rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(pointontri, point(lower(halfspace)), rtol=RTOLERANCE, atol=ATOLERANCE)
         end
 
         # front and back face intersections
@@ -170,7 +170,7 @@
         intsct1 = halfspaceintersection(surfaceintersection(tri, r1))
         intsct2 = halfspaceintersection(surfaceintersection(tri, r2))
 
-        @test isapprox(point(intsct1), point(intsct2), rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test isapprox(point(intsct1), point(intsct2), rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # ray should miss
         r = Ray([1.0, 1.0, 1.0], [0.0, 0.0, -1.0])
@@ -200,11 +200,11 @@
 
         # starts outside and hits
         res = surfaceintersection(pln, routintersects)
-        @test isapprox(point(lower(res)), [0.0, 0.0, 1.0], rtol = RTOLERANCE, atol = ATOLERANCE) && upper(res) isa Infinity
+        @test isapprox(point(lower(res)), [0.0, 0.0, 1.0], rtol=RTOLERANCE, atol=ATOLERANCE) && upper(res) isa Infinity
 
         # starts inside and hits
         res = surfaceintersection(pln, rinintersects)
-        @test lower(res) isa RayOrigin && isapprox(point(upper(res)), [0.0, 0.0, 1.0], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test lower(res) isa RayOrigin && isapprox(point(upper(res)), [0.0, 0.0, 1.0], rtol=RTOLERANCE, atol=ATOLERANCE)
     end # testset plane
 
     @testset "Rectangle" begin
@@ -234,11 +234,11 @@
 
         # starts outside and hits
         res = surfaceintersection(rect, routintersects)
-        @test isapprox(point(lower(res)), [0.0, 0.0, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE) && upper(res) isa Infinity
+        @test isapprox(point(lower(res)), [0.0, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && upper(res) isa Infinity
 
         # starts inside and hits
         res = surfaceintersection(rect, rinintersects)
-        @test lower(res) isa RayOrigin && isapprox(point(upper(res)), [0.0, 0.0, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test lower(res) isa RayOrigin && isapprox(point(upper(res)), [0.0, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # starts inside and misses bounds
         @test surfaceintersection(rect, rinmiss) isa EmptyInterval
@@ -248,18 +248,18 @@
 
         # starts outside and hits bounds
         res = surfaceintersection(rect, routbounds)
-        @test isapprox(point(lower(res)), [0.5, 0.5, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE) && upper(res) isa Infinity
+        @test isapprox(point(lower(res)), [0.5, 0.5, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && upper(res) isa Infinity
 
         # starts inside and hits bounds
         res = surfaceintersection(rect, rinbounds)
-        @test lower(res) isa RayOrigin && isapprox(point(upper(res)), [0.5, 0.5, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test lower(res) isa RayOrigin && isapprox(point(upper(res)), [0.5, 0.5, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # test a rectangle with translation and rotation
         rect2 = Rectangle(0.3, 0.5, SVector(3.0, 1.0, 4.0), SVector(0.2, 0.3, 0.4))
         rayhit = Ray([0.6, 0.6, 0.6], [-0.3, -0.1, -0.3])
         raymiss = Ray([0.7, 0.4, 0.4], [-0.3, -0.1, -0.3])
         res = surfaceintersection(rect2, rayhit)
-        @test isapprox(point(lower(res)), [0.2863636363636363, 0.4954545454545454, 0.2863636363636363], rtol = RTOLERANCE, atol = ATOLERANCE) && upper(res) isa Infinity
+        @test isapprox(point(lower(res)), [0.2863636363636363, 0.4954545454545454, 0.2863636363636363], rtol=RTOLERANCE, atol=ATOLERANCE) && upper(res) isa Infinity
         @test surfaceintersection(rect2, raymiss) isa EmptyInterval
     end # testset Rectangle
 
@@ -292,11 +292,11 @@
 
         # starts outside and hits
         res = surfaceintersection(ell, routintersects)
-        @test isapprox(point(lower(res)), [0.0, 0.0, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE) && upper(res) isa Infinity
+        @test isapprox(point(lower(res)), [0.0, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && upper(res) isa Infinity
 
         # starts inside and hits
         res = surfaceintersection(ell, rinintersects)
-        @test lower(res) isa RayOrigin && isapprox(point(upper(res)), [0.0, 0.0, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test lower(res) isa RayOrigin && isapprox(point(upper(res)), [0.0, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # starts inside and misses bounds
         @test surfaceintersection(ell, rinmiss) isa EmptyInterval
@@ -306,15 +306,15 @@
 
         # starts outside and hits bounds
         res = surfaceintersection(ell, routbounds)
-        @test isapprox(point(lower(res)), [0.5, 0.0, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE) && upper(res) isa Infinity
+        @test isapprox(point(lower(res)), [0.5, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && upper(res) isa Infinity
 
         # starts inside and hits bounds
         res = surfaceintersection(ell, rinbounds)
-        @test lower(res) isa RayOrigin && isapprox(point(upper(res)), [0.5, 0.0, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test lower(res) isa RayOrigin && isapprox(point(upper(res)), [0.5, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # asymmetric hit
         res = surfaceintersection(ell, rasymhit)
-        @test isapprox(point(lower(res)), [0.0, 0.9, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE) && upper(res) isa Infinity
+        @test isapprox(point(lower(res)), [0.0, 0.9, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && upper(res) isa Infinity
 
         # asymmetric miss
         @test surfaceintersection(ell, rasymmiss) isa EmptyInterval
@@ -324,7 +324,7 @@
         rayhit = Ray([0.6, 0.6, 0.6], [-0.3, -0.1, -0.3])
         raymiss = Ray([0.7, 0.4, 0.4], [-0.3, -0.1, -0.3])
         res = surfaceintersection(ell2, rayhit)
-        @test isapprox(point(lower(res)), [0.2863636363636363, 0.4954545454545454, 0.2863636363636363], rtol = RTOLERANCE, atol = ATOLERANCE) && upper(res) isa Infinity
+        @test isapprox(point(lower(res)), [0.2863636363636363, 0.4954545454545454, 0.2863636363636363], rtol=RTOLERANCE, atol=ATOLERANCE) && upper(res) isa Infinity
         @test surfaceintersection(ell2, raymiss) isa EmptyInterval
     end # testset Ellipse
 
@@ -356,11 +356,11 @@
 
         # starts outside and hits
         res = surfaceintersection(hex, routintersects)
-        @test isapprox(point(lower(res)), [0.0, 0.0, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE) && upper(res) isa Infinity
+        @test isapprox(point(lower(res)), [0.0, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && upper(res) isa Infinity
 
         # starts inside and hits
         res = surfaceintersection(hex, rinintersects)
-        @test lower(res) isa RayOrigin && isapprox(point(upper(res)), [0.0, 0.0, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test lower(res) isa RayOrigin && isapprox(point(upper(res)), [0.0, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # starts inside and misses bounds
         @test surfaceintersection(hex, rinmiss) isa EmptyInterval
@@ -370,15 +370,15 @@
 
         # starts outside and hits bounds
         res = surfaceintersection(hex, routbounds)
-        @test isapprox(point(lower(res)), [sqrt(3) / 2, 0.0, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE) && upper(res) isa Infinity
+        @test isapprox(point(lower(res)), [sqrt(3) / 2, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && upper(res) isa Infinity
 
         # starts inside and hits bounds
         res = surfaceintersection(hex, rinbounds)
-        @test lower(res) isa RayOrigin && isapprox(point(upper(res)), [sqrt(3) / 2, 0.0, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test lower(res) isa RayOrigin && isapprox(point(upper(res)), [sqrt(3) / 2, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # asymmetric hit
         res = surfaceintersection(hex, rasymhit)
-        @test isapprox(point(lower(res)), [0.0, 1.0, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE) && upper(res) isa Infinity
+        @test isapprox(point(lower(res)), [0.0, 1.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && upper(res) isa Infinity
 
         # asymmetric miss
         @test surfaceintersection(hex, rasymmiss) isa EmptyInterval
@@ -388,15 +388,15 @@
         rayhit = Ray([0.6, 0.6, 0.6], [-0.3, -0.1, -0.3])
         raymiss = Ray([0.7, 0.4, 0.4], [-0.3, -0.1, -0.3])
         res = surfaceintersection(hex2, rayhit)
-        @test isapprox(point(lower(res)), [0.2863636363636363, 0.4954545454545454, 0.2863636363636363], rtol = RTOLERANCE, atol = ATOLERANCE) && upper(res) isa Infinity
+        @test isapprox(point(lower(res)), [0.2863636363636363, 0.4954545454545454, 0.2863636363636363], rtol=RTOLERANCE, atol=ATOLERANCE) && upper(res) isa Infinity
         @test surfaceintersection(hex2, raymiss) isa EmptyInterval
     end # testset Hexagon
 
-    
+
     @testset "Convex Polygon" begin
 
         t = identitytransform()
-    
+
         local_points_2d = [
             SVector(-1.0, -1.0),
             SVector(1.0, -1.0),
@@ -405,9 +405,9 @@
             SVector(-1.0, 1.0),
             SVector(-2.0, 0.0)
         ]
-            
+
         @test_nowarn ConvexPolygon(t, local_points_2d)
-    
+
         rinplane = Ray([0.0, 0.0, 0.0], [1.0, 1.0, 0.0])
         routside = Ray([0.0, 0.0, 1.0], [1.0, 1.0, 1.0])
         rinside = Ray([0.0, 0.0, -1.0], [1.0, 1.0, -1.0])
@@ -419,49 +419,49 @@
         routbounds = Ray([sqrt(3) / 2, 0.0, 1.0], [0.0, 0.0, -1.0])
         rasymhit = Ray([0.0, 0.9, 1.0], [0.0, 0.0, -1.0])
         rasymmiss = Ray([3.0, 0.0, 1.0], [0.0, 0.0, -1.0])
-    
+
         poly = ConvexPolygon(t, local_points_2d)
-    
+
         # parallel to plane and outside
         @test surfaceintersection(poly, routside) isa EmptyInterval
-    
+
         # parallel and on plane
         @test surfaceintersection(poly, rinplane) isa EmptyInterval
-    
+
         # inside but not hitting
         @test surfaceintersection(poly, rinside) isa EmptyInterval
-    
+
         # starts outside and hits
         res = surfaceintersection(poly, routintersects)
-        @test isapprox(point(lower(res)), [0.0, 0.0, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE) && OpticSim.upper(res) isa Infinity
-    
+        @test isapprox(point(lower(res)), [0.0, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
+
         # starts inside and hits
         res = surfaceintersection(poly, rinintersects)
-        @test lower(res) isa RayOrigin && isapprox(point(upper(res)), [0.0, 0.0, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE)
-    
+        @test lower(res) isa RayOrigin && isapprox(point(upper(res)), [0.0, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
+
         # starts inside and misses bounds
         @test surfaceintersection(poly, rinmiss) isa EmptyInterval
-    
+
         # starts outside and misses bounds
         @test surfaceintersection(poly, routmiss) isa EmptyInterval
-    
+
         # starts outside and hits bounds
         res = surfaceintersection(poly, routbounds)
-        @test isapprox(point(lower(res)), [sqrt(3) / 2, 0.0, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE) && upper(res) isa Infinity
-    
+        @test isapprox(point(lower(res)), [sqrt(3) / 2, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && upper(res) isa Infinity
+
         # starts inside and hits bounds
         res = surfaceintersection(poly, rinbounds)
-        @test lower(res) isa RayOrigin && isapprox(point(upper(res)), [sqrt(3) / 2, 0.0, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE)
-    
+        @test lower(res) isa RayOrigin && isapprox(point(upper(res)), [sqrt(3) / 2, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
+
         # asymmetric hit
         res = surfaceintersection(poly, rasymhit)
-        @test isapprox(point(lower(res)), [0.0, 0.9, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE) && upper(res) isa Infinity
-    
+        @test isapprox(point(lower(res)), [0.0, 0.9, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && upper(res) isa Infinity
+
         # asymmetric miss
         @test surfaceintersection(poly, rasymmiss) isa EmptyInterval
-    
+
     end # testset Convex Polygon
-    
+
 
     @testset "Stops" begin
         infiniterect = RectangularAperture(0.4, 0.8, SVector(0.0, 1.0, 0.0), SVector(0.0, 0.0, 1.0))
@@ -476,9 +476,9 @@
         # on edge
         r = Ray([0.0, 1.0, 0.6], [0.0, -1.0, 0.0])
         res = surfaceintersection(infiniterect, r)
-        @test isapprox(point(lower(res)), [0.0, 0.0, 0.6], rtol = RTOLERANCE, atol = ATOLERANCE) && upper(res) isa Infinity
+        @test isapprox(point(lower(res)), [0.0, 0.0, 0.6], rtol=RTOLERANCE, atol=ATOLERANCE) && upper(res) isa Infinity
         res = surfaceintersection(finiterect, r)
-        @test isapprox(point(lower(res)), [0.0, 0.0, 0.6], rtol = RTOLERANCE, atol = ATOLERANCE) && upper(res) isa Infinity
+        @test isapprox(point(lower(res)), [0.0, 0.0, 0.6], rtol=RTOLERANCE, atol=ATOLERANCE) && upper(res) isa Infinity
         # through hole asym
         r = Ray([0.7, 1.0, 1.0], [0.0, -1.0, 0.0])
         @test surfaceintersection(infiniterect, r) isa EmptyInterval
@@ -486,12 +486,12 @@
         # on finite edge
         r = Ray([1.0, -1.0, 2.0], [0.0, 1.0, 0.0])
         res = surfaceintersection(infiniterect, r)
-        @test lower(res) isa RayOrigin && isapprox(point(upper(res)), [1.0, 0.0, 2.0], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test lower(res) isa RayOrigin && isapprox(point(upper(res)), [1.0, 0.0, 2.0], rtol=RTOLERANCE, atol=ATOLERANCE)
         res = surfaceintersection(finiterect, r)
-        @test lower(res) isa RayOrigin && isapprox(point(upper(res)), [1.0, 0.0, 2.0], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test lower(res) isa RayOrigin && isapprox(point(upper(res)), [1.0, 0.0, 2.0], rtol=RTOLERANCE, atol=ATOLERANCE)
         # outside finite
         r = Ray([2.0, 1.0, 3.0], [0.0, -1.0, 0.0])
-        @test isapprox(point(surfaceintersection(infiniterect, r)), [2.0, 0.0, 3.0], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test isapprox(point(surfaceintersection(infiniterect, r)), [2.0, 0.0, 3.0], rtol=RTOLERANCE, atol=ATOLERANCE)
         @test surfaceintersection(finiterect, r) isa EmptyInterval
 
         infinitecirc = CircularAperture(0.4, SVector(0.0, 1.0, 0.0), SVector(0.0, 0.0, 1.0))
@@ -506,9 +506,9 @@
         # on edge
         r = Ray([0.0, 1.0, 0.6], [0.0, -1.0, 0.0])
         res = surfaceintersection(infinitecirc, r)
-        @test isapprox(point(lower(res)), [0.0, 0.0, 0.6], rtol = RTOLERANCE, atol = ATOLERANCE) && upper(res) isa Infinity
+        @test isapprox(point(lower(res)), [0.0, 0.0, 0.6], rtol=RTOLERANCE, atol=ATOLERANCE) && upper(res) isa Infinity
         res = surfaceintersection(finitecirc, r)
-        @test isapprox(point(lower(res)), [0.0, 0.0, 0.6], rtol = RTOLERANCE, atol = ATOLERANCE) && upper(res) isa Infinity
+        @test isapprox(point(lower(res)), [0.0, 0.0, 0.6], rtol=RTOLERANCE, atol=ATOLERANCE) && upper(res) isa Infinity
         # through hole 2
         r = Ray([0.3, 1.0, 1.0], [0.0, -1.0, 0.0])
         @test surfaceintersection(infinitecirc, r) isa EmptyInterval
@@ -516,12 +516,12 @@
         # on finite edge
         r = Ray([1.0, -1.0, 2.0], [0.0, 1.0, 0.0])
         res = surfaceintersection(infinitecirc, r)
-        @test lower(res) isa RayOrigin && isapprox(point(upper(res)), [1.0, 0.0, 2.0], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test lower(res) isa RayOrigin && isapprox(point(upper(res)), [1.0, 0.0, 2.0], rtol=RTOLERANCE, atol=ATOLERANCE)
         res = surfaceintersection(finitecirc, r)
-        @test lower(res) isa RayOrigin && isapprox(point(upper(res)), [1.0, 0.0, 2.0], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test lower(res) isa RayOrigin && isapprox(point(upper(res)), [1.0, 0.0, 2.0], rtol=RTOLERANCE, atol=ATOLERANCE)
         # outside finite
         r = Ray([2.0, 1.0, 3.0], [0.0, -1.0, 0.0])
-        @test isapprox(point(surfaceintersection(infinitecirc, r)), [2.0, 0.0, 3.0], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test isapprox(point(surfaceintersection(infinitecirc, r)), [2.0, 0.0, 3.0], rtol=RTOLERANCE, atol=ATOLERANCE)
         @test surfaceintersection(finitecirc, r) isa EmptyInterval
 
         annulus = Annulus(0.5, 1.0, SVector(0.0, 1.0, 0.0), SVector(0.0, 0.0, 1.0))
@@ -533,7 +533,7 @@
         # on edge
         r = Ray([0.0, 1.0, 0.5], [0.0, -1.0, 0.0])
         res = surfaceintersection(annulus, r)
-        @test isapprox(point(lower(res)), [0.0, 0.0, 0.5], rtol = RTOLERANCE, atol = ATOLERANCE) && upper(res) isa Infinity
+        @test isapprox(point(lower(res)), [0.0, 0.0, 0.5], rtol=RTOLERANCE, atol=ATOLERANCE) && upper(res) isa Infinity
         # through hole 2
         r = Ray([0.3, 1.0, 1.0], [0.0, -1.0, 0.0])
         @test surfaceintersection(infiniterect, r) isa EmptyInterval
@@ -541,7 +541,7 @@
         # on finite edge
         r = Ray([1.0, -1.0, 1.0], [0.0, 1.0, 0.0])
         res = surfaceintersection(annulus, r)
-        @test lower(res) isa RayOrigin && isapprox(point(upper(res)), [1.0, 0.0, 1.0], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test lower(res) isa RayOrigin && isapprox(point(upper(res)), [1.0, 0.0, 1.0], rtol=RTOLERANCE, atol=ATOLERANCE)
         # outside finite
         r = Ray([0.9, 1.0, 1.9], [0.0, -1.0, 0.0])
         @test surfaceintersection(annulus, r) isa EmptyInterval
@@ -549,7 +549,7 @@
         # polygon stop intersection
         polygon_stop_frame = Transform()
         polygon_stop_poly = ConvexPolygon(polygon_stop_frame, [SVector(0.0, 0.0), SVector(1.0, 0.0), SVector(0.5, 0.5)], opaqueinterface(Float64))
-        polygon_stop = InfiniteStopConvexPoly(polygon_stop_poly)        
+        polygon_stop = InfiniteStopConvexPoly(polygon_stop_poly)
 
         # through polygon which should lead to non intersection
         r = Ray([0.2, 0.1, 1.0], [0.0, 0.0, -1.0])
@@ -589,7 +589,7 @@
                 end
 
                 for intsct in allintersections
-                    @test isapprox(point(halfspaceintersection(intsct)), pt, rtol = RTOLERANCE, atol = ATOLERANCE)
+                    @test isapprox(point(halfspaceintersection(intsct)), pt, rtol=RTOLERANCE, atol=ATOLERANCE)
                     @test upper(intsct) isa Infinity
                 end
             end
@@ -614,17 +614,17 @@
         # hit from inside
         r = Ray([0.5, 0.5, 0.2], [0.0, 1.0, 0.0])
         res = surfaceintersection(accelsurf, r)
-        @test lower(res) isa RayOrigin && isapprox(point(upper(res)), [0.5, 0.8996900152986361, 0.2], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test lower(res) isa RayOrigin && isapprox(point(upper(res)), [0.5, 0.8996900152986361, 0.2], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # hit from outside
         r = Ray([0.0, 0.5, 0.2], [1.0, 0.0, -1.0])
         res = surfaceintersection(accelsurf, r)
-        @test isapprox(point(lower(res)), [0.06398711204047353, 0.5, 0.13601288795952649], rtol = RTOLERANCE, atol = ATOLERANCE) && upper(res) isa Infinity
+        @test isapprox(point(lower(res)), [0.06398711204047353, 0.5, 0.13601288795952649], rtol=RTOLERANCE, atol=ATOLERANCE) && upper(res) isa Infinity
 
         # two hits from outside
         r = Ray([0.0, 0.5, 0.25], [1.0, 0.0, 0.0])
         res = surfaceintersection(accelsurf, r)
-        @test isapprox(point(lower(res)), [0.12607777053030267, 0.5, 0.25], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(upper(res)), [0.8705887077060419, 0.5, 0.25], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test isapprox(point(lower(res)), [0.12607777053030267, 0.5, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(upper(res)), [0.8705887077060419, 0.5, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         surf = TestData.wavybeziersurface()
         accelsurf = AcceleratedParametricSurface(surf)
@@ -632,12 +632,12 @@
         # 3 hit starting outside
         r = Ray([0.5, 0.0, 0.0], [0.0, 1.0, 0.0])
         res = surfaceintersection(accelsurf, r)
-        @test isa(res, DisjointUnion) && length(res) == 2 && isapprox(point(lower(res[1])), [0.5, 0.10013694786182059, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(upper(res[1])), [0.5, 0.49625, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(lower(res[2])), [0.5, 0.8971357794109067, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE) && (upper(res[2]) isa Infinity)
+        @test isa(res, DisjointUnion) && length(res) == 2 && isapprox(point(lower(res[1])), [0.5, 0.10013694786182059, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(upper(res[1])), [0.5, 0.49625, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(lower(res[2])), [0.5, 0.8971357794109067, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && (upper(res[2]) isa Infinity)
 
         # 3 hit starting inside
         r = Ray([0.5, 1.0, 0.0], [0.0, -1.0, 0.0])
         res = surfaceintersection(accelsurf, r)
-        @test isa(res, DisjointUnion) && length(res) == 2 && (lower(res[1]) isa RayOrigin) && isapprox(point(upper(res[1])), [0.5, 0.8971357794109067, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(lower(res[2])), [0.5, 0.49625, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(upper(res[2])), [0.5, 0.10013694786182059, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test isa(res, DisjointUnion) && length(res) == 2 && (lower(res[1]) isa RayOrigin) && isapprox(point(upper(res[1])), [0.5, 0.8971357794109067, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(lower(res[2])), [0.5, 0.49625, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(upper(res[2])), [0.5, 0.10013694786182059, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         surf = TestData.verywavybeziersurface()
         accelsurf = AcceleratedParametricSurface(surf, 20)
@@ -645,32 +645,32 @@
         # five hits starting outside
         r = Ray([0.9, 0.0, -0.3], [0.0, 1.0, 0.7])
         res = surfaceintersection(accelsurf, r)
-        a = isapprox(point(lower(res[1])), [0.9, 0.03172286522032046, -0.2777939943457758], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(upper(res[1])), [0.9, 0.1733979947040411, -0.17862140370717122], rtol = RTOLERANCE, atol = ATOLERANCE)
-        b = isapprox(point(lower(res[2])), [0.9, 0.5335760974594397, 0.07350326822160776], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(upper(res[2])), [0.9, 0.7767707607392784, 0.24373953251749486], rtol = RTOLERANCE, atol = ATOLERANCE)
-        c = isapprox(point(lower(res[3])), [0.9, 0.9830891958374246, 0.3881624370861975], rtol = RTOLERANCE, atol = ATOLERANCE) && (upper(res[3]) isa Infinity)
+        a = isapprox(point(lower(res[1])), [0.9, 0.03172286522032046, -0.2777939943457758], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(upper(res[1])), [0.9, 0.1733979947040411, -0.17862140370717122], rtol=RTOLERANCE, atol=ATOLERANCE)
+        b = isapprox(point(lower(res[2])), [0.9, 0.5335760974594397, 0.07350326822160776], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(upper(res[2])), [0.9, 0.7767707607392784, 0.24373953251749486], rtol=RTOLERANCE, atol=ATOLERANCE)
+        c = isapprox(point(lower(res[3])), [0.9, 0.9830891958374246, 0.3881624370861975], rtol=RTOLERANCE, atol=ATOLERANCE) && (upper(res[3]) isa Infinity)
         @test isa(res, DisjointUnion) && length(res) == 3 && a && b && c
 
         # five hits starting inside
         r = Ray([0.9, 1.0, 0.4], [0.0, -1.0, -0.7])
         res = surfaceintersection(accelsurf, r)
-        a = (lower(res[1]) isa RayOrigin) && isapprox(point(upper(res[1])), [0.9, 0.9830891958374246, 0.3881624370861975], rtol = RTOLERANCE, atol = ATOLERANCE)
-        b = isapprox(point(lower(res[2])), [0.9, 0.7767707607392784, 0.24373953251749486], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(upper(res[2])), [0.9, 0.5335760974594397, 0.07350326822160776], rtol = RTOLERANCE, atol = ATOLERANCE)
-        c = isapprox(point(lower(res[3])), [0.9, 0.17339799470404108, -0.1786214037071712], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(upper(res[3])), [0.9, 0.03172286522032046, -0.27779399434577573], rtol = RTOLERANCE, atol = ATOLERANCE)
+        a = (lower(res[1]) isa RayOrigin) && isapprox(point(upper(res[1])), [0.9, 0.9830891958374246, 0.3881624370861975], rtol=RTOLERANCE, atol=ATOLERANCE)
+        b = isapprox(point(lower(res[2])), [0.9, 0.7767707607392784, 0.24373953251749486], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(upper(res[2])), [0.9, 0.5335760974594397, 0.07350326822160776], rtol=RTOLERANCE, atol=ATOLERANCE)
+        c = isapprox(point(lower(res[3])), [0.9, 0.17339799470404108, -0.1786214037071712], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(upper(res[3])), [0.9, 0.03172286522032046, -0.27779399434577573], rtol=RTOLERANCE, atol=ATOLERANCE)
         @test isa(res, DisjointUnion) && length(res) == 3 && a && b && c
 
         # 4 hits starting inside
         r = Ray([0.1, 0.0, -0.3], [0.0, 1.0, 0.7])
         res = surfaceintersection(accelsurf, r)
-        a = (lower(res[1]) isa RayOrigin) && isapprox(point(upper(res[1])), [0.1, 0.2851860296285551, -0.10036977926001144], rtol = RTOLERANCE, atol = ATOLERANCE)
-        b = isapprox(point(lower(res[2])), [0.1, 0.5166793625025807, 0.06167555375180668], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(upper(res[2])), [0.1, 0.7770862508789854, 0.24396037561528983], rtol = RTOLERANCE, atol = ATOLERANCE)
-        c = isapprox(point(lower(res[3])), [0.1, 0.98308919558696, 0.3881624369108719], rtol = RTOLERANCE, atol = ATOLERANCE) && (upper(res[3]) isa Infinity)
+        a = (lower(res[1]) isa RayOrigin) && isapprox(point(upper(res[1])), [0.1, 0.2851860296285551, -0.10036977926001144], rtol=RTOLERANCE, atol=ATOLERANCE)
+        b = isapprox(point(lower(res[2])), [0.1, 0.5166793625025807, 0.06167555375180668], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(upper(res[2])), [0.1, 0.7770862508789854, 0.24396037561528983], rtol=RTOLERANCE, atol=ATOLERANCE)
+        c = isapprox(point(lower(res[3])), [0.1, 0.98308919558696, 0.3881624369108719], rtol=RTOLERANCE, atol=ATOLERANCE) && (upper(res[3]) isa Infinity)
         @test isa(res, DisjointUnion) && length(res) == 3 && a && b && c
 
         # 4 hits starting outside
         r = Ray([0.9, 0.9, 0.4], [0.0, -0.9, -0.7])
         res = surfaceintersection(accelsurf, r)
-        a = isapprox(point(lower(res[1])), [0.9, 0.736072142615238, 0.2725005553674076], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(upper(res[1])), [0.9, 0.567439326091764, 0.141341698071372], rtol = RTOLERANCE, atol = ATOLERANCE)
-        b = isapprox(point(lower(res[2])), [0.9, 0.16601081959179267, -0.1708804736508277], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(upper(res[2])), [0.9, 0.032434058775915924, -0.274773509840954], rtol = RTOLERANCE, atol = ATOLERANCE)
+        a = isapprox(point(lower(res[1])), [0.9, 0.736072142615238, 0.2725005553674076], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(upper(res[1])), [0.9, 0.567439326091764, 0.141341698071372], rtol=RTOLERANCE, atol=ATOLERANCE)
+        b = isapprox(point(lower(res[2])), [0.9, 0.16601081959179267, -0.1708804736508277], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(upper(res[2])), [0.9, 0.032434058775915924, -0.274773509840954], rtol=RTOLERANCE, atol=ATOLERANCE)
         @test isa(res, DisjointUnion) && length(res) == 2 && a && b
     end # testset Bezier
 
@@ -707,7 +707,7 @@
                         missedintersections += 1
                     else
                         # closest point should be on the surface, furthest should be on bounding prism
-                        @test isapprox(point(lower(intsct)), pt, rtol = RTOLERANCE, atol = ATOLERANCE)
+                        @test isapprox(point(lower(intsct)), pt, rtol=RTOLERANCE, atol=ATOLERANCE)
                         @test isa(upper(intsct), Intersection{Float64,3}) || (OpticSim.direction(r)[3] == -1 && isa(upper(intsct), Infinity{Float64}))
                     end
                 end
@@ -721,12 +721,12 @@
         # hit from inside
         r = Ray([0.0, 0.0, -0.5], [0.1, 0.2, 0.5])
         intvl = surfaceintersection(az1, r)
-        @test (lower(intvl) isa RayOrigin) && isapprox(point(upper(intvl)), [0.12363711269619936, 0.24727422539239863, 0.11818556348099664], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test (lower(intvl) isa RayOrigin) && isapprox(point(upper(intvl)), [0.12363711269619936, 0.24727422539239863, 0.11818556348099664], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # hit from outside
         r = Ray([0.0, 0.0, 0.5], [0.1, 0.2, -0.5])
         intvl = surfaceintersection(az1, r)
-        @test isapprox(point(lower(intvl)), [0.07118311042701463, 0.1423662208540292, 0.144084447864927], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(upper(intvl)), [0.6708203932499369, 1.3416407864998738, -2.8541019662496843], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test isapprox(point(lower(intvl)), [0.07118311042701463, 0.1423662208540292, 0.144084447864927], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(upper(intvl)), [0.6708203932499369, 1.3416407864998738, -2.8541019662496843], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # miss from inside
         r = Ray([0.2, 0.2, -0.5], [0.0, 0.0, -1.0])
@@ -746,19 +746,19 @@
         # two hits from outside
         r = Ray([2.0, 0.0, 0.25], [-1.0, 0.0, 0.0])
         hit = surfaceintersection(az1, r)
-        a = isapprox(point(lower(hit[1])), [1.5, 0.0, 0.25], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(upper(hit[1])), [1.3571758210851095, 0.0, 0.25], rtol = RTOLERANCE, atol = ATOLERANCE)
-        b = isapprox(point(lower(hit[2])), [-1.2665828947521165, 0.0, 0.25], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(upper(hit[2])), [-1.5, 0.0, 0.25], rtol = RTOLERANCE, atol = ATOLERANCE)
+        a = isapprox(point(lower(hit[1])), [1.5, 0.0, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(upper(hit[1])), [1.3571758210851095, 0.0, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE)
+        b = isapprox(point(lower(hit[2])), [-1.2665828947521165, 0.0, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(upper(hit[2])), [-1.5, 0.0, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE)
         @test isa(hit, DisjointUnion) && length(hit) == 2 && a && b
 
         # hit cyl from outside
         r = Ray([0.0, 2.0, -0.5], [0.0, -1.0, 0.0])
         intvl = surfaceintersection(az1, r)
-        @test isapprox(point(lower(intvl)), [0.0, 1.5, -0.5], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(upper(intvl)), [0.0, -1.5, -0.5], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test isapprox(point(lower(intvl)), [0.0, 1.5, -0.5], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(upper(intvl)), [0.0, -1.5, -0.5], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # hit cyl from inside
         r = Ray([0.0, 0.0, -0.5], [0.0, -1.0, 0.0])
         intvl = surfaceintersection(az1, r)
-        @test (lower(intvl) isa RayOrigin) && isapprox(point(upper(intvl)), [0.0, -1.5, -0.5], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test (lower(intvl) isa RayOrigin) && isapprox(point(upper(intvl)), [0.0, -1.5, -0.5], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         z2 = TestData.zernikesurface2()
         az2 = AcceleratedParametricSurface(z2, 20)
@@ -766,20 +766,20 @@
         # two hits
         r = Ray([2.0, -1.0, 0.2], [-1.0, 0.0, 0.0])
         intvl = surfaceintersection(az2, r)
-        @test isapprox(point(lower(intvl)), [0.238496383738369, -1.0, 0.2], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(upper(intvl)), [-0.8790518227874484, -1.0, 0.2], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test isapprox(point(lower(intvl)), [0.238496383738369, -1.0, 0.2], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(upper(intvl)), [-0.8790518227874484, -1.0, 0.2], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # three hits
         r = Ray([-0.7, 1.0, 0.2], [0.0, -1.0, 0.0])
         hit = surfaceintersection(az2, r)
-        a = (lower(hit[1]) isa RayOrigin) && isapprox(point(upper(hit[1])), [-0.7, 0.8732489598020176, 0.2], rtol = RTOLERANCE, atol = ATOLERANCE)
-        b = isapprox(point(lower(hit[2])), [-0.7, -0.34532502965048606, 0.2], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(upper(hit[2])), [-0.7, -1.1615928003236047, 0.2], rtol = RTOLERANCE, atol = ATOLERANCE)
+        a = (lower(hit[1]) isa RayOrigin) && isapprox(point(upper(hit[1])), [-0.7, 0.8732489598020176, 0.2], rtol=RTOLERANCE, atol=ATOLERANCE)
+        b = isapprox(point(lower(hit[2])), [-0.7, -0.34532502965048606, 0.2], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(upper(hit[2])), [-0.7, -1.1615928003236047, 0.2], rtol=RTOLERANCE, atol=ATOLERANCE)
         @test isa(hit, DisjointUnion) && length(hit) == 2 && a && b
 
         # four hits
         r = Ray([1.5, 0.1, 0.35], [-1.0, -0.5, 0.0])
         hit = surfaceintersection(az2, r)
-        a = isapprox(point(lower(hit[1])), [1.4371467631969683, 0.06857338159848421, 0.35], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(upper(hit[1])), [1.1428338578611368, -0.07858307106943167, 0.35], rtol = RTOLERANCE, atol = ATOLERANCE)
-        b = isapprox(point(lower(hit[2])), [0.12916355683491865, -0.5854182215825409, 0.35], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(upper(hit[2])), [-0.7290713614371003, -1.0145356807185504, 0.35], rtol = RTOLERANCE, atol = ATOLERANCE)
+        a = isapprox(point(lower(hit[1])), [1.4371467631969683, 0.06857338159848421, 0.35], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(upper(hit[1])), [1.1428338578611368, -0.07858307106943167, 0.35], rtol=RTOLERANCE, atol=ATOLERANCE)
+        b = isapprox(point(lower(hit[2])), [0.12916355683491865, -0.5854182215825409, 0.35], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(upper(hit[2])), [-0.7290713614371003, -1.0145356807185504, 0.35], rtol=RTOLERANCE, atol=ATOLERANCE)
         @test isa(hit, DisjointUnion) && length(hit) == 2 && a && b
 
         # failure case, had a bug where rounding error would cause o2 to fail
@@ -823,7 +823,7 @@
                         missedintersections += 1
                     else
                         # closest point should be on the surface, furthest should be on bounding prism
-                        @test isapprox(point(lower(intsct)), pt, rtol = RTOLERANCE, atol = ATOLERANCE)
+                        @test isapprox(point(lower(intsct)), pt, rtol=RTOLERANCE, atol=ATOLERANCE)
                         @test isa(upper(intsct), Intersection{Float64,3}) || (OpticSim.direction(r)[3] == -1 && isa(upper(intsct), Infinity{Float64}))
                     end
                 end
@@ -837,12 +837,12 @@
         # hit from inside
         r = Ray([0.0, 0.0, -0.5], [0.1, 0.2, 0.5])
         intvl = surfaceintersection(aq1, r)
-        @test (lower(intvl) isa RayOrigin) && isapprox(point(upper(intvl)), [0.09758258750208074, 0.19516517500416142, -0.01208706248959643], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test (lower(intvl) isa RayOrigin) && isapprox(point(upper(intvl)), [0.09758258750208074, 0.19516517500416142, -0.01208706248959643], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # hit from outside
         r = Ray([0.0, 0.0, 0.5], [0.1, 0.2, -0.5])
         intvl = surfaceintersection(aq1, r)
-        @test isapprox(point(lower(intvl)), [0.10265857811957124, 0.20531715623914257, -0.013292890597856405], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(upper(intvl)), [0.6708203932499369, 1.3416407864998738, -2.8541019662496843], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test isapprox(point(lower(intvl)), [0.10265857811957124, 0.20531715623914257, -0.013292890597856405], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(upper(intvl)), [0.6708203932499369, 1.3416407864998738, -2.8541019662496843], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # miss from inside
         r = Ray([0.2, 0.2, -0.5], [0.0, 0.0, -1.0])
@@ -887,8 +887,8 @@
             b2min, b2max = boundingval(a, indices[2], false), boundingval(a, indices[2], true)
 
             step = 0.00001
-            pt1val = rand((b1min + step):step:(b1max - step))
-            pt2val = rand((b2min + step):step:(b2max - step))
+            pt1val = rand((b1min+step):step:(b1max-step))
+            pt2val = rand((b2min+step):step:(b2max-step))
 
             result = Array{Float64,1}(undef, 3)
             result[indices[1]] = pt1val
@@ -931,12 +931,12 @@
         # starting outside
         r = Ray([-1.0, -1.1, 0.0], [1.0, 1.0, 0.0])
         intscts = surfaceintersection(bbox, r)
-        @test isapprox(point(lower(intscts)), [-0.5, -0.6, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(upper(intscts)), [0.5, 0.4, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test isapprox(point(lower(intscts)), [-0.5, -0.6, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(upper(intscts)), [0.5, 0.4, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # starting inside
         r = Ray([0.0, 0.0, 0.0], [1.0, 1.0, 0.0])
         intscts = surfaceintersection(bbox, r)
-        @test lower(intscts) isa RayOrigin && isapprox(point(upper(intscts)), [0.5, 0.5, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test lower(intscts) isa RayOrigin && isapprox(point(upper(intscts)), [0.5, 0.5, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # inside infinite
         r = Ray([0.0, 0.0, 0.0], [0.0, 0.0, 1.0])
@@ -982,11 +982,11 @@
         intersection_obj = (leaf(Cylinder(0.5, 3.0), OpticSim.rotationd(90.0, 0.0, 0.0)) ∩ Sphere(1.0))()
         r = Ray([0.7, 0.0, 0.0], [-1.0, 0.0, 0.0])
         int = OpticSim.evalcsg(intersection_obj, r)
-        @test isapprox(point(lower(int)), [0.5, 0.0, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(upper(int)), [-0.5, 0.0, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test isapprox(point(lower(int)), [0.5, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(upper(int)), [-0.5, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         r = Ray([5.0, 0.0, 0.0], [-1.0, 0.0, 0.0])
         int = OpticSim.evalcsg(intersection_obj, r)
-        @test isapprox(point(lower(int)), [0.5, 0.0, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(upper(int)), [-0.5, 0.0, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test isapprox(point(lower(int)), [0.5, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(upper(int)), [-0.5, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         r = Ray([0.7, 0.0, 0.0], [1.0, 0.0, 0.0])
         int = OpticSim.evalcsg(intersection_obj, r)
@@ -994,15 +994,15 @@
 
         r = Ray([0.0, 0.0, 0.0], [1.0, 0.0, 0.0])
         int = OpticSim.evalcsg(intersection_obj, r)
-        @test (lower(int) isa RayOrigin) && isapprox(point(upper(int)), [0.5, 0.0, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test (lower(int) isa RayOrigin) && isapprox(point(upper(int)), [0.5, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         r = Ray([0.0, 0.0, 0.0], [0.0, 1.0, 0.0])
         int = OpticSim.evalcsg(intersection_obj, r)
-        @test (lower(int) isa RayOrigin) && isapprox(point(upper(int)), [0.0, 1.0, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test (lower(int) isa RayOrigin) && isapprox(point(upper(int)), [0.0, 1.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         r = Ray([0.0, 2.0, 0.0], [0.0, -1.0, 0.0])
         int = OpticSim.evalcsg(intersection_obj, r)
-        @test isapprox(point(lower(int)), [0.0, 1.0, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(upper(int)), [0.0, -1.0, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test isapprox(point(lower(int)), [0.0, 1.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(upper(int)), [0.0, -1.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # UNION
         union_obj = (Cylinder(0.5, 3.0) ∪ Sphere(1.0))(OpticSim.translation(1.0, 0.0, 0.0))
@@ -1012,29 +1012,29 @@
 
         r = Ray([1.0, 0.0, 0.0], [1.0, 0.0, 0.0])
         int = OpticSim.evalcsg(union_obj, r)
-        @test (lower(int) isa RayOrigin) && isapprox(point(upper(int)), [2.0, 0.0, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test (lower(int) isa RayOrigin) && isapprox(point(upper(int)), [2.0, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         r = Ray([1.6, 0.0, 0.0], [1.0, 0.0, 0.0])
         int = OpticSim.evalcsg(union_obj, r)
-        @test (lower(int) isa RayOrigin) && isapprox(point(upper(int)), [2.0, 0.0, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test (lower(int) isa RayOrigin) && isapprox(point(upper(int)), [2.0, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         r = Ray([1.6, 0.0, 0.0], [-1.0, 0.0, 0.0])
         int = OpticSim.evalcsg(union_obj, r)
-        @test (lower(int) isa RayOrigin) && isapprox(point(upper(int)), [0.0, 0.0, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test (lower(int) isa RayOrigin) && isapprox(point(upper(int)), [0.0, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         r = Ray([-1.0, 0.0, 0.0], [1.0, 0.0, 0.0])
         int = OpticSim.evalcsg(union_obj, r)
-        @test isapprox(point(lower(int)), [0.0, 0.0, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(upper(int)), [2.0, 0.0, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test isapprox(point(lower(int)), [0.0, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(upper(int)), [2.0, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         r = Ray([-1.0, 0.0, 4.0], [1.0, 0.0, 0.0])
         int = OpticSim.evalcsg(union_obj, r)
-        @test isapprox(point(lower(int)), [0.5, 0.0, 4.0], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(upper(int)), [1.5, 0.0, 4.0], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test isapprox(point(lower(int)), [0.5, 0.0, 4.0], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(upper(int)), [1.5, 0.0, 4.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # DIFFERENCE
         difference_obj = (Cylinder(0.5, 3.0) - leaf(Sphere(1.0), OpticSim.translation(0.75, 0.0, 0.2)))()
         r = Ray([0.25, 0.0, 0.0], [-1.0, 0.0, 0.0])
         int = OpticSim.evalcsg(difference_obj, r)
-        @test isapprox(point(lower(int)), [-0.2297958971132712, 0.0, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(upper(int)), [-0.5, 0.0, 0.0], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test isapprox(point(lower(int)), [-0.2297958971132712, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(upper(int)), [-0.5, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         r = Ray([0.25, 0.0, 0.0], [1.0, 0.0, 0.0])
         int = OpticSim.evalcsg(difference_obj, r)
@@ -1042,15 +1042,15 @@
 
         r = Ray([0.25, 0.0, 0.0], [0.0, 0.0, 1.0])
         int = OpticSim.evalcsg(difference_obj, r)
-        @test isapprox(point(lower(int)), [0.25, 0.0, 1.0660254037844386], rtol = RTOLERANCE, atol = ATOLERANCE) && (upper(int) isa Infinity)
+        @test isapprox(point(lower(int)), [0.25, 0.0, 1.0660254037844386], rtol=RTOLERANCE, atol=ATOLERANCE) && (upper(int) isa Infinity)
 
         r = Ray([0.25, 0.0, 1.5], [0.0, 0.0, -1.0])
         int = OpticSim.evalcsg(difference_obj, r)
-        @test (lower(int[1]) isa RayOrigin) && isapprox(point(upper(int[1])), [0.25, 0.0, 1.0660254037844386], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(lower(int[2])), [0.25, 0.0, -0.6660254037844386], rtol = RTOLERANCE, atol = ATOLERANCE) && (upper(int[2]) isa Infinity)
+        @test (lower(int[1]) isa RayOrigin) && isapprox(point(upper(int[1])), [0.25, 0.0, 1.0660254037844386], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(lower(int[2])), [0.25, 0.0, -0.6660254037844386], rtol=RTOLERANCE, atol=ATOLERANCE) && (upper(int[2]) isa Infinity)
 
         r = Ray([0.25, 0.0, 1.5], [1.0, 0.0, 0.0])
         int = OpticSim.evalcsg(difference_obj, r)
-        @test (lower(int) isa RayOrigin) && isapprox(point(upper(int)), [0.5, 0.0, 1.5], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test (lower(int) isa RayOrigin) && isapprox(point(upper(int)), [0.5, 0.0, 1.5], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         r = Ray([0.25, 0.0, 1.5], [0.0, 0.0, 1.0])
         int = OpticSim.evalcsg(difference_obj, r)
@@ -1063,17 +1063,17 @@
         # five hits starting outside
         r = Ray([0.9, 0.0, -0.3], [0.0, 1.0, 0.7])
         res = surfaceintersection(accelsurf, r)
-        a = isapprox(point(lower(res[1])), [0.9, 0.03172286522032046, -0.2777939943457758], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(upper(res[1])), [0.9, 0.1733979947040411, -0.17862140370717122], rtol = RTOLERANCE, atol = ATOLERANCE)
-        b = isapprox(point(lower(res[2])), [0.9, 0.5335760974594397, 0.07350326822160776], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(upper(res[2])), [0.9, 0.7767707607392784, 0.24373953251749486], rtol = RTOLERANCE, atol = ATOLERANCE)
-        c = isapprox(point(lower(res[3])), [0.9, 0.9830891958374246, 0.3881624370861975], rtol = RTOLERANCE, atol = ATOLERANCE) && (upper(res[3]) isa Infinity)
+        a = isapprox(point(lower(res[1])), [0.9, 0.03172286522032046, -0.2777939943457758], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(upper(res[1])), [0.9, 0.1733979947040411, -0.17862140370717122], rtol=RTOLERANCE, atol=ATOLERANCE)
+        b = isapprox(point(lower(res[2])), [0.9, 0.5335760974594397, 0.07350326822160776], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(upper(res[2])), [0.9, 0.7767707607392784, 0.24373953251749486], rtol=RTOLERANCE, atol=ATOLERANCE)
+        c = isapprox(point(lower(res[3])), [0.9, 0.9830891958374246, 0.3881624370861975], rtol=RTOLERANCE, atol=ATOLERANCE) && (upper(res[3]) isa Infinity)
         @test isa(res, DisjointUnion) && length(res) == 3 && a && b && c
 
         # five hits starting inside
         r = Ray([0.9, 1.0, 0.4], [0.0, -1.0, -0.7])
         res = surfaceintersection(accelsurf, r)
-        a = (lower(res[1]) isa RayOrigin) && isapprox(point(upper(res[1])), [0.9, 0.9830891958374246, 0.3881624370861975], rtol = RTOLERANCE, atol = ATOLERANCE)
-        b = isapprox(point(lower(res[2])), [0.9, 0.7767707607392784, 0.24373953251749486], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(upper(res[2])), [0.9, 0.5335760974594397, 0.07350326822160776], rtol = RTOLERANCE, atol = ATOLERANCE)
-        c = isapprox(point(lower(res[3])), [0.9, 0.17339799470404108, -0.1786214037071712], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(upper(res[3])), [0.9, 0.03172286522032046, -0.27779399434577573], rtol = RTOLERANCE, atol = ATOLERANCE)
+        a = (lower(res[1]) isa RayOrigin) && isapprox(point(upper(res[1])), [0.9, 0.9830891958374246, 0.3881624370861975], rtol=RTOLERANCE, atol=ATOLERANCE)
+        b = isapprox(point(lower(res[2])), [0.9, 0.7767707607392784, 0.24373953251749486], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(upper(res[2])), [0.9, 0.5335760974594397, 0.07350326822160776], rtol=RTOLERANCE, atol=ATOLERANCE)
+        c = isapprox(point(lower(res[3])), [0.9, 0.17339799470404108, -0.1786214037071712], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(upper(res[3])), [0.9, 0.03172286522032046, -0.27779399434577573], rtol=RTOLERANCE, atol=ATOLERANCE)
         @test isa(res, DisjointUnion) && length(res) == 3 && a && b && c
     end # testset CSG
 
@@ -1088,7 +1088,7 @@
                     ray = OpticalRay(SVector(0.0, 0.0, 2.0), SVector(0.0, sind(θi), -cosd(θi)), 1.0, λ)
                     raydir, _, _ = OpticSim.processintersection(int, SVector(0.0, 0.0, 0.0), SVector(0.0, 0.0, 1.0), ray, 20.0, 1.0, true, true)
                     # order is random so just check that it is correct for one of them
-                    @test any([isapprox(x, angle_from_ray(raydir), rtol = RTOLERANCE, atol = ATOLERANCE) for x in [true_diff(m, λ, period, θi) for m in -2:2]])
+                    @test any([isapprox(x, angle_from_ray(raydir), rtol=RTOLERANCE, atol=ATOLERANCE) for x in [true_diff(m, λ, period, θi) for m in -2:2]])
                 end
             end
         end
@@ -1129,7 +1129,7 @@
                         missedintersections += 1
                     else
                         # closest point should be on the surface, furthest should be on bounding prism
-                        @test isapprox(point(lower(intsct)), pt, rtol = RTOLERANCE, atol = ATOLERANCE)
+                        @test isapprox(point(lower(intsct)), pt, rtol=RTOLERANCE, atol=ATOLERANCE)
                         @test isa(upper(intsct), Intersection{Float64,3}) || (OpticSim.direction(r)[3] == -1 && isa(upper(intsct), Infinity{Float64}))
                     end
                 end
@@ -1146,12 +1146,12 @@
         # hit from inside
         r = Ray([0.0, 0.0, -0.5], [0.1, 0.2, 0.5])
         intvl = surfaceintersection(az1, r)
-        @test (lower(intvl) isa RayOrigin) && isapprox(point(upper(intvl)), [0.07870079995991423, 0.15740159991982847, -0.10649600020042879], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test (lower(intvl) isa RayOrigin) && isapprox(point(upper(intvl)), [0.07870079995991423, 0.15740159991982847, -0.10649600020042879], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # hit from outside
         r = Ray([0.0, 0.0, 0.5], [0.1, 0.2, -0.5])
         intvl = surfaceintersection(az1, r)
-        @test isapprox(point(lower(intvl)), [0.13584702907541094, 0.2716940581508219, -0.1792351453770547], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(upper(intvl)), [1.0, 2.0, -4.5], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test isapprox(point(lower(intvl)), [0.13584702907541094, 0.2716940581508219, -0.1792351453770547], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(upper(intvl)), [1.0, 2.0, -4.5], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # miss from inside
         r = Ray([0.2, 0.2, -0.5], [0.0, 0.0, -1.0])
@@ -1171,23 +1171,23 @@
         # two hits from outside
         r = Ray([0.0, -1.5, 0.25], [-1.0, 0.0, 0.0])
         intvl = surfaceintersection(az1, r)
-        @test isapprox(point(lower(intvl)), [-1.030882920068228, -1.5, 0.25], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(upper(intvl)), [-1.786071230727613, -1.5, 0.25], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test isapprox(point(lower(intvl)), [-1.030882920068228, -1.5, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(upper(intvl)), [-1.786071230727613, -1.5, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         r = Ray([1.5, -0.8, 0.25], [-1.0, 0.0, 0.0])
         hit = surfaceintersection(az1, r)
-        a = isapprox(point(lower(hit[1])), [0.21526832427065165, -0.8, 0.25], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(upper(hit[1])), [-0.25523748548950076, -0.8, 0.25], rtol = RTOLERANCE, atol = ATOLERANCE)
-        b = isapprox(point(lower(hit[2])), [-1.9273057166986296, -0.8, 0.25], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(upper(hit[2])), [-2.0, -0.8, 0.25], rtol = RTOLERANCE, atol = ATOLERANCE)
+        a = isapprox(point(lower(hit[1])), [0.21526832427065165, -0.8, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(upper(hit[1])), [-0.25523748548950076, -0.8, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE)
+        b = isapprox(point(lower(hit[2])), [-1.9273057166986296, -0.8, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(upper(hit[2])), [-2.0, -0.8, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE)
         @test isa(hit, DisjointUnion) && length(hit) == 2 && a && b
 
         # hit cyl from outside
         r = Ray([0.0, 3.0, -0.5], [0.0, -1.0, 0.0])
         intvl = surfaceintersection(az1, r)
-        @test isapprox(point(lower(intvl)), [0.0, 2.0, -0.5], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(upper(intvl)), [0.0, -2.0, -0.5], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test isapprox(point(lower(intvl)), [0.0, 2.0, -0.5], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(upper(intvl)), [0.0, -2.0, -0.5], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # hit cyl from inside
         r = Ray([0.0, 0.0, -0.5], [0.0, -1.0, 0.0])
         intvl = surfaceintersection(az1, r)
-        @test (lower(intvl) isa RayOrigin) && isapprox(point(upper(intvl)), [0.0, -2.0, -0.5], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test (lower(intvl) isa RayOrigin) && isapprox(point(upper(intvl)), [0.0, -2.0, -0.5], rtol=RTOLERANCE, atol=ATOLERANCE)
 
     end # testset Chebyshev
 
@@ -1222,7 +1222,7 @@
                         missedintersections += 1
                     else
                         # closest point should be on the surface, furthest should be on bounding prism
-                        @test isapprox(point(lower(intsct)), pt, rtol = RTOLERANCE, atol = ATOLERANCE)
+                        @test isapprox(point(lower(intsct)), pt, rtol=RTOLERANCE, atol=ATOLERANCE)
                         @test isa(upper(intsct), Intersection{Float64,3}) || (OpticSim.direction(r)[3] == -1 && isa(upper(intsct), Infinity{Float64}))
                     end
                 end
@@ -1252,7 +1252,7 @@
                         missedintersections += 1
                     else
                         # closest point should be on the surface, furthest should be on bounding prism
-                        @test isapprox(point(lower(intsct)), pt, rtol = RTOLERANCE, atol = ATOLERANCE)
+                        @test isapprox(point(lower(intsct)), pt, rtol=RTOLERANCE, atol=ATOLERANCE)
                         @test isa(upper(intsct), Intersection{Float64,3}) || (OpticSim.direction(r)[3] == -1 && isa(upper(intsct), Infinity{Float64}))
                     end
                 end
@@ -1266,12 +1266,12 @@
         # hit from inside
         r = Ray([0.0, 0.0, -0.5], [0.1, 0.2, 0.5])
         intvl = surfaceintersection(az1, r)
-        @test (lower(intvl) isa RayOrigin) && isapprox(point(upper(intvl)), [0.13038780645120746, 0.26077561290241486, 0.15193903225603717], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test (lower(intvl) isa RayOrigin) && isapprox(point(upper(intvl)), [0.13038780645120746, 0.26077561290241486, 0.15193903225603717], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # hit from outside
         r = Ray([0.0, 0.0, 0.5], [0.1, 0.2, -0.5])
         intvl = surfaceintersection(az1, r)
-        @test isapprox(point(lower(intvl)), [0.046677740288643785, 0.0933554805772876, 0.26661129855678095], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(upper(intvl)), [0.6708203932499369, 1.3416407864998738, -2.8541019662496843], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test isapprox(point(lower(intvl)), [0.046677740288643785, 0.0933554805772876, 0.26661129855678095], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(upper(intvl)), [0.6708203932499369, 1.3416407864998738, -2.8541019662496843], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # miss from inside
         r = Ray([0.2, 0.2, -0.5], [0.0, 0.0, -1.0])
@@ -1291,18 +1291,18 @@
         # two hits from outside
         r = Ray([2.0, 0.0, 0.25], [-1.0, 0.0, 0.0])
         hit = surfaceintersection(az1, r)
-        a = isapprox(point(lower(hit[1])), [1.5, 0.0, 0.25], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(upper(hit[1])), [1.394132887629247, 0.0, 0.25], rtol = RTOLERANCE, atol = ATOLERANCE)
-        b = isapprox(point(lower(hit[2])), [0.30184444700168467, 0.0, 0.25], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(upper(hit[2])), [-0.6437764440680096, 0.0, 0.25], rtol = RTOLERANCE, atol = ATOLERANCE)
+        a = isapprox(point(lower(hit[1])), [1.5, 0.0, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(upper(hit[1])), [1.394132887629247, 0.0, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE)
+        b = isapprox(point(lower(hit[2])), [0.30184444700168467, 0.0, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(upper(hit[2])), [-0.6437764440680096, 0.0, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE)
         @test isa(hit, DisjointUnion) && length(hit) == 2 && a && b
 
         # hit cyl from outside
         r = Ray([0.0, 2.0, -0.5], [0.0, -1.0, 0.0])
         intvl = surfaceintersection(az1, r)
-        @test isapprox(point(lower(intvl)), [0.0, 1.5, -0.5], rtol = RTOLERANCE, atol = ATOLERANCE) && isapprox(point(upper(intvl)), [0.0, -1.5, -0.5], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test isapprox(point(lower(intvl)), [0.0, 1.5, -0.5], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(upper(intvl)), [0.0, -1.5, -0.5], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # hit cyl from inside
         r = Ray([0.0, 0.0, -0.5], [0.0, -1.0, 0.0])
         intvl = surfaceintersection(az1, r)
-        @test (lower(intvl) isa RayOrigin) && isapprox(point(upper(intvl)), [0.0, -1.5, -0.5], rtol = RTOLERANCE, atol = ATOLERANCE)
+        @test (lower(intvl) isa RayOrigin) && isapprox(point(upper(intvl)), [0.0, -1.5, -0.5], rtol=RTOLERANCE, atol=ATOLERANCE)
     end # testset GridSag
 end # testset intersection
