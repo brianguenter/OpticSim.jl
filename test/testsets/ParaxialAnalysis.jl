@@ -21,20 +21,25 @@ using Unitful.DefaultSymbols
     end
 
     @testset "Projection" begin
+        using StaticArrays
+
+        using Unitful, Unitful.DefaultSymbols
         focallength = 10.0
         lens = ParaxialLensRect(focallength, 100.0, 100.0, [0.0, 0.0, 1.0], [0.0, 0.0, 0.0])
-        display = OpticSim.Repeat.Display(1000, 1000, 1.0μm, 1.0μm, translation(0.0, 0.0, -focallength))
-        lenslet = OpticSim.Repeat.LensletAssembly(lens, identitytransform(), display)
+        display = OpticSim.Repeat.Display(1000, 1000, 1.0μm, 1.0μm, Geometry.translation(0.0, 0.0, -focallength))
+        lenslet = OpticSim.Repeat.LensletAssembly(lens, Geometry.identitytransform(), display)
         displaypoint = SVector(0.0, 0.0, -8.0)
         pupilpoints = SMatrix{3,2}(10.0, 10.0, 10.0, -10.0, -10.0, 20.0)
         Repeat.project(lenslet, displaypoint, pupilpoints)
     end
 
     @testset "BeamEnergy" begin
+        using StaticArrays
+
         focallength = 10.0
         lens = ParaxialLensRect(focallength, 1.0, 1.0, [0.0, 0.0, 1.0], [0.0, 0.0, 0.0])
-        display = OpticSim.Repeat.Display(1000, 1000, 1.0μm, 1.0μm, translation(0.0, 0.0, -focallength))
-        lenslet = OpticSim.Repeat.LensletAssembly(lens, identitytransform(), display)
+        display = OpticSim.Repeat.Display(1000, 1000, 1.0μm, 1.0μm, Geometry.translation(0.0, 0.0, -focallength))
+        lenslet = OpticSim.Repeat.LensletAssembly(lens, Geometry.identitytransform(), display)
         displaypoint = SVector(0.0, 0.0, -8.0)
         #pupil is placed so that only 1/4 of it (approximately) is illuminated by lens beam
         pupil = Rectangle(1.0, 1.0, SVector(0.0, 0.0, -1.0), SVector(2.0, 2.0, 40.0))
@@ -44,6 +49,8 @@ using Unitful.DefaultSymbols
     end
 
     @testset "SphericalPolygon" begin
+        using StaticArrays
+
         """creates a circular polygon that subtends a half angle of θ"""
         function sphericalcircle(θ, nsides=10)
             temp = MMatrix{3,nsides,Float64}(undef)
@@ -94,12 +101,12 @@ using Unitful.DefaultSymbols
             1.0)
 
         #test that spherical triangle and spherical polygon area algorithms return the same values for the same spherical areas
-        @test isapprox(area(oneeigthsphere()), area(threesidedpoly()))
-        @test isapprox(area(onesixteenthphere()), area(onesixteenthspherepoly()))
+        @test isapprox(OpticSim.area(oneeigthsphere()), OpticSim.area(threesidedpoly()))
+        @test isapprox(OpticSim.area(onesixteenthphere()), OpticSim.area(onesixteenthspherepoly()))
 
         #halve the spherical area and make sure area function computes 1/2 the area
-        @test isapprox(area(onesixteenthphere()), area(oneeigthsphere()) / 2.0)
-        @test isapprox(area(sphericalcircle(π / 8.0, 1000)) / 4.0, area(sphericalcircle(π / 16.0, 1000)), atol=1e-2)
+        @test isapprox(OpticSim.area(onesixteenthphere()), OpticSim.area(oneeigthsphere()) / 2.0)
+        @test isapprox(OpticSim.area(sphericalcircle(π / 8.0, 1000)) / 4.0, OpticSim.area(sphericalcircle(π / 16.0, 1000)), atol=1e-2)
     end
 end
 

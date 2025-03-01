@@ -4,36 +4,41 @@
 
 using Test
 using TestItems
-using FiniteDifferences
-using StaticArrays
-using LinearAlgebra
-using Suppressor
-using Random
-using Unitful
-using Plots
-using DataFrames
+using TestItemRunner
 
-using OpticSim
-# Geometry Module
-using OpticSim.Geometry
-# curve/surface imports
-using OpticSim: findspan, makemesh, knotstoinsert, coefficients, inside, quadraticroots, tobeziersegments, evalcsg, makiemesh
-# interval imports
-using OpticSim: α, halfspaceintersection, positivehalfspace, lower, upper, EmptyInterval, rayorigininterval, intervalcomplement, intervalintersection, intervalunion, RayOrigin, Infinity, Intersection
-include("TestData/TestData.jl")
-# bounding box imports
-using OpticSim: doesintersect
-# RBT imports
-using OpticSim: rotmat, rotmatd
-# lens imports
-using OpticSim: reflectedray, snell, refractedray, trace, intersection, pathlength, power
-#Bounding volume hierarchy imports
-# 
 @testsnippet TestConstants begin
     const COMP_TOLERANCE = 25 * eps(Float64)
     const RTOLERANCE = 1e-10
     const ATOLERANCE = 10 * eps(Float64)
     const SEED = 12312487
+end
+
+@testsnippet Dependencies begin
+    using Random
+    using OpticSim.Emitters
+    using OpticSim.Geometry
+    using StaticArrays
+    import StableRNGs
+    using AGFFileReader
+    using BenchmarkTools
+    using DataFrames
+    using FiniteDifferences
+    using GeometryBasics
+    using Images
+    using LazySets
+    using MeshIO
+    using Plots
+    using SpecialFunctions
+    using Statistics
+    using Suppressor
+    using Unitful
+    using InteractiveUtils
+    using LinearAlgebra
+    using Random
+end
+
+@testsnippet TEST_DATA begin
+    include("TestData/TestData.jl")
 end
 
 """Evaluate all functions not requiring arguments in a given module and test they don't throw anything"""
@@ -62,25 +67,4 @@ end
 
 include("Benchmarks/Benchmarks.jl")
 
-alltestsets = [
-    "Repeat",
-    "Emitters",
-    "Lenses",
-    "Comparison",
-    "Paraxial",
-    "ParaxialAnalysis",
-    "Transform",
-    # "JuliaLang",
-    # "BVH",
-    # "Examples", # slow
-    "General",
-    "SurfaceDefs",
-    "Intersection",
-    "OpticalSystem",
-    "Allocations"
-    # "Visualization"
-]
-
-# runtestsets = ALL_TESTS ? alltestsets : intersect(alltestsets, ARGS)
-include("testsets/Repeat.jl")
-# include.([joinpath("testsets", "$(testset).jl") for testset in alltestsets])
+@run_package_tests

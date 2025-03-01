@@ -67,7 +67,7 @@ Interface describing an idealized planar lens, i.e. one that is thin and with no
 ParaxialInterface(focallength::T, centroid::SVector{3,T}, outsidematerial::Y)
 ```
 """
-struct ParaxialInterface{T,S} <: OpticalInterface{T}
+struct ParaxialInterface{T,S<:AGFFileReader.AbstractGlass} <: OpticalInterface{T}
     focallength::T
     outsidematerial::S
     centroid::SVector{3,T}
@@ -115,8 +115,8 @@ struct FresnelInterface{T,Y<:AGFFileReader.AbstractGlass,Z<:AGFFileReader.Abstra
     transmission::T
     interfacemode::InterfaceMode
 
-    function FresnelInterface{T}(insidematerial::Z, outsidematerial::Y; reflectance::T=zero(T), transmission::T=one(T), interfacemode=ReflectOrTransmit) where {Z<:AGFFileReader.AbstractGlass,Y<:AGFFileReader.AbstractGlass,T<:Real}
-        return new{T,Z,Y}(insidematerial, outsidematerial, reflectance, transmission, interfacemode)
+    function FresnelInterface{T}(insidematerial::Y, outsidematerial::Z; reflectance::T=zero(T), transmission::T=one(T), interfacemode=ReflectOrTransmit) where {Z<:AGFFileReader.AbstractGlass,Y<:AGFFileReader.AbstractGlass,T<:Real}
+        return new{T,Y,Z}(insidematerial, outsidematerial, reflectance, transmission, interfacemode)
     end
 
 end
@@ -150,9 +150,9 @@ If `nothing` then `reflectance` is assumed to be **0** and `transmission` is ass
 ThinGratingInterface(vector, period, insidematerial, outsidematerial; maxorder = 1, minorder = -1, reflectance = nothing, transmission = nothing)
 ```
 """
-struct ThinGratingInterface{T} <: OpticalInterface{T}
-    insidematerial::Glass
-    outsidematerial::Glass
+struct ThinGratingInterface{T,Y<:AGFFileReader.AbstractGlass,Z<:AGFFileReader.AbstractGlass} <: OpticalInterface{T}
+    insidematerial::Y
+    outsidematerial::Z
     vector::SVector{3,T}
     period::T
     maxorder::Int
@@ -160,7 +160,7 @@ struct ThinGratingInterface{T} <: OpticalInterface{T}
     transmission::SVector{GRATING_MAX_ORDERS,T}
     reflectance::SVector{GRATING_MAX_ORDERS,T}
 
-    function ThinGratingInterface(vector::SVector{3,T}, period::T, insidematerial::Z, outsidematerial::Y; maxorder::Int=1, minorder::Int=-1, reflectance::Union{Nothing,AbstractVector{T}}=nothing, transmission::Union{Nothing,AbstractVector{T}}=nothing) where {T<:Real,Z<:AGFFileReader.AbstractGlass,Y<:AGFFileReader.AbstractGlass}
+    function ThinGratingInterface(vector::SVector{3,T}, period::T, insidematerial::Y, outsidematerial::Z; maxorder::Int=1, minorder::Int=-1, reflectance::Union{Nothing,AbstractVector{T}}=nothing, transmission::Union{Nothing,AbstractVector{T}}=nothing) where {T<:Real,Z<:AGFFileReader.AbstractGlass,Y<:AGFFileReader.AbstractGlass}
         @assert maxorder >= minorder
         norders = maxorder - minorder + 1
         @assert norders <= GRATING_MAX_ORDERS "Thin grating is limited to $GRATING_MAX_ORDERS orders"
@@ -178,7 +178,7 @@ struct ThinGratingInterface{T} <: OpticalInterface{T}
         @assert zero(T) <= sum(reflectance) <= one(T)
         @assert zero(T) <= sum(transmission) <= one(T)
         @assert zero(T) <= sum(reflectance) + sum(transmission) <= one(T)
-        new{T}(glassid(insidematerial), glassid(outsidematerial), normalize(vector), period, maxorder, minorder, sreflectance, stransmission)
+        new{T,Y,Z}(insidematerial, outsidematerial, normalize(vector), period, maxorder, minorder, sreflectance, stransmission)
     end
 end
 export ThinGratingInterface
@@ -218,10 +218,10 @@ For reference, see:
 HologramInterface(signalpointordir::SVector{3,T}, signalbeamstate::BeamState, referencepointordir::SVector{3,T}, referencebeamstate::BeamState, recordingλ::T, thickness::T, beforematerial, substratematerial, aftermaterial, signalrecordingmaterial, referencerecordingmaterial, RImodulation::T, include0order  = false)
 ```
 """
-struct HologramInterface{T} <: OpticalInterface{T}
-    beforematerial::Glass
-    substratematerial::Glass
-    aftermaterial::Glass
+struct HologramInterface{T,X<:AGFFileReader.AbstractGlass,Y<:AGFFileReader.AbstractGlass,Z<:AGFFileReader.AbstractGlass} <: OpticalInterface{T}
+    beforematerial::X
+    substratematerial::Y
+    aftermaterial::Z
     signalpointordir::SVector{3,T}
     signalbeamstate::BeamState
     referencepointordir::SVector{3,T}
@@ -233,7 +233,7 @@ struct HologramInterface{T} <: OpticalInterface{T}
     RImodulation::T
     include0order::Bool
 
-    function HologramInterface(signalpointordir::SVector{3,T}, signalbeamstate::BeamState, referencepointordir::SVector{3,T}, referencebeamstate::BeamState, recordingλ::T, thickness::T, beforematerial::Z, substratematerial::X, aftermaterial::Y, signalrecordingmaterial::P, referencerecordingmaterial::Q, RImodulation::T, include0order::Bool=false) where {T<:Real,X<:AGFFileReader.AbstractGlass,Z<:AGFFileReader.AbstractGlass,Y<:AGFFileReader.AbstractGlass,P<:AGFFileReader.AbstractGlass,Q<:AGFFileReader.AbstractGlass}
+    function HologramInterface(signalpointordir::SVector{3,T}, signalbeamstate::BeamState, referencepointordir::SVector{3,T}, referencebeamstate::BeamState, recordingλ::T, thickness::T, beforematerial::X, substratematerial::Y, aftermaterial::Z, signalrecordingmaterial::P, referencerecordingmaterial::Q, RImodulation::T, include0order::Bool=false) where {T<:Real,X<:AGFFileReader.AbstractGlass,Z<:AGFFileReader.AbstractGlass,Y<:AGFFileReader.AbstractGlass,P<:AGFFileReader.AbstractGlass,Q<:AGFFileReader.AbstractGlass}
         @assert substratematerial !== AGFFileReader.Air "Substrate can't be air"
         if signalbeamstate === CollimatedBeam
             signalpointordir = normalize(signalpointordir)
@@ -241,11 +241,8 @@ struct HologramInterface{T} <: OpticalInterface{T}
         if referencebeamstate === CollimatedBeam
             referencepointordir = normalize(referencepointordir)
         end
-        new{T}(glassid(beforematerial), glassid(substratematerial), glassid(aftermaterial), signalpointordir, signalbeamstate, referencepointordir, referencebeamstate, recordingλ, glassid(signalrecordingmaterial), glassid(referencerecordingmaterial), thickness, RImodulation, include0order)
+        new{T,X,Y,Z}(beforematerial, substratematerial, aftermaterial, signalpointordir, signalbeamstate, referencepointordir, referencebeamstate, recordingλ, signalrecordingmaterial, referencerecordingmaterial, thickness, RImodulation, include0order)
     end
-
-    # 'zero' constructor to use for blank elements in SVector - not ideal...
-    HologramInterface{T}() where {T<:Real} = new{T}(NullInterface(T), 0, NullInterface(T), zeros(SVector{3,T}), CollimatedBeam, zeros(SVector{3,T}), CollimatedBeam, zero(T), 0, 0, zero(T), zero(T), false)
 end
 export HologramInterface
 

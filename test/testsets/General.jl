@@ -1,26 +1,28 @@
 # MIT license
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # See LICENSE in the project root for full license information.
-@testitem "General" begin
-    @testset "QuadraticRoots" begin
+@testitem "General" setup = [TestConstants] begin
+    @testset "OpticSim.quadraticroots" begin
+        using Random
+
         Random.seed!(SEED)
         similarroots(r1, r2, x1, x2) = isapprox([r1, r2], [x1, x2], rtol=1e-9) || isapprox([r2, r1], [x1, x2], rtol=1e-9)
 
         for i in 1:10000
             r1, r2, scale = rand(3) .- 0.5
             a, b, c = scale .* (1, r1 + r2, r1 * r2)
-            x1, x2 = quadraticroots(a, b, c)
+            x1, x2 = OpticSim.quadraticroots(a, b, c)
             @test similarroots(-r1, -r2, x1, x2)
         end
 
         a, b, c = 1, 0, -1
-        x1, x2 = quadraticroots(a, b, c)
+        x1, x2 = OpticSim.quadraticroots(a, b, c)
         @test similarroots(1, -1, x1, x2)
 
         a, b, c = 1, 2, 1 # (x+1)(x+1)= x^2 + 2x + 1, double root at one
-        x1, x2 = quadraticroots(a, b, c)
+        x1, x2 = OpticSim.quadraticroots(a, b, c)
         @test similarroots(-1, -1, x1, x2)
-    end # testset QuadraticRoots
+    end # testset OpticSim.quadraticroots
 
     # @testset "Transform" begin
     #     Random.seed!(SEED)

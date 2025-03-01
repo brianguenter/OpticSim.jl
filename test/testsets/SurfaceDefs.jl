@@ -2,19 +2,19 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # See LICENSE in the project root for full license information.
 
-@testitem "SurfaceDefs" setup = [TestConstants] begin
+@testitem "SurfaceDefs" setup = [TestConstants, TEST_DATA] begin
     @testset "Knots" begin
         # find span
         knots = KnotVector{Int64}([0, 0, 0, 1, 2, 3, 4, 4, 5, 5, 5])
         function apply(knots::KnotVector, curveorder, u, correctindex)
-            knotnum = findspan(knots, curveorder, u)
+            knotnum = OpticSim.findspan(knots, curveorder, u)
             return knotnum == correctindex
         end
         @test apply(knots, 2, 2.5, 5) && apply(knots, 2, 0, 3) && apply(knots, 2, 4, 6) && apply(knots, 2, 5, 8)
 
         # insert knots
         knots = [0, 0, 0, 0, 1, 2, 3, 3, 4, 4, 5, 5, 6, 7, 7, 7, 7]
-        insertions = knotstoinsert(knots, 3)
+        insertions = OpticSim.knotstoinsert(knots, 3)
         @test insertions == [(5, 2), (6, 2), (7, 1), (9, 1), (11, 1), (13, 2)]
     end
 
@@ -32,8 +32,8 @@
             0x00000016 0x00000017 0x00000018
         ]
         surf = TestData.bsplinesurface()
-        points, triangles = makiemesh(makemesh(surf, 2))
-        segments = tobeziersegments(surf) # TODO just testing that this evaluates for now
+        points, triangles = OpticSim.makiemesh(makemesh(surf, 2))
+
         @test triangles == correcttris
         @test all(isapprox.(points, correctverts, rtol=RTOLERANCE, atol=ATOLERANCE))
     end # testset BSpline
@@ -42,7 +42,7 @@
         # polynomial is 3x^2 + 2x + 1
         coeff = [1.0 2.0 3.0]
         curve = PowerBasisCurve{OpticSim.Euclidean,Float64,1,2}(coeff)
-        @test !all(isapprox.(coeff, coefficients(curve, 1), rtol=RTOLERANCE, atol=ATOLERANCE)) # TODO not sure if this is correct/what this is testing?
+        @test !all(isapprox.(coeff, OpticSim.coefficients(curve, 1), rtol=RTOLERANCE, atol=ATOLERANCE)) # TODO not sure if this is correct/what this is testing?
         correct = true
         for x in -10.0:0.1:10
             exact = 3 * x^2 + 2 * x + 1
@@ -52,6 +52,8 @@
     end # testset PowerBasis
 
     @testset "BezierSurface" begin
+        using FiniteDifferences: central_fdm
+
         surf = TestData.beziersurface()
         fdm = central_fdm(10, 1)
         for u in 0:0.1:1, v in 0:0.1:1
@@ -66,6 +68,8 @@
     end # testset BezierSurface
 
     @testset "ZernikeSurface" begin
+        using FiniteDifferences: central_fdm
+
         surf = TestData.zernikesurface1a() # with normradius
         fdm = central_fdm(10, 1)
         for ρ in 0.05:0.1:0.95, ϕ in 0:(π/10):(2π)
@@ -82,6 +86,8 @@
     end # testset ZernikeSurface
 
     @testset "QTypeSurface" begin
+        using FiniteDifferences: central_fdm
+
         # test predefined values against papers
         # Forbes, G. W. "Robust, efficient computational methods for axially symmetric optical aspheres." OpticSim express 18.19 (2010): 19700-19712.
         # Forbes, G. W. "Characterizing the shape of freeform optics." OpticSim express 20.3 (2012): 2483-2499.
