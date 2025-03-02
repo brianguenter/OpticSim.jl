@@ -19,22 +19,8 @@ end
     using OpticSim.Geometry
     using StaticArrays
     import StableRNGs
-    using AGFFileReader
-    using BenchmarkTools
+    using Colors
     using DataFrames
-    using FiniteDifferences
-    using GeometryBasics
-    using Images
-    using LazySets
-    using MeshIO
-    using Plots
-    using SpecialFunctions
-    using Statistics
-    using Suppressor
-    using Unitful
-    using InteractiveUtils
-    using LinearAlgebra
-    using Random
 end
 
 @testsnippet TEST_DATA begin
