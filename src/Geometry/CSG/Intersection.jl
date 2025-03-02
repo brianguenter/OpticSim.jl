@@ -38,11 +38,11 @@ struct Intersection{T,N} <: FinitePoint{T}
     interface::AllOpticalInterfaces{T} # returns a union of all OpticalInterface subtypes - can't have an abstract type here as it results in allocations
     flippednormal::Bool
 
-    function Intersection(α::T, point::SVector{N,T}, normal::SVector{N,T}, u::T, v::T, interface::AllOpticalInterfaces{T}; flippednormal = false) where {T<:Real,N}
+    function Intersection(α::T, point::SVector{N,T}, normal::SVector{N,T}, u::T, v::T, interface::AllOpticalInterfaces{T}; flippednormal=false) where {T<:Real,N}
         new{T,N}(α, point, normalize(normal), u, v, interface, flippednormal)
     end
 
-    function Intersection(α::T, point::AbstractVector{T}, normal::AbstractVector{T}, u::T, v::T, interface::AllOpticalInterfaces{T}; flippednormal = false) where {T<:Real}
+    function Intersection(α::T, point::AbstractVector{T}, normal::AbstractVector{T}, u::T, v::T, interface::AllOpticalInterfaces{T}; flippednormal=false) where {T<:Real}
         @assert length(point) == length(normal)
         N = length(point)
         new{T,N}(α, SVector{N,T}(point), SVector{N,T}(normal), u, v, interface, flippednormal)
@@ -76,7 +76,7 @@ end
 Used by the CSG complement operator (i.e. [`-`](@ref)) to reverse the inside outside sense of the object.
 """
 function reversenormal(a::Intersection{T,N}) where {T<:Real,N}
-    return Intersection(α(a), point(a), -normal(a), u(a), v(a), interface(a), flippednormal = !flippednormal(a))
+    return Intersection(α(a), point(a), -normal(a), u(a), v(a), interface(a), flippednormal=!flippednormal(a))
 end
 
 """
@@ -90,7 +90,7 @@ Infinity{T}()
 ```
 """
 struct Infinity{T} <: IntervalPoint{T}
-    Infinity(::Type{T} = Float64) where {T<:Real} = new{T}()
+    Infinity(::Type{T}=Float64) where {T<:Real} = new{T}()
     Infinity{T}() where {T<:Real} = new{T}()
 end
 """
@@ -104,7 +104,7 @@ RayOrigin{T}()
 ```
 """
 struct RayOrigin{T} <: FinitePoint{T}
-    RayOrigin(::Type{T} = Float64) where {T<:Real} = new{T}()
+    RayOrigin(::Type{T}=Float64) where {T<:Real} = new{T}()
     RayOrigin{T}() where {T<:Real} = new{T}()
 end
 export Infinity, RayOrigin
@@ -173,10 +173,6 @@ Apply a Transform to an Intersection object
 function Base.:*(a::Transform{T}, intsct::Intersection{T,3})::Intersection{T,3} where {T<:Real}
     u, v = uv(intsct)
     i = interface(intsct)
-    if VERSION < v"1.6.0-DEV"
-        # TODO REMOVE
-        return @unionsplit OpticalInterface T i Intersection(α(intsct), a * point(intsct), Geometry.rotate(a, normal(intsct)), u, v, i, flippednormal = flippednormal(intsct))
-    else
-        return Intersection(α(intsct), a * point(intsct), Geometry.rotate(a, normal(intsct)), u, v, interface(intsct), flippednormal = flippednormal(intsct))
-    end
+
+    return Intersection(α(intsct), a * point(intsct), Geometry.rotate(a, normal(intsct)), u, v, interface(intsct), flippednormal=flippednormal(intsct))
 end

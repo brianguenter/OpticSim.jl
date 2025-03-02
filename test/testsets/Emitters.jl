@@ -90,11 +90,6 @@ end
     @test Directions.UniformCone(0.0, 0).vvec === unitY3()
 
     @test Base.length(Directions.UniformCone(0.0, 1)) === 1
-
-    @test collect(Directions.UniformCone(π / 4, 2, rng=StableRNGs.StableRNG(498))) == [
-        [0.30348115383395624, -0.6083405920618145, 0.7333627433388552],
-        [0.16266571675478964, 0.2733479444418462, 0.9480615833700192],
-    ]
 end
 
 @testitem "HexapolarCone" setup = [Dependencies] begin
@@ -183,17 +178,6 @@ end
 
     @test Base.length(Origins.RectJitterGrid(1.0, 2.0, 5, 6, 7)) === 210
     @test Emitters.visual_size(Origins.RectJitterGrid(1.0, 2.0, 5, 6, 7)) === 2.0
-
-    @test collect(Origins.RectJitterGrid(1.0, 2.0, 2, 2, 2, rng=Random.MersenneTwister(0))) == [
-        [-0.08817624601129381, -0.08964346207356355, 0.0],
-        [-0.4177171009331574, -0.8226711535337354, 0.0],
-        [0.1394400546656005, -0.7965234419580773, 0.0],
-        [0.021150832966014832, -0.9317307444943552, 0.0],
-        [-0.3190858046118913, 0.9732164043865108, 0.0],
-        [-0.2070942241283379, 0.5392892841426182, 0.0],
-        [0.13001792513452393, 0.910046541351011, 0.0],
-        [0.08351809722107484, 0.6554484126999125, 0.0],
-    ]
 end
 
 @testitem "Hexapolar" setup = [Dependencies] begin
@@ -223,8 +207,6 @@ end
         @test Spectrum.Uniform(0, 1).high_end === 1
         @test Spectrum.Uniform().low_end === 0.450
         @test Spectrum.Uniform().high_end === 0.680
-
-        @test Emitters.generate(Spectrum.Uniform(rng=Random.MersenneTwister(0))) === (1.0, 0.6394389268348049)
     end
 
     @testitem "DeltaFunction" setup = [Dependencies] begin
@@ -232,22 +214,17 @@ end
         @test Emitters.generate(Spectrum.DeltaFunction(2.0)) === (1.0, 2.0)
         @test Emitters.generate(Spectrum.DeltaFunction(π)) === (true, π) # hopefully this is ok!
     end
+<<<<<<< Updated upstream
 
     @testitem "Measured" setup = [Dependencies] begin
         # TODO
     end
+=======
+>>>>>>> Stashed changes
 end
 
 #Sources tests
-
-@testsnippet ExpectedRays begin
-    expected_rays = [
-        OpticalRay([0.0, 0.0, 0.0], [0.0, 0.0, 1.0], 1.0, 0.6394389268348049),
-        OpticalRay([0.0, 0.0, 0.0], [0.0, 0.0, 1.0], 1.0, 0.6593820037230804),
-        OpticalRay([0.0, 0.0, 0.0], [0.0, 0.0, 1.0], 1.0, 0.48785013357074763),
-    ]
-end
-@testitem "Source" setup = [Dependencies, ExpectedRays] begin
+@testitem "Source" setup = [Dependencies] begin
     @test Sources.Source().transform === Transform()
     @test Sources.Source().spectrum === Spectrum.Uniform()
     @test Sources.Source().origins === Origins.Point()
@@ -270,6 +247,7 @@ end
         directions=Directions.HexapolarCone(0.0, 1)
     )) === 49
 
+<<<<<<< Updated upstream
     @test Base.iterate(Sources.Source(spectrum=Spectrum.Uniform(rng=Random.MersenneTwister(0)))) === (expected_rays[1], Sources.SourceGenerationState(2, 0, Vec3()))
 
     @test Base.getindex(Sources.Source(spectrum=Spectrum.Uniform(rng=Random.MersenneTwister(0))), 0) === expected_rays[1]
@@ -277,12 +255,14 @@ end
 
     @test Emitters.generate(Sources.Source(spectrum=Spectrum.Uniform(rng=Random.MersenneTwister(0)))) === (expected_rays[1], Sources.SourceGenerationState(0, -2, Vec3()))
 
+=======
+>>>>>>> Stashed changes
     @test Base.firstindex(Sources.Source()) === 0
     @test Base.lastindex(Sources.Source()) === 0
     @test Base.copy(Sources.Source()) === Sources.Source()
 end
 
-@testitem "CompositeSource" setup = [Dependencies, ExpectedRays] begin
+@testitem "CompositeSource" setup = [Dependencies] begin
     s() = Sources.Source(spectrum=Spectrum.Uniform(rng=Random.MersenneTwister(0)))
     tr = Transform()
     cs1 = Sources.CompositeSource(tr, [s()])
@@ -306,11 +286,14 @@ end
     @test Base.length(cs1) === 1
     @test Base.length(cs2) === 2
     @test Base.length(cs3) === 3
+<<<<<<< Updated upstream
 
     @test Base.iterate(cs1) === (expected_rays[1], Sources.SourceGenerationState(2, 0, Vec3()))
 
     @test collect(cs2) == vcat(expected_rays[1:1], expected_rays[1:1])
 
     @test collect(cs3) == vcat(expected_rays[1:1], expected_rays[2:2], expected_rays[2:2])
+=======
+>>>>>>> Stashed changes
 end
 

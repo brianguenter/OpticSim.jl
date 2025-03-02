@@ -95,11 +95,33 @@ cycles/rad = 1/θc = diameter/λ
 diffractionlimit(λ::Unitful.Length, diameter::Unitful.Length) = uconvert(Unitful.NoUnits, diameter / λ) / rad2deg(1)
 export diffractionlimit
 
+#simple binary subdivision root finder. Only used in one place crazy to have dependency on Roots.jl just for this. 
+function find_zero(func::Function, low::T, high::T) where {T<:Real}
+    #subdivide fixed number of times
+    ntimes = 30
+
+    let middle
+        for _ in 1:30
+            middle = 0.5 * (low + high)
+            temp = func(middle)
+
+            if temp > 0
+                low = middle
+            elseif temp < 0
+                high = middle
+            elseif temp == 0
+                return middle
+            end
+        end
+        return middle
+    end
+end
+
 """computes the diameter of a diffraction limited lens that has response mtf at frequency cyclesperdeg"""
 function diameter_for_cycles_deg(mtf, cyclesperdeg, λ::Unitful.Length)
     cyclesperrad = rad2deg(1) * cyclesperdeg
     f(x) = mtfcircular(x, 1.0) - mtf
-    normalizedfrequency = find_zero(f, (0.0, 1.0))
+    normalizedfrequency = find_zero(f, 0.0, 1.0)
     fc = cyclesperrad / normalizedfrequency
     return uconvert(mm, λ * fc)
 end

@@ -36,6 +36,23 @@ using OpticSim: reflectedray, snell, refractedray, trace, intersection, pathleng
     const SEED = 12312487
 end
 
+<<<<<<< Updated upstream
+=======
+@testsnippet Dependencies begin
+    using Random
+    using OpticSim.Emitters
+    using OpticSim.Geometry
+    using StaticArrays
+    import StableRNGs
+    using Colors
+    using DataFrames
+end
+
+@testsnippet TEST_DATA begin
+    include("TestData/TestData.jl")
+end
+
+>>>>>>> Stashed changes
 """Evaluate all functions not requiring arguments in a given module and test they don't throw anything"""
 macro test_all_no_arg_functions(m)
     quote
