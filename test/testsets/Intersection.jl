@@ -43,6 +43,9 @@
         xy = sqrt(2) / 4.0
         pt1 = [xy, xy, 0.0]
         pt2 = [-xy, -xy, 0.0]
+        cpt1 = point(OpticSim.lower(intscts))
+        cpt2 = point(OpticSim.upper(intscts))
+        @test isapprox(pt1, cpt1, rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(pt2, cpt2, rtol=RTOLERANCE, atol=ATOLERANCE)
         cpt1 = point(OpticSim.OpticSim.lower(intscts))
         cpt2 = point(OpticSim.upper(intscts))
         @test isapprox(pt1, cpt1, rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(pt2, cpt2, rtol=RTOLERANCE, atol=ATOLERANCE)
@@ -50,6 +53,7 @@
         # starting inside
         r = Ray([0.0, 0.0, 0.0], [1.0, 1.0, 0.0])
         intscts = surfaceintersection(cyl, r)
+        @test OpticSim.lower(intscts) isa RayOrigin && isapprox(pt1, point(OpticSim.upper(intscts)), rtol=RTOLERANCE, atol=ATOLERANCE)
         @test OpticSim.OpticSim.lower(intscts) isa RayOrigin && isapprox(pt1, point(OpticSim.upper(intscts)), rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # inside infinite
@@ -100,6 +104,9 @@
         xy = sqrt(2) / 4.0
         pt1 = [xy, xy, 0.0]
         pt2 = [-xy, -xy, 0.0]
+        cpt1 = point(OpticSim.lower(intscts))
+        cpt2 = point(OpticSim.upper(intscts))
+        @test isapprox(pt1, cpt1, rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(pt2, cpt2, rtol=RTOLERANCE, atol=ATOLERANCE)
         cpt1 = point(OpticSim.OpticSim.lower(intscts))
         cpt2 = point(OpticSim.upper(intscts))
         @test isapprox(pt1, cpt1, rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(pt2, cpt2, rtol=RTOLERANCE, atol=ATOLERANCE)
@@ -107,6 +114,7 @@
         # starting inside
         r = Ray([0.0, 0.0, 0.0], [1.0, 1.0, 0.0])
         intscts = surfaceintersection(sph, r)
+        @test OpticSim.lower(intscts) isa RayOrigin && isapprox(pt1, point(OpticSim.upper(intscts)), rtol=RTOLERANCE, atol=ATOLERANCE)
         @test OpticSim.OpticSim.lower(intscts) isa RayOrigin && isapprox(pt1, point(OpticSim.upper(intscts)), rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # on diagonal
@@ -140,10 +148,12 @@
 
         r = Ray([10.0, 10.0, 1.0], [-1.0, -1.0, 0.0])
         int = surfaceintersection(sph, r)
+        @test isapprox(point(OpticSim.lower(int)), [1.0, 1.0, 1.0], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(int) isa Infinity
         @test isapprox(point(OpticSim.OpticSim.lower(int)), [1.0, 1.0, 1.0], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(int) isa Infinity
 
         r = Ray([0.8, 1.4, 1.2], [1.0, -1.0, 0.0])
         int = surfaceintersection(sph, r)
+        @test isapprox(point(OpticSim.lower(int)), [0.898231126982741, 1.301768873017259, 1.2], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(int)), [1.301768873017259, 0.8982311269827411, 1.2], rtol=RTOLERANCE, atol=ATOLERANCE)
         @test isapprox(point(OpticSim.OpticSim.lower(int)), [0.898231126982741, 1.301768873017259, 1.2], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(int)), [1.301768873017259, 0.8982311269827411, 1.2], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         r = Ray([2.0, 2.0, 1.5], [-1.0, -1.0, 0.0])
@@ -163,6 +173,9 @@
             origin = SVector(3.0, 3.0, 3.0)
             r = Ray(origin, pointontri .- origin)
             halfspace = surfaceintersection(tri, r)
+            @test !(halfspace isa EmptyInterval) && OpticSim.upper(halfspace) isa Infinity
+            t = OpticSim.α(OpticSim.lower(halfspace))
+            @test isapprox(point(r, t), point(OpticSim.lower(halfspace)), rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(pointontri, point(OpticSim.lower(halfspace)), rtol=RTOLERANCE, atol=ATOLERANCE)
             @test !(halfspace isa EmptyInterval) && OpticSim.upper(halfspace) isa Infinity
             t = OpticSim.α(OpticSim.OpticSim.lower(halfspace))
             @test isapprox(point(r, t), point(OpticSim.OpticSim.lower(halfspace)), rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(pointontri, point(OpticSim.OpticSim.lower(halfspace)), rtol=RTOLERANCE, atol=ATOLERANCE)
@@ -206,10 +219,12 @@
 
         # starts outside and hits
         res = surfaceintersection(pln, routintersects)
+        @test isapprox(point(OpticSim.lower(res)), [0.0, 0.0, 1.0], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
         @test isapprox(point(OpticSim.OpticSim.lower(res)), [0.0, 0.0, 1.0], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
 
         # starts inside and hits
         res = surfaceintersection(pln, rinintersects)
+        @test OpticSim.lower(res) isa RayOrigin && isapprox(point(OpticSim.upper(res)), [0.0, 0.0, 1.0], rtol=RTOLERANCE, atol=ATOLERANCE)
         @test OpticSim.OpticSim.lower(res) isa RayOrigin && isapprox(point(OpticSim.upper(res)), [0.0, 0.0, 1.0], rtol=RTOLERANCE, atol=ATOLERANCE)
     end # testset plane
 
@@ -242,10 +257,12 @@
 
         # starts outside and hits
         res = surfaceintersection(rect, routintersects)
+        @test isapprox(point(OpticSim.lower(res)), [0.0, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
         @test isapprox(point(OpticSim.OpticSim.lower(res)), [0.0, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
 
         # starts inside and hits
         res = surfaceintersection(rect, rinintersects)
+        @test OpticSim.lower(res) isa RayOrigin && isapprox(point(OpticSim.upper(res)), [0.0, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
         @test OpticSim.lower(res) isa RayOrigin && isapprox(point(OpticSim.upper(res)), [0.0, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # starts inside and misses bounds
@@ -257,9 +274,11 @@
         # starts outside and hits bounds
         res = surfaceintersection(rect, routbounds)
         @test isapprox(point(OpticSim.lower(res)), [0.5, 0.5, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
+        @test isapprox(point(OpticSim.lower(res)), [0.5, 0.5, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
 
         # starts inside and hits bounds
         res = surfaceintersection(rect, rinbounds)
+        @test OpticSim.lower(res) isa RayOrigin && isapprox(point(OpticSim.upper(res)), [0.5, 0.5, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
         @test OpticSim.lower(res) isa RayOrigin && isapprox(point(OpticSim.upper(res)), [0.5, 0.5, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # test a rectangle with OpticSim.translation and rotation
@@ -267,6 +286,7 @@
         rayhit = Ray([0.6, 0.6, 0.6], [-0.3, -0.1, -0.3])
         raymiss = Ray([0.7, 0.4, 0.4], [-0.3, -0.1, -0.3])
         res = surfaceintersection(rect2, rayhit)
+        @test isapprox(point(OpticSim.lower(res)), [0.2863636363636363, 0.4954545454545454, 0.2863636363636363], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
         @test isapprox(point(OpticSim.lower(res)), [0.2863636363636363, 0.4954545454545454, 0.2863636363636363], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
         @test surfaceintersection(rect2, raymiss) isa EmptyInterval
     end # testset Rectangle
@@ -302,9 +322,11 @@
         # starts outside and hits
         res = surfaceintersection(ell, routintersects)
         @test isapprox(point(OpticSim.lower(res)), [0.0, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
+        @test isapprox(point(OpticSim.lower(res)), [0.0, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
 
         # starts inside and hits
         res = surfaceintersection(ell, rinintersects)
+        @test OpticSim.lower(res) isa RayOrigin && isapprox(point(OpticSim.upper(res)), [0.0, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
         @test OpticSim.lower(res) isa RayOrigin && isapprox(point(OpticSim.upper(res)), [0.0, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # starts inside and misses bounds
@@ -316,13 +338,16 @@
         # starts outside and hits bounds
         res = surfaceintersection(ell, routbounds)
         @test isapprox(point(OpticSim.lower(res)), [0.5, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
+        @test isapprox(point(OpticSim.lower(res)), [0.5, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
 
         # starts inside and hits bounds
         res = surfaceintersection(ell, rinbounds)
         @test OpticSim.lower(res) isa RayOrigin && isapprox(point(OpticSim.upper(res)), [0.5, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
+        @test OpticSim.lower(res) isa RayOrigin && isapprox(point(OpticSim.upper(res)), [0.5, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # asymmetric hit
         res = surfaceintersection(ell, rasymhit)
+        @test isapprox(point(OpticSim.lower(res)), [0.0, 0.9, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
         @test isapprox(point(OpticSim.lower(res)), [0.0, 0.9, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
 
         # asymmetric miss
@@ -333,6 +358,7 @@
         rayhit = Ray([0.6, 0.6, 0.6], [-0.3, -0.1, -0.3])
         raymiss = Ray([0.7, 0.4, 0.4], [-0.3, -0.1, -0.3])
         res = surfaceintersection(ell2, rayhit)
+        @test isapprox(point(OpticSim.lower(res)), [0.2863636363636363, 0.4954545454545454, 0.2863636363636363], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
         @test isapprox(point(OpticSim.lower(res)), [0.2863636363636363, 0.4954545454545454, 0.2863636363636363], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
         @test surfaceintersection(ell2, raymiss) isa EmptyInterval
     end # testset Ellipse
@@ -368,9 +394,11 @@
         # starts outside and hits
         res = surfaceintersection(hex, routintersects)
         @test isapprox(point(OpticSim.lower(res)), [0.0, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
+        @test isapprox(point(OpticSim.lower(res)), [0.0, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
 
         # starts inside and hits
         res = surfaceintersection(hex, rinintersects)
+        @test OpticSim.lower(res) isa RayOrigin && isapprox(point(OpticSim.upper(res)), [0.0, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
         @test OpticSim.lower(res) isa RayOrigin && isapprox(point(OpticSim.upper(res)), [0.0, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # starts inside and misses bounds
@@ -382,13 +410,16 @@
         # starts outside and hits bounds
         res = surfaceintersection(hex, routbounds)
         @test isapprox(point(OpticSim.lower(res)), [sqrt(3) / 2, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
+        @test isapprox(point(OpticSim.lower(res)), [sqrt(3) / 2, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
 
         # starts inside and hits bounds
         res = surfaceintersection(hex, rinbounds)
         @test OpticSim.lower(res) isa RayOrigin && isapprox(point(OpticSim.upper(res)), [sqrt(3) / 2, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
+        @test OpticSim.lower(res) isa RayOrigin && isapprox(point(OpticSim.upper(res)), [sqrt(3) / 2, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # asymmetric hit
         res = surfaceintersection(hex, rasymhit)
+        @test isapprox(point(OpticSim.lower(res)), [0.0, 1.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
         @test isapprox(point(OpticSim.lower(res)), [0.0, 1.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
 
         # asymmetric miss
@@ -400,11 +431,14 @@
         raymiss = Ray([0.7, 0.4, 0.4], [-0.3, -0.1, -0.3])
         res = surfaceintersection(hex2, rayhit)
         @test isapprox(point(OpticSim.lower(res)), [0.2863636363636363, 0.4954545454545454, 0.2863636363636363], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
+        @test isapprox(point(OpticSim.lower(res)), [0.2863636363636363, 0.4954545454545454, 0.2863636363636363], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
         @test surfaceintersection(hex2, raymiss) isa EmptyInterval
     end # testset Hexagon
 
 
     @testset "Convex Polygon" begin
+
+        t = OpticSim.identitytransform()
 
 
         t = Geometry.OpticSim.identitytransform()
@@ -445,10 +479,14 @@
 
         # starts outside and hits
         res = surfaceintersection(poly, routintersects)
+        @test isapprox(point(OpticSim.lower(res)), [0.0, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
+
         @test isapprox(point(OpticSim.lower(res)), [0.0, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.OpticSim.upper(res) isa Infinity
 
         # starts inside and hits
         res = surfaceintersection(poly, rinintersects)
+        @test OpticSim.lower(res) isa RayOrigin && isapprox(point(OpticSim.upper(res)), [0.0, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
+
         @test OpticSim.lower(res) isa RayOrigin && isapprox(point(OpticSim.upper(res)), [0.0, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # starts inside and misses bounds
@@ -461,12 +499,18 @@
         res = surfaceintersection(poly, routbounds)
         @test isapprox(point(OpticSim.lower(res)), [sqrt(3) / 2, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
 
+        @test isapprox(point(OpticSim.lower(res)), [sqrt(3) / 2, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
+
         # starts inside and hits bounds
         res = surfaceintersection(poly, rinbounds)
         @test OpticSim.lower(res) isa RayOrigin && isapprox(point(OpticSim.upper(res)), [sqrt(3) / 2, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
+        @test OpticSim.lower(res) isa RayOrigin && isapprox(point(OpticSim.upper(res)), [sqrt(3) / 2, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
+
         # asymmetric hit
         res = surfaceintersection(poly, rasymhit)
+        @test isapprox(point(OpticSim.lower(res)), [0.0, 0.9, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
+
         @test isapprox(point(OpticSim.lower(res)), [0.0, 0.9, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
 
         # asymmetric miss
@@ -489,7 +533,9 @@
         r = Ray([0.0, 1.0, 0.6], [0.0, -1.0, 0.0])
         res = surfaceintersection(infiniterect, r)
         @test isapprox(point(OpticSim.lower(res)), [0.0, 0.0, 0.6], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
+        @test isapprox(point(OpticSim.lower(res)), [0.0, 0.0, 0.6], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
         res = surfaceintersection(finiterect, r)
+        @test isapprox(point(OpticSim.lower(res)), [0.0, 0.0, 0.6], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
         @test isapprox(point(OpticSim.lower(res)), [0.0, 0.0, 0.6], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
         # through hole asym
         r = Ray([0.7, 1.0, 1.0], [0.0, -1.0, 0.0])
@@ -499,7 +545,9 @@
         r = Ray([1.0, -1.0, 2.0], [0.0, 1.0, 0.0])
         res = surfaceintersection(infiniterect, r)
         @test OpticSim.lower(res) isa RayOrigin && isapprox(point(OpticSim.upper(res)), [1.0, 0.0, 2.0], rtol=RTOLERANCE, atol=ATOLERANCE)
+        @test OpticSim.lower(res) isa RayOrigin && isapprox(point(OpticSim.upper(res)), [1.0, 0.0, 2.0], rtol=RTOLERANCE, atol=ATOLERANCE)
         res = surfaceintersection(finiterect, r)
+        @test OpticSim.lower(res) isa RayOrigin && isapprox(point(OpticSim.upper(res)), [1.0, 0.0, 2.0], rtol=RTOLERANCE, atol=ATOLERANCE)
         @test OpticSim.lower(res) isa RayOrigin && isapprox(point(OpticSim.upper(res)), [1.0, 0.0, 2.0], rtol=RTOLERANCE, atol=ATOLERANCE)
         # outside finite
         r = Ray([2.0, 1.0, 3.0], [0.0, -1.0, 0.0])
@@ -519,7 +567,9 @@
         r = Ray([0.0, 1.0, 0.6], [0.0, -1.0, 0.0])
         res = surfaceintersection(infinitecirc, r)
         @test isapprox(point(OpticSim.lower(res)), [0.0, 0.0, 0.6], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
+        @test isapprox(point(OpticSim.lower(res)), [0.0, 0.0, 0.6], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
         res = surfaceintersection(finitecirc, r)
+        @test isapprox(point(OpticSim.lower(res)), [0.0, 0.0, 0.6], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
         @test isapprox(point(OpticSim.lower(res)), [0.0, 0.0, 0.6], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
         # through hole 2
         r = Ray([0.3, 1.0, 1.0], [0.0, -1.0, 0.0])
@@ -529,7 +579,9 @@
         r = Ray([1.0, -1.0, 2.0], [0.0, 1.0, 0.0])
         res = surfaceintersection(infinitecirc, r)
         @test OpticSim.lower(res) isa RayOrigin && isapprox(point(OpticSim.upper(res)), [1.0, 0.0, 2.0], rtol=RTOLERANCE, atol=ATOLERANCE)
+        @test OpticSim.lower(res) isa RayOrigin && isapprox(point(OpticSim.upper(res)), [1.0, 0.0, 2.0], rtol=RTOLERANCE, atol=ATOLERANCE)
         res = surfaceintersection(finitecirc, r)
+        @test OpticSim.lower(res) isa RayOrigin && isapprox(point(OpticSim.upper(res)), [1.0, 0.0, 2.0], rtol=RTOLERANCE, atol=ATOLERANCE)
         @test OpticSim.lower(res) isa RayOrigin && isapprox(point(OpticSim.upper(res)), [1.0, 0.0, 2.0], rtol=RTOLERANCE, atol=ATOLERANCE)
         # outside finite
         r = Ray([2.0, 1.0, 3.0], [0.0, -1.0, 0.0])
@@ -546,6 +598,7 @@
         r = Ray([0.0, 1.0, 0.5], [0.0, -1.0, 0.0])
         res = surfaceintersection(annulus, r)
         @test isapprox(point(OpticSim.lower(res)), [0.0, 0.0, 0.5], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
+        @test isapprox(point(OpticSim.lower(res)), [0.0, 0.0, 0.5], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
         # through hole 2
         r = Ray([0.3, 1.0, 1.0], [0.0, -1.0, 0.0])
         @test surfaceintersection(infiniterect, r) isa EmptyInterval
@@ -553,6 +606,7 @@
         # on finite edge
         r = Ray([1.0, -1.0, 1.0], [0.0, 1.0, 0.0])
         res = surfaceintersection(annulus, r)
+        @test OpticSim.lower(res) isa RayOrigin && isapprox(point(OpticSim.upper(res)), [1.0, 0.0, 1.0], rtol=RTOLERANCE, atol=ATOLERANCE)
         @test OpticSim.lower(res) isa RayOrigin && isapprox(point(OpticSim.upper(res)), [1.0, 0.0, 1.0], rtol=RTOLERANCE, atol=ATOLERANCE)
         # outside finite
         r = Ray([0.9, 1.0, 1.9], [0.0, -1.0, 0.0])
@@ -603,6 +657,8 @@
                 for intsct in allintersections
                     @test isapprox(point(OpticSim.halfspaceintersection(intsct)), pt, rtol=RTOLERANCE, atol=ATOLERANCE)
                     @test OpticSim.upper(intsct) isa Infinity
+                    @test isapprox(point(OpticSim.halfspaceintersection(intsct)), pt, rtol=RTOLERANCE, atol=ATOLERANCE)
+                    @test OpticSim.upper(intsct) isa Infinity
                 end
             end
         end
@@ -627,15 +683,18 @@
         r = Ray([0.5, 0.5, 0.2], [0.0, 1.0, 0.0])
         res = surfaceintersection(accelsurf, r)
         @test OpticSim.lower(res) isa RayOrigin && isapprox(point(OpticSim.upper(res)), [0.5, 0.8996900152986361, 0.2], rtol=RTOLERANCE, atol=ATOLERANCE)
+        @test OpticSim.lower(res) isa RayOrigin && isapprox(point(OpticSim.upper(res)), [0.5, 0.8996900152986361, 0.2], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # hit from outside
         r = Ray([0.0, 0.5, 0.2], [1.0, 0.0, -1.0])
         res = surfaceintersection(accelsurf, r)
         @test isapprox(point(OpticSim.lower(res)), [0.06398711204047353, 0.5, 0.13601288795952649], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
+        @test isapprox(point(OpticSim.lower(res)), [0.06398711204047353, 0.5, 0.13601288795952649], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(res) isa Infinity
 
         # two hits from outside
         r = Ray([0.0, 0.5, 0.25], [1.0, 0.0, 0.0])
         res = surfaceintersection(accelsurf, r)
+        @test isapprox(point(OpticSim.lower(res)), [0.12607777053030267, 0.5, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(res)), [0.8705887077060419, 0.5, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE)
         @test isapprox(point(OpticSim.lower(res)), [0.12607777053030267, 0.5, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(res)), [0.8705887077060419, 0.5, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         surf = TestData.wavybeziersurface()
@@ -645,10 +704,12 @@
         r = Ray([0.5, 0.0, 0.0], [0.0, 1.0, 0.0])
         res = surfaceintersection(accelsurf, r)
         @test isa(res, DisjointUnion) && length(res) == 2 && isapprox(point(OpticSim.lower(res[1])), [0.5, 0.10013694786182059, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(res[1])), [0.5, 0.49625, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.lower(res[2])), [0.5, 0.8971357794109067, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && (OpticSim.upper(res[2]) isa Infinity)
+        @test isa(res, DisjointUnion) && length(res) == 2 && isapprox(point(OpticSim.lower(res[1])), [0.5, 0.10013694786182059, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(res[1])), [0.5, 0.49625, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.lower(res[2])), [0.5, 0.8971357794109067, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && (OpticSim.upper(res[2]) isa Infinity)
 
         # 3 hit starting inside
         r = Ray([0.5, 1.0, 0.0], [0.0, -1.0, 0.0])
         res = surfaceintersection(accelsurf, r)
+        @test isa(res, DisjointUnion) && length(res) == 2 && (OpticSim.lower(res[1]) isa RayOrigin) && isapprox(point(OpticSim.upper(res[1])), [0.5, 0.8971357794109067, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.lower(res[2])), [0.5, 0.49625, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(res[2])), [0.5, 0.10013694786182059, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
         @test isa(res, DisjointUnion) && length(res) == 2 && (OpticSim.lower(res[1]) isa RayOrigin) && isapprox(point(OpticSim.upper(res[1])), [0.5, 0.8971357794109067, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.lower(res[2])), [0.5, 0.49625, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(res[2])), [0.5, 0.10013694786182059, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         surf = TestData.verywavybeziersurface()
@@ -660,11 +721,17 @@
         a = isapprox(point(OpticSim.lower(res[1])), [0.9, 0.03172286522032046, -0.2777939943457758], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(res[1])), [0.9, 0.1733979947040411, -0.17862140370717122], rtol=RTOLERANCE, atol=ATOLERANCE)
         b = isapprox(point(OpticSim.lower(res[2])), [0.9, 0.5335760974594397, 0.07350326822160776], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(res[2])), [0.9, 0.7767707607392784, 0.24373953251749486], rtol=RTOLERANCE, atol=ATOLERANCE)
         c = isapprox(point(OpticSim.lower(res[3])), [0.9, 0.9830891958374246, 0.3881624370861975], rtol=RTOLERANCE, atol=ATOLERANCE) && (OpticSim.upper(res[3]) isa Infinity)
+        a = isapprox(point(OpticSim.lower(res[1])), [0.9, 0.03172286522032046, -0.2777939943457758], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(res[1])), [0.9, 0.1733979947040411, -0.17862140370717122], rtol=RTOLERANCE, atol=ATOLERANCE)
+        b = isapprox(point(OpticSim.lower(res[2])), [0.9, 0.5335760974594397, 0.07350326822160776], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(res[2])), [0.9, 0.7767707607392784, 0.24373953251749486], rtol=RTOLERANCE, atol=ATOLERANCE)
+        c = isapprox(point(OpticSim.lower(res[3])), [0.9, 0.9830891958374246, 0.3881624370861975], rtol=RTOLERANCE, atol=ATOLERANCE) && (OpticSim.upper(res[3]) isa Infinity)
         @test isa(res, DisjointUnion) && length(res) == 3 && a && b && c
 
         # five hits starting inside
         r = Ray([0.9, 1.0, 0.4], [0.0, -1.0, -0.7])
         res = surfaceintersection(accelsurf, r)
+        a = (OpticSim.lower(res[1]) isa RayOrigin) && isapprox(point(OpticSim.upper(res[1])), [0.9, 0.9830891958374246, 0.3881624370861975], rtol=RTOLERANCE, atol=ATOLERANCE)
+        b = isapprox(point(OpticSim.lower(res[2])), [0.9, 0.7767707607392784, 0.24373953251749486], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(res[2])), [0.9, 0.5335760974594397, 0.07350326822160776], rtol=RTOLERANCE, atol=ATOLERANCE)
+        c = isapprox(point(OpticSim.lower(res[3])), [0.9, 0.17339799470404108, -0.1786214037071712], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(res[3])), [0.9, 0.03172286522032046, -0.27779399434577573], rtol=RTOLERANCE, atol=ATOLERANCE)
         a = (OpticSim.lower(res[1]) isa RayOrigin) && isapprox(point(OpticSim.upper(res[1])), [0.9, 0.9830891958374246, 0.3881624370861975], rtol=RTOLERANCE, atol=ATOLERANCE)
         b = isapprox(point(OpticSim.lower(res[2])), [0.9, 0.7767707607392784, 0.24373953251749486], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(res[2])), [0.9, 0.5335760974594397, 0.07350326822160776], rtol=RTOLERANCE, atol=ATOLERANCE)
         c = isapprox(point(OpticSim.lower(res[3])), [0.9, 0.17339799470404108, -0.1786214037071712], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(res[3])), [0.9, 0.03172286522032046, -0.27779399434577573], rtol=RTOLERANCE, atol=ATOLERANCE)
@@ -676,11 +743,16 @@
         a = (OpticSim.lower(res[1]) isa RayOrigin) && isapprox(point(OpticSim.upper(res[1])), [0.1, 0.2851860296285551, -0.10036977926001144], rtol=RTOLERANCE, atol=ATOLERANCE)
         b = isapprox(point(OpticSim.lower(res[2])), [0.1, 0.5166793625025807, 0.06167555375180668], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(res[2])), [0.1, 0.7770862508789854, 0.24396037561528983], rtol=RTOLERANCE, atol=ATOLERANCE)
         c = isapprox(point(OpticSim.lower(res[3])), [0.1, 0.98308919558696, 0.3881624369108719], rtol=RTOLERANCE, atol=ATOLERANCE) && (OpticSim.upper(res[3]) isa Infinity)
+        a = (OpticSim.lower(res[1]) isa RayOrigin) && isapprox(point(OpticSim.upper(res[1])), [0.1, 0.2851860296285551, -0.10036977926001144], rtol=RTOLERANCE, atol=ATOLERANCE)
+        b = isapprox(point(OpticSim.lower(res[2])), [0.1, 0.5166793625025807, 0.06167555375180668], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(res[2])), [0.1, 0.7770862508789854, 0.24396037561528983], rtol=RTOLERANCE, atol=ATOLERANCE)
+        c = isapprox(point(OpticSim.lower(res[3])), [0.1, 0.98308919558696, 0.3881624369108719], rtol=RTOLERANCE, atol=ATOLERANCE) && (OpticSim.upper(res[3]) isa Infinity)
         @test isa(res, DisjointUnion) && length(res) == 3 && a && b && c
 
         # 4 hits starting outside
         r = Ray([0.9, 0.9, 0.4], [0.0, -0.9, -0.7])
         res = surfaceintersection(accelsurf, r)
+        a = isapprox(point(OpticSim.lower(res[1])), [0.9, 0.736072142615238, 0.2725005553674076], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(res[1])), [0.9, 0.567439326091764, 0.141341698071372], rtol=RTOLERANCE, atol=ATOLERANCE)
+        b = isapprox(point(OpticSim.lower(res[2])), [0.9, 0.16601081959179267, -0.1708804736508277], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(res[2])), [0.9, 0.032434058775915924, -0.274773509840954], rtol=RTOLERANCE, atol=ATOLERANCE)
         a = isapprox(point(OpticSim.lower(res[1])), [0.9, 0.736072142615238, 0.2725005553674076], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(res[1])), [0.9, 0.567439326091764, 0.141341698071372], rtol=RTOLERANCE, atol=ATOLERANCE)
         b = isapprox(point(OpticSim.lower(res[2])), [0.9, 0.16601081959179267, -0.1708804736508277], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(res[2])), [0.9, 0.032434058775915924, -0.274773509840954], rtol=RTOLERANCE, atol=ATOLERANCE)
         @test isa(res, DisjointUnion) && length(res) == 2 && a && b
@@ -721,6 +793,8 @@
                         # closest point should be on the surface, furthest should be on bounding prism
                         @test isapprox(point(OpticSim.lower(intsct)), pt, rtol=RTOLERANCE, atol=ATOLERANCE)
                         @test isa(OpticSim.upper(intsct), Intersection{Float64,3}) || (OpticSim.direction(r)[3] == -1 && isa(OpticSim.upper(intsct), Infinity{Float64}))
+                        @test isapprox(point(OpticSim.lower(intsct)), pt, rtol=RTOLERANCE, atol=ATOLERANCE)
+                        @test isa(OpticSim.upper(intsct), Intersection{Float64,3}) || (OpticSim.direction(r)[3] == -1 && isa(OpticSim.upper(intsct), Infinity{Float64}))
                     end
                 end
             end
@@ -734,10 +808,12 @@
         r = Ray([0.0, 0.0, -0.5], [0.1, 0.2, 0.5])
         intvl = surfaceintersection(az1, r)
         @test (OpticSim.lower(intvl) isa RayOrigin) && isapprox(point(OpticSim.upper(intvl)), [0.12363711269619936, 0.24727422539239863, 0.11818556348099664], rtol=RTOLERANCE, atol=ATOLERANCE)
+        @test (OpticSim.lower(intvl) isa RayOrigin) && isapprox(point(OpticSim.upper(intvl)), [0.12363711269619936, 0.24727422539239863, 0.11818556348099664], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # hit from outside
         r = Ray([0.0, 0.0, 0.5], [0.1, 0.2, -0.5])
         intvl = surfaceintersection(az1, r)
+        @test isapprox(point(OpticSim.lower(intvl)), [0.07118311042701463, 0.1423662208540292, 0.144084447864927], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(intvl)), [0.6708203932499369, 1.3416407864998738, -2.8541019662496843], rtol=RTOLERANCE, atol=ATOLERANCE)
         @test isapprox(point(OpticSim.lower(intvl)), [0.07118311042701463, 0.1423662208540292, 0.144084447864927], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(intvl)), [0.6708203932499369, 1.3416407864998738, -2.8541019662496843], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # miss from inside
@@ -760,16 +836,20 @@
         hit = surfaceintersection(az1, r)
         a = isapprox(point(OpticSim.lower(hit[1])), [1.5, 0.0, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(hit[1])), [1.3571758210851095, 0.0, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE)
         b = isapprox(point(OpticSim.lower(hit[2])), [-1.2665828947521165, 0.0, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(hit[2])), [-1.5, 0.0, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE)
+        a = isapprox(point(OpticSim.lower(hit[1])), [1.5, 0.0, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(hit[1])), [1.3571758210851095, 0.0, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE)
+        b = isapprox(point(OpticSim.lower(hit[2])), [-1.2665828947521165, 0.0, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(hit[2])), [-1.5, 0.0, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE)
         @test isa(hit, DisjointUnion) && length(hit) == 2 && a && b
 
         # hit cyl from outside
         r = Ray([0.0, 2.0, -0.5], [0.0, -1.0, 0.0])
         intvl = surfaceintersection(az1, r)
         @test isapprox(point(OpticSim.lower(intvl)), [0.0, 1.5, -0.5], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(intvl)), [0.0, -1.5, -0.5], rtol=RTOLERANCE, atol=ATOLERANCE)
+        @test isapprox(point(OpticSim.lower(intvl)), [0.0, 1.5, -0.5], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(intvl)), [0.0, -1.5, -0.5], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # hit cyl from inside
         r = Ray([0.0, 0.0, -0.5], [0.0, -1.0, 0.0])
         intvl = surfaceintersection(az1, r)
+        @test (OpticSim.lower(intvl) isa RayOrigin) && isapprox(point(OpticSim.upper(intvl)), [0.0, -1.5, -0.5], rtol=RTOLERANCE, atol=ATOLERANCE)
         @test (OpticSim.lower(intvl) isa RayOrigin) && isapprox(point(OpticSim.upper(intvl)), [0.0, -1.5, -0.5], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         z2 = TestData.zernikesurface2()
@@ -779,10 +859,13 @@
         r = Ray([2.0, -1.0, 0.2], [-1.0, 0.0, 0.0])
         intvl = surfaceintersection(az2, r)
         @test isapprox(point(OpticSim.lower(intvl)), [0.238496383738369, -1.0, 0.2], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(intvl)), [-0.8790518227874484, -1.0, 0.2], rtol=RTOLERANCE, atol=ATOLERANCE)
+        @test isapprox(point(OpticSim.lower(intvl)), [0.238496383738369, -1.0, 0.2], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(intvl)), [-0.8790518227874484, -1.0, 0.2], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # three hits
         r = Ray([-0.7, 1.0, 0.2], [0.0, -1.0, 0.0])
         hit = surfaceintersection(az2, r)
+        a = (OpticSim.lower(hit[1]) isa RayOrigin) && isapprox(point(OpticSim.upper(hit[1])), [-0.7, 0.8732489598020176, 0.2], rtol=RTOLERANCE, atol=ATOLERANCE)
+        b = isapprox(point(OpticSim.lower(hit[2])), [-0.7, -0.34532502965048606, 0.2], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(hit[2])), [-0.7, -1.1615928003236047, 0.2], rtol=RTOLERANCE, atol=ATOLERANCE)
         a = (OpticSim.lower(hit[1]) isa RayOrigin) && isapprox(point(OpticSim.upper(hit[1])), [-0.7, 0.8732489598020176, 0.2], rtol=RTOLERANCE, atol=ATOLERANCE)
         b = isapprox(point(OpticSim.lower(hit[2])), [-0.7, -0.34532502965048606, 0.2], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(hit[2])), [-0.7, -1.1615928003236047, 0.2], rtol=RTOLERANCE, atol=ATOLERANCE)
         @test isa(hit, DisjointUnion) && length(hit) == 2 && a && b
@@ -790,6 +873,8 @@
         # four hits
         r = Ray([1.5, 0.1, 0.35], [-1.0, -0.5, 0.0])
         hit = surfaceintersection(az2, r)
+        a = isapprox(point(OpticSim.lower(hit[1])), [1.4371467631969683, 0.06857338159848421, 0.35], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(hit[1])), [1.1428338578611368, -0.07858307106943167, 0.35], rtol=RTOLERANCE, atol=ATOLERANCE)
+        b = isapprox(point(OpticSim.lower(hit[2])), [0.12916355683491865, -0.5854182215825409, 0.35], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(hit[2])), [-0.7290713614371003, -1.0145356807185504, 0.35], rtol=RTOLERANCE, atol=ATOLERANCE)
         a = isapprox(point(OpticSim.lower(hit[1])), [1.4371467631969683, 0.06857338159848421, 0.35], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(hit[1])), [1.1428338578611368, -0.07858307106943167, 0.35], rtol=RTOLERANCE, atol=ATOLERANCE)
         b = isapprox(point(OpticSim.lower(hit[2])), [0.12916355683491865, -0.5854182215825409, 0.35], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(hit[2])), [-0.7290713614371003, -1.0145356807185504, 0.35], rtol=RTOLERANCE, atol=ATOLERANCE)
         @test isa(hit, DisjointUnion) && length(hit) == 2 && a && b
@@ -837,6 +922,8 @@
                         # closest point should be on the surface, furthest should be on bounding prism
                         @test isapprox(point(OpticSim.lower(intsct)), pt, rtol=RTOLERANCE, atol=ATOLERANCE)
                         @test isa(OpticSim.upper(intsct), Intersection{Float64,3}) || (OpticSim.direction(r)[3] == -1 && isa(OpticSim.upper(intsct), Infinity{Float64}))
+                        @test isapprox(point(OpticSim.lower(intsct)), pt, rtol=RTOLERANCE, atol=ATOLERANCE)
+                        @test isa(OpticSim.upper(intsct), Intersection{Float64,3}) || (OpticSim.direction(r)[3] == -1 && isa(OpticSim.upper(intsct), Infinity{Float64}))
                     end
                 end
             end
@@ -850,10 +937,12 @@
         r = Ray([0.0, 0.0, -0.5], [0.1, 0.2, 0.5])
         intvl = surfaceintersection(aq1, r)
         @test (OpticSim.lower(intvl) isa RayOrigin) && isapprox(point(OpticSim.upper(intvl)), [0.09758258750208074, 0.19516517500416142, -0.01208706248959643], rtol=RTOLERANCE, atol=ATOLERANCE)
+        @test (OpticSim.lower(intvl) isa RayOrigin) && isapprox(point(OpticSim.upper(intvl)), [0.09758258750208074, 0.19516517500416142, -0.01208706248959643], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # hit from outside
         r = Ray([0.0, 0.0, 0.5], [0.1, 0.2, -0.5])
         intvl = surfaceintersection(aq1, r)
+        @test isapprox(point(OpticSim.lower(intvl)), [0.10265857811957124, 0.20531715623914257, -0.013292890597856405], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(intvl)), [0.6708203932499369, 1.3416407864998738, -2.8541019662496843], rtol=RTOLERANCE, atol=ATOLERANCE)
         @test isapprox(point(OpticSim.lower(intvl)), [0.10265857811957124, 0.20531715623914257, -0.013292890597856405], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(intvl)), [0.6708203932499369, 1.3416407864998738, -2.8541019662496843], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # miss from inside
@@ -944,10 +1033,12 @@
         r = Ray([-1.0, -1.1, 0.0], [1.0, 1.0, 0.0])
         intscts = surfaceintersection(bbox, r)
         @test isapprox(point(OpticSim.lower(intscts)), [-0.5, -0.6, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(intscts)), [0.5, 0.4, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
+        @test isapprox(point(OpticSim.lower(intscts)), [-0.5, -0.6, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(intscts)), [0.5, 0.4, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # starting inside
         r = Ray([0.0, 0.0, 0.0], [1.0, 1.0, 0.0])
         intscts = surfaceintersection(bbox, r)
+        @test OpticSim.lower(intscts) isa RayOrigin && isapprox(point(OpticSim.upper(intscts)), [0.5, 0.5, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
         @test OpticSim.lower(intscts) isa RayOrigin && isapprox(point(OpticSim.upper(intscts)), [0.5, 0.5, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # inside infinite
@@ -993,79 +1084,107 @@
         # INTERSECTION
         intersection_obj = (leaf(Cylinder(0.5, 3.0), OpticSim.rotationd(90.0, 0.0, 0.0)) ∩ Sphere(1.0))()
         r = Ray([0.7, 0.0, 0.0], [-1.0, 0.0, 0.0])
-        int = OpticSim.OpticSim.evalcsg(intersection_obj, r)
+        int = OpticSim.evalcsg(intersection_obj, r)
+        @test isapprox(point(OpticSim.lower(int)), [0.5, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(int)), [-0.5, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
+        int = OpticSim.evalcsg(intersection_obj, r)
         @test isapprox(point(OpticSim.lower(int)), [0.5, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(int)), [-0.5, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         r = Ray([5.0, 0.0, 0.0], [-1.0, 0.0, 0.0])
-        int = OpticSim.OpticSim.evalcsg(intersection_obj, r)
+        int = OpticSim.evalcsg(intersection_obj, r)
+        @test isapprox(point(OpticSim.lower(int)), [0.5, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(int)), [-0.5, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
+        int = OpticSim.evalcsg(intersection_obj, r)
         @test isapprox(point(OpticSim.lower(int)), [0.5, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(int)), [-0.5, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         r = Ray([0.7, 0.0, 0.0], [1.0, 0.0, 0.0])
-        int = OpticSim.OpticSim.evalcsg(intersection_obj, r)
+        int = OpticSim.evalcsg(intersection_obj, r)
         @test (int isa EmptyInterval)
 
         r = Ray([0.0, 0.0, 0.0], [1.0, 0.0, 0.0])
-        int = OpticSim.OpticSim.evalcsg(intersection_obj, r)
+        int = OpticSim.evalcsg(intersection_obj, r)
+        @test (OpticSim.lower(int) isa RayOrigin) && isapprox(point(OpticSim.upper(int)), [0.5, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
+        int = OpticSim.evalcsg(intersection_obj, r)
         @test (OpticSim.lower(int) isa RayOrigin) && isapprox(point(OpticSim.upper(int)), [0.5, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         r = Ray([0.0, 0.0, 0.0], [0.0, 1.0, 0.0])
-        int = OpticSim.OpticSim.evalcsg(intersection_obj, r)
+        int = OpticSim.evalcsg(intersection_obj, r)
+        @test (OpticSim.lower(int) isa RayOrigin) && isapprox(point(OpticSim.upper(int)), [0.0, 1.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
+        int = OpticSim.evalcsg(intersection_obj, r)
         @test (OpticSim.lower(int) isa RayOrigin) && isapprox(point(OpticSim.upper(int)), [0.0, 1.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         r = Ray([0.0, 2.0, 0.0], [0.0, -1.0, 0.0])
-        int = OpticSim.OpticSim.evalcsg(intersection_obj, r)
+        int = OpticSim.evalcsg(intersection_obj, r)
+        @test isapprox(point(OpticSim.lower(int)), [0.0, 1.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(int)), [0.0, -1.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
+        int = OpticSim.evalcsg(intersection_obj, r)
         @test isapprox(point(OpticSim.lower(int)), [0.0, 1.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(int)), [0.0, -1.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # UNION
-        union_obj = (Cylinder(0.5, 3.0) ∪ Sphere(1.0))(OpticSim.OpticSim.translation(1.0, 0.0, 0.0))
+        union_obj = (Cylinder(0.5, 3.0) ∪ Sphere(1.0))(OpticSim.translation(1.0, 0.0, 0.0))
         r = Ray([1.0, 0.0, 0.0], [0.0, 0.0, 1.0])
-        int = OpticSim.OpticSim.evalcsg(union_obj, r)
+        int = OpticSim.evalcsg(union_obj, r)
         @test (OpticSim.lower(int) isa RayOrigin) && (OpticSim.upper(int) isa Infinity)
 
         r = Ray([1.0, 0.0, 0.0], [1.0, 0.0, 0.0])
-        int = OpticSim.OpticSim.evalcsg(union_obj, r)
+        int = OpticSim.evalcsg(union_obj, r)
+        @test (OpticSim.lower(int) isa RayOrigin) && isapprox(point(OpticSim.upper(int)), [2.0, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
+        int = OpticSim.evalcsg(union_obj, r)
         @test (OpticSim.lower(int) isa RayOrigin) && isapprox(point(OpticSim.upper(int)), [2.0, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         r = Ray([1.6, 0.0, 0.0], [1.0, 0.0, 0.0])
-        int = OpticSim.OpticSim.evalcsg(union_obj, r)
+        int = OpticSim.evalcsg(union_obj, r)
+        @test (OpticSim.lower(int) isa RayOrigin) && isapprox(point(OpticSim.upper(int)), [2.0, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
+        int = OpticSim.evalcsg(union_obj, r)
         @test (OpticSim.lower(int) isa RayOrigin) && isapprox(point(OpticSim.upper(int)), [2.0, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         r = Ray([1.6, 0.0, 0.0], [-1.0, 0.0, 0.0])
-        int = OpticSim.OpticSim.evalcsg(union_obj, r)
+        int = OpticSim.evalcsg(union_obj, r)
+        @test (OpticSim.lower(int) isa RayOrigin) && isapprox(point(OpticSim.upper(int)), [0.0, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
+        int = OpticSim.evalcsg(union_obj, r)
         @test (OpticSim.lower(int) isa RayOrigin) && isapprox(point(OpticSim.upper(int)), [0.0, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         r = Ray([-1.0, 0.0, 0.0], [1.0, 0.0, 0.0])
-        int = OpticSim.OpticSim.evalcsg(union_obj, r)
+        int = OpticSim.evalcsg(union_obj, r)
+        @test isapprox(point(OpticSim.lower(int)), [0.0, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(int)), [2.0, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
+        int = OpticSim.evalcsg(union_obj, r)
         @test isapprox(point(OpticSim.lower(int)), [0.0, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(int)), [2.0, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         r = Ray([-1.0, 0.0, 4.0], [1.0, 0.0, 0.0])
-        int = OpticSim.OpticSim.evalcsg(union_obj, r)
+        int = OpticSim.evalcsg(union_obj, r)
+        @test isapprox(point(OpticSim.lower(int)), [0.5, 0.0, 4.0], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(int)), [1.5, 0.0, 4.0], rtol=RTOLERANCE, atol=ATOLERANCE)
+        int = OpticSim.evalcsg(union_obj, r)
         @test isapprox(point(OpticSim.lower(int)), [0.5, 0.0, 4.0], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(int)), [1.5, 0.0, 4.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # DIFFERENCE
-        difference_obj = (Cylinder(0.5, 3.0) - leaf(Sphere(1.0), OpticSim.OpticSim.translation(0.75, 0.0, 0.2)))()
+        difference_obj = (Cylinder(0.5, 3.0) - leaf(Sphere(1.0), OpticSim.translation(0.75, 0.0, 0.2)))()
         r = Ray([0.25, 0.0, 0.0], [-1.0, 0.0, 0.0])
-        int = OpticSim.OpticSim.evalcsg(difference_obj, r)
+        int = OpticSim.evalcsg(difference_obj, r)
+        @test isapprox(point(OpticSim.lower(int)), [-0.2297958971132712, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(int)), [-0.5, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
+        int = OpticSim.evalcsg(difference_obj, r)
         @test isapprox(point(OpticSim.lower(int)), [-0.2297958971132712, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(int)), [-0.5, 0.0, 0.0], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         r = Ray([0.25, 0.0, 0.0], [1.0, 0.0, 0.0])
-        int = OpticSim.OpticSim.evalcsg(difference_obj, r)
+        int = OpticSim.evalcsg(difference_obj, r)
         @test int isa EmptyInterval
 
         r = Ray([0.25, 0.0, 0.0], [0.0, 0.0, 1.0])
-        int = OpticSim.OpticSim.evalcsg(difference_obj, r)
+        int = OpticSim.evalcsg(difference_obj, r)
+        @test isapprox(point(OpticSim.lower(int)), [0.25, 0.0, 1.0660254037844386], rtol=RTOLERANCE, atol=ATOLERANCE) && (OpticSim.upper(int) isa Infinity)
+        int = OpticSim.evalcsg(difference_obj, r)
         @test isapprox(point(OpticSim.lower(int)), [0.25, 0.0, 1.0660254037844386], rtol=RTOLERANCE, atol=ATOLERANCE) && (OpticSim.upper(int) isa Infinity)
 
         r = Ray([0.25, 0.0, 1.5], [0.0, 0.0, -1.0])
-        int = OpticSim.OpticSim.evalcsg(difference_obj, r)
+        int = OpticSim.evalcsg(difference_obj, r)
+        @test (OpticSim.lower(int[1]) isa RayOrigin) && isapprox(point(OpticSim.upper(int[1])), [0.25, 0.0, 1.0660254037844386], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.lower(int[2])), [0.25, 0.0, -0.6660254037844386], rtol=RTOLERANCE, atol=ATOLERANCE) && (OpticSim.upper(int[2]) isa Infinity)
+        int = OpticSim.evalcsg(difference_obj, r)
         @test (OpticSim.lower(int[1]) isa RayOrigin) && isapprox(point(OpticSim.upper(int[1])), [0.25, 0.0, 1.0660254037844386], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.lower(int[2])), [0.25, 0.0, -0.6660254037844386], rtol=RTOLERANCE, atol=ATOLERANCE) && (OpticSim.upper(int[2]) isa Infinity)
 
         r = Ray([0.25, 0.0, 1.5], [1.0, 0.0, 0.0])
-        int = OpticSim.OpticSim.evalcsg(difference_obj, r)
+        int = OpticSim.evalcsg(difference_obj, r)
+        @test (OpticSim.lower(int) isa RayOrigin) && isapprox(point(OpticSim.upper(int)), [0.5, 0.0, 1.5], rtol=RTOLERANCE, atol=ATOLERANCE)
+        int = OpticSim.evalcsg(difference_obj, r)
         @test (OpticSim.lower(int) isa RayOrigin) && isapprox(point(OpticSim.upper(int)), [0.5, 0.0, 1.5], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         r = Ray([0.25, 0.0, 1.5], [0.0, 0.0, 1.0])
-        int = OpticSim.OpticSim.evalcsg(difference_obj, r)
+        int = OpticSim.evalcsg(difference_obj, r)
         @test (OpticSim.lower(int) isa RayOrigin) && (OpticSim.upper(int) isa Infinity)
 
         # DisjointUnion result on CSG
@@ -1078,11 +1197,17 @@
         a = isapprox(point(OpticSim.lower(res[1])), [0.9, 0.03172286522032046, -0.2777939943457758], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(res[1])), [0.9, 0.1733979947040411, -0.17862140370717122], rtol=RTOLERANCE, atol=ATOLERANCE)
         b = isapprox(point(OpticSim.lower(res[2])), [0.9, 0.5335760974594397, 0.07350326822160776], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(res[2])), [0.9, 0.7767707607392784, 0.24373953251749486], rtol=RTOLERANCE, atol=ATOLERANCE)
         c = isapprox(point(OpticSim.lower(res[3])), [0.9, 0.9830891958374246, 0.3881624370861975], rtol=RTOLERANCE, atol=ATOLERANCE) && (OpticSim.upper(res[3]) isa Infinity)
+        a = isapprox(point(OpticSim.lower(res[1])), [0.9, 0.03172286522032046, -0.2777939943457758], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(res[1])), [0.9, 0.1733979947040411, -0.17862140370717122], rtol=RTOLERANCE, atol=ATOLERANCE)
+        b = isapprox(point(OpticSim.lower(res[2])), [0.9, 0.5335760974594397, 0.07350326822160776], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(res[2])), [0.9, 0.7767707607392784, 0.24373953251749486], rtol=RTOLERANCE, atol=ATOLERANCE)
+        c = isapprox(point(OpticSim.lower(res[3])), [0.9, 0.9830891958374246, 0.3881624370861975], rtol=RTOLERANCE, atol=ATOLERANCE) && (OpticSim.upper(res[3]) isa Infinity)
         @test isa(res, DisjointUnion) && length(res) == 3 && a && b && c
 
         # five hits starting inside
         r = Ray([0.9, 1.0, 0.4], [0.0, -1.0, -0.7])
         res = surfaceintersection(accelsurf, r)
+        a = (OpticSim.lower(res[1]) isa RayOrigin) && isapprox(point(OpticSim.upper(res[1])), [0.9, 0.9830891958374246, 0.3881624370861975], rtol=RTOLERANCE, atol=ATOLERANCE)
+        b = isapprox(point(OpticSim.lower(res[2])), [0.9, 0.7767707607392784, 0.24373953251749486], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(res[2])), [0.9, 0.5335760974594397, 0.07350326822160776], rtol=RTOLERANCE, atol=ATOLERANCE)
+        c = isapprox(point(OpticSim.lower(res[3])), [0.9, 0.17339799470404108, -0.1786214037071712], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(res[3])), [0.9, 0.03172286522032046, -0.27779399434577573], rtol=RTOLERANCE, atol=ATOLERANCE)
         a = (OpticSim.lower(res[1]) isa RayOrigin) && isapprox(point(OpticSim.upper(res[1])), [0.9, 0.9830891958374246, 0.3881624370861975], rtol=RTOLERANCE, atol=ATOLERANCE)
         b = isapprox(point(OpticSim.lower(res[2])), [0.9, 0.7767707607392784, 0.24373953251749486], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(res[2])), [0.9, 0.5335760974594397, 0.07350326822160776], rtol=RTOLERANCE, atol=ATOLERANCE)
         c = isapprox(point(OpticSim.lower(res[3])), [0.9, 0.17339799470404108, -0.1786214037071712], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(res[3])), [0.9, 0.03172286522032046, -0.27779399434577573], rtol=RTOLERANCE, atol=ATOLERANCE)
@@ -1143,6 +1268,8 @@
                         # closest point should be on the surface, furthest should be on bounding prism
                         @test isapprox(point(OpticSim.lower(intsct)), pt, rtol=RTOLERANCE, atol=ATOLERANCE)
                         @test isa(OpticSim.upper(intsct), Intersection{Float64,3}) || (OpticSim.direction(r)[3] == -1 && isa(OpticSim.upper(intsct), Infinity{Float64}))
+                        @test isapprox(point(OpticSim.lower(intsct)), pt, rtol=RTOLERANCE, atol=ATOLERANCE)
+                        @test isa(OpticSim.upper(intsct), Intersection{Float64,3}) || (OpticSim.direction(r)[3] == -1 && isa(OpticSim.upper(intsct), Infinity{Float64}))
                     end
                 end
             end
@@ -1159,10 +1286,12 @@
         r = Ray([0.0, 0.0, -0.5], [0.1, 0.2, 0.5])
         intvl = surfaceintersection(az1, r)
         @test (OpticSim.lower(intvl) isa RayOrigin) && isapprox(point(OpticSim.upper(intvl)), [0.07870079995991423, 0.15740159991982847, -0.10649600020042879], rtol=RTOLERANCE, atol=ATOLERANCE)
+        @test (OpticSim.lower(intvl) isa RayOrigin) && isapprox(point(OpticSim.upper(intvl)), [0.07870079995991423, 0.15740159991982847, -0.10649600020042879], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # hit from outside
         r = Ray([0.0, 0.0, 0.5], [0.1, 0.2, -0.5])
         intvl = surfaceintersection(az1, r)
+        @test isapprox(point(OpticSim.lower(intvl)), [0.13584702907541094, 0.2716940581508219, -0.1792351453770547], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(intvl)), [1.0, 2.0, -4.5], rtol=RTOLERANCE, atol=ATOLERANCE)
         @test isapprox(point(OpticSim.lower(intvl)), [0.13584702907541094, 0.2716940581508219, -0.1792351453770547], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(intvl)), [1.0, 2.0, -4.5], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # miss from inside
@@ -1184,9 +1313,12 @@
         r = Ray([0.0, -1.5, 0.25], [-1.0, 0.0, 0.0])
         intvl = surfaceintersection(az1, r)
         @test isapprox(point(OpticSim.lower(intvl)), [-1.030882920068228, -1.5, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(intvl)), [-1.786071230727613, -1.5, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE)
+        @test isapprox(point(OpticSim.lower(intvl)), [-1.030882920068228, -1.5, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(intvl)), [-1.786071230727613, -1.5, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         r = Ray([1.5, -0.8, 0.25], [-1.0, 0.0, 0.0])
         hit = surfaceintersection(az1, r)
+        a = isapprox(point(OpticSim.lower(hit[1])), [0.21526832427065165, -0.8, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(hit[1])), [-0.25523748548950076, -0.8, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE)
+        b = isapprox(point(OpticSim.lower(hit[2])), [-1.9273057166986296, -0.8, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(hit[2])), [-2.0, -0.8, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE)
         a = isapprox(point(OpticSim.lower(hit[1])), [0.21526832427065165, -0.8, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(hit[1])), [-0.25523748548950076, -0.8, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE)
         b = isapprox(point(OpticSim.lower(hit[2])), [-1.9273057166986296, -0.8, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(hit[2])), [-2.0, -0.8, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE)
         @test isa(hit, DisjointUnion) && length(hit) == 2 && a && b
@@ -1195,10 +1327,12 @@
         r = Ray([0.0, 3.0, -0.5], [0.0, -1.0, 0.0])
         intvl = surfaceintersection(az1, r)
         @test isapprox(point(OpticSim.lower(intvl)), [0.0, 2.0, -0.5], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(intvl)), [0.0, -2.0, -0.5], rtol=RTOLERANCE, atol=ATOLERANCE)
+        @test isapprox(point(OpticSim.lower(intvl)), [0.0, 2.0, -0.5], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(intvl)), [0.0, -2.0, -0.5], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # hit cyl from inside
         r = Ray([0.0, 0.0, -0.5], [0.0, -1.0, 0.0])
         intvl = surfaceintersection(az1, r)
+        @test (OpticSim.lower(intvl) isa RayOrigin) && isapprox(point(OpticSim.upper(intvl)), [0.0, -2.0, -0.5], rtol=RTOLERANCE, atol=ATOLERANCE)
         @test (OpticSim.lower(intvl) isa RayOrigin) && isapprox(point(OpticSim.upper(intvl)), [0.0, -2.0, -0.5], rtol=RTOLERANCE, atol=ATOLERANCE)
 
     end # testset Chebyshev
@@ -1236,6 +1370,8 @@
                         # closest point should be on the surface, furthest should be on bounding prism
                         @test isapprox(point(OpticSim.lower(intsct)), pt, rtol=RTOLERANCE, atol=ATOLERANCE)
                         @test isa(OpticSim.upper(intsct), Intersection{Float64,3}) || (OpticSim.direction(r)[3] == -1 && isa(OpticSim.upper(intsct), Infinity{Float64}))
+                        @test isapprox(point(OpticSim.lower(intsct)), pt, rtol=RTOLERANCE, atol=ATOLERANCE)
+                        @test isa(OpticSim.upper(intsct), Intersection{Float64,3}) || (OpticSim.direction(r)[3] == -1 && isa(OpticSim.upper(intsct), Infinity{Float64}))
                     end
                 end
             end
@@ -1266,6 +1402,8 @@
                         # closest point should be on the surface, furthest should be on bounding prism
                         @test isapprox(point(OpticSim.lower(intsct)), pt, rtol=RTOLERANCE, atol=ATOLERANCE)
                         @test isa(OpticSim.upper(intsct), Intersection{Float64,3}) || (OpticSim.direction(r)[3] == -1 && isa(OpticSim.upper(intsct), Infinity{Float64}))
+                        @test isapprox(point(OpticSim.lower(intsct)), pt, rtol=RTOLERANCE, atol=ATOLERANCE)
+                        @test isa(OpticSim.upper(intsct), Intersection{Float64,3}) || (OpticSim.direction(r)[3] == -1 && isa(OpticSim.upper(intsct), Infinity{Float64}))
                     end
                 end
             end
@@ -1279,10 +1417,12 @@
         r = Ray([0.0, 0.0, -0.5], [0.1, 0.2, 0.5])
         intvl = surfaceintersection(az1, r)
         @test (OpticSim.lower(intvl) isa RayOrigin) && isapprox(point(OpticSim.upper(intvl)), [0.13038780645120746, 0.26077561290241486, 0.15193903225603717], rtol=RTOLERANCE, atol=ATOLERANCE)
+        @test (OpticSim.lower(intvl) isa RayOrigin) && isapprox(point(OpticSim.upper(intvl)), [0.13038780645120746, 0.26077561290241486, 0.15193903225603717], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # hit from outside
         r = Ray([0.0, 0.0, 0.5], [0.1, 0.2, -0.5])
         intvl = surfaceintersection(az1, r)
+        @test isapprox(point(OpticSim.lower(intvl)), [0.046677740288643785, 0.0933554805772876, 0.26661129855678095], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(intvl)), [0.6708203932499369, 1.3416407864998738, -2.8541019662496843], rtol=RTOLERANCE, atol=ATOLERANCE)
         @test isapprox(point(OpticSim.lower(intvl)), [0.046677740288643785, 0.0933554805772876, 0.26661129855678095], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(intvl)), [0.6708203932499369, 1.3416407864998738, -2.8541019662496843], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # miss from inside
@@ -1305,16 +1445,20 @@
         hit = surfaceintersection(az1, r)
         a = isapprox(point(OpticSim.lower(hit[1])), [1.5, 0.0, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(hit[1])), [1.394132887629247, 0.0, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE)
         b = isapprox(point(OpticSim.lower(hit[2])), [0.30184444700168467, 0.0, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(hit[2])), [-0.6437764440680096, 0.0, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE)
+        a = isapprox(point(OpticSim.lower(hit[1])), [1.5, 0.0, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(hit[1])), [1.394132887629247, 0.0, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE)
+        b = isapprox(point(OpticSim.lower(hit[2])), [0.30184444700168467, 0.0, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(hit[2])), [-0.6437764440680096, 0.0, 0.25], rtol=RTOLERANCE, atol=ATOLERANCE)
         @test isa(hit, DisjointUnion) && length(hit) == 2 && a && b
 
         # hit cyl from outside
         r = Ray([0.0, 2.0, -0.5], [0.0, -1.0, 0.0])
         intvl = surfaceintersection(az1, r)
         @test isapprox(point(OpticSim.lower(intvl)), [0.0, 1.5, -0.5], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(intvl)), [0.0, -1.5, -0.5], rtol=RTOLERANCE, atol=ATOLERANCE)
+        @test isapprox(point(OpticSim.lower(intvl)), [0.0, 1.5, -0.5], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(intvl)), [0.0, -1.5, -0.5], rtol=RTOLERANCE, atol=ATOLERANCE)
 
         # hit cyl from inside
         r = Ray([0.0, 0.0, -0.5], [0.0, -1.0, 0.0])
         intvl = surfaceintersection(az1, r)
+        @test (OpticSim.lower(intvl) isa RayOrigin) && isapprox(point(OpticSim.upper(intvl)), [0.0, -1.5, -0.5], rtol=RTOLERANCE, atol=ATOLERANCE)
         @test (OpticSim.lower(intvl) isa RayOrigin) && isapprox(point(OpticSim.upper(intvl)), [0.0, -1.5, -0.5], rtol=RTOLERANCE, atol=ATOLERANCE)
     end # testset GridSag
 end # testset intersection

@@ -29,6 +29,8 @@
             if !(rₜ === nothing)
                 sinθₜ = norm(cross(-nₛ, rₜ))
                 sinθᵢ = norm(cross(nₛ, rᵢ))
+                a = isapprox(ηₜ * sinθₜ, ηᵢ * sinθᵢ, rtol=RTOLERANCE, atol=ATOLERANCE) #verify snell's law for the the transmitted and incident ray
+                b = isapprox(1.0, norm(rₜ), rtol=RTOLERANCE, atol=ATOLERANCE) #verify transmitted ray is unit
                 a = isapprox(ηₜ * sinθₜ, ηᵢ * sinθᵢ, rtol=RTOLERANCE, atol=ATOLERANCE) #verify OpticSim.snell's law for the the transmitted and incident ray
                 b = isapprox(1.0, norm(rₜ), rtol=RTOLERANCE, atol=ATOLERANCE) #verify transmitted ray is unit
                 perp = normalize(cross(nₛ, rᵢ))
@@ -46,6 +48,9 @@
             nₛ = randunit()
             n1 = 1.0
             n2 = 1.4
+            sθ1, sθ2 = OpticSim.snell(nₛ, r, n1, n2)
+            sθ3, sθ4 = OpticSim.snell(nₛ, r, n2, n1)
+            @test isapprox(sθ1 * n1, sθ2 * n2, rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(sθ3 * n2, sθ4 * n1, rtol=RTOLERANCE, atol=ATOLERANCE)
             sθ1, sθ2 = OpticSim.snell(nₛ, r, n1, n2)
             sθ3, sθ4 = OpticSim.snell(nₛ, r, n2, n1)
             @test isapprox(sθ1 * n1, sθ2 * n2, rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(sθ3 * n2, sθ4 * n1, rtol=RTOLERANCE, atol=ATOLERANCE)
