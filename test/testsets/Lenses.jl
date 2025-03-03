@@ -48,8 +48,8 @@
             nₛ = randunit()
             n1 = 1.0
             n2 = 1.4
-            sθ1, sθ2 = snell(nₛ, r, n1, n2)
-            sθ3, sθ4 = snell(nₛ, r, n2, n1)
+            sθ1, sθ2 = OpticSim.snell(nₛ, r, n1, n2)
+            sθ3, sθ4 = OpticSim.snell(nₛ, r, n2, n1)
             @test isapprox(sθ1 * n1, sθ2 * n2, rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(sθ3 * n2, sθ4 * n1, rtol=RTOLERANCE, atol=ATOLERANCE)
             sθ1, sθ2 = OpticSim.snell(nₛ, r, n1, n2)
             sθ3, sθ4 = OpticSim.snell(nₛ, r, n2, n1)
