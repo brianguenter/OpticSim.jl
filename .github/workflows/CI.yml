@@ -38,7 +38,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt install libxt6 libxrender1 libxext6 libgl1-mesa-glx libqt5widgets5
-      - uses: actions/cache@v2
+      - uses: actions/cache@v4
         env:
           cache-name: cache-artifacts
         with:
