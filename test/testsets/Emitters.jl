@@ -9,6 +9,7 @@
     using StaticArrays
     import StableRNGs
 end
+
 @testitem "RayListSource" setup = [Dependencies] begin
     rays = Vector{OpticalRay{Float64,3}}(undef, 0)
     for i in 0:7
@@ -25,6 +26,9 @@ end
 
 #Angular power tests
 
+@testitem "Lambertian" setup = [Dependencies] begin
+    @test typeof(AngularPower.Lambertian()) === AngularPower.Lambertian{Float64}
+    @test_throws MethodError AngularPower.Lambertian(String)
 @testitem "Lambertian" setup = [Dependencies] begin
     @test typeof(AngularPower.Lambertian()) === AngularPower.Lambertian{Float64}
     @test_throws MethodError AngularPower.Lambertian(String)
@@ -50,8 +54,8 @@ end
 #Directions tests
 
 @testitem "Constant" setup = [Dependencies] begin
-    @test Directions.Constant(0, 0, 0).direction === Vec3(Int)
-    @test Directions.Constant(Vec3()).direction === Vec3()
+    @test Directions.Constant(0, 0, 0).direction === Geometry.Vec3(Int)
+    @test Directions.Constant(Geometry.Vec3()).direction === Geometry.Vec3()
     @test Directions.Constant().direction === unitZ3()
 
     @test Base.length(Directions.Constant()) === 1
@@ -73,7 +77,7 @@ end
     @test Directions.RectGrid(0.0, 0.0, 0, 0).vvec === unitY3()
 
     @test Base.length(Directions.RectGrid(0.0, 0.0, 2, 3)) === 6
-    @test collect(Directions.RectGrid(ones(Vec3), π / 4, π / 4, 2, 3)) == [
+    @test collect(Directions.RectGrid(ones(Geometry.Vec3), π / 4, π / 4, 2, 3)) == [
         [0.6014252485829169, 0.7571812496798511, 1.2608580392339483],
         [1.1448844430815608, 0.4854516524305293, 0.9891284419846265],
         [0.643629619770125, 1.0798265148205617, 1.0798265148205617],
@@ -114,19 +118,19 @@ end
 
 #Origins tests
 @testitem "Point" setup = [Dependencies] begin
-    @test Origins.Point(Vec3()).origin === Vec3()
-    @test Origins.Point(0, 0, 0).origin === Vec3(Int)
-    @test Origins.Point().origin === Vec3()
+    @test Origins.Point(Geometry.Vec3()).origin === Geometry.Vec3()
+    @test Origins.Point(0, 0, 0).origin === Geometry.Vec3(Int)
+    @test Origins.Point().origin === Geometry.Vec3()
 
     @test Base.length(Origins.Point()) === 1
     @test Emitters.visual_size(Origins.Point()) === 1
     @test Emitters.visual_size(Origins.Point()) === 1
-    @test Emitters.generate(Origins.Point(), 1) === Vec3()
+    @test Emitters.generate(Origins.Point(), 1) === Geometry.Vec3()
 
-    @test Base.iterate(Origins.Point(), 1) === (Vec3(), 2)
+    @test Base.iterate(Origins.Point(), 1) === (Geometry.Vec3(), 2)
     @test Base.iterate(Origins.Point(), 2) === nothing
-    @test Base.getindex(Origins.Point(), 1) === Vec3()
-    @test Base.getindex(Origins.Point(), 2) === Vec3()
+    @test Base.getindex(Origins.Point(), 1) === Geometry.Vec3()
+    @test Base.getindex(Origins.Point(), 2) === Geometry.Vec3()
     @test Base.firstindex(Origins.Point()) === 0
     @test Base.lastindex(Origins.Point()) === 0
     @test Base.copy(Origins.Point()) === Origins.Point()
@@ -200,7 +204,7 @@ end
 end
 
 @testitem "Spectrum" setup = [Dependencies] begin
-    @testitem "Uniform" begin
+    @testset "Uniform" begin
         @test Spectrum.UNIFORMSHORT === 0.450
         @test Spectrum.UNIFORMLONG === 0.680
         @test Spectrum.Uniform(0, 1).low_end === 0
@@ -209,18 +213,11 @@ end
         @test Spectrum.Uniform().high_end === 0.680
     end
 
-    @testitem "DeltaFunction" setup = [Dependencies] begin
+    @testset "DeltaFunction" begin
         @test Emitters.generate(Spectrum.DeltaFunction(2)) === (1, 2)
         @test Emitters.generate(Spectrum.DeltaFunction(2.0)) === (1.0, 2.0)
         @test Emitters.generate(Spectrum.DeltaFunction(π)) === (true, π) # hopefully this is ok!
     end
-<<<<<<< Updated upstream
-
-    @testitem "Measured" setup = [Dependencies] begin
-        # TODO
-    end
-=======
->>>>>>> Stashed changes
 end
 
 #Sources tests
@@ -247,16 +244,6 @@ end
         directions=Directions.HexapolarCone(0.0, 1)
     )) === 49
 
-<<<<<<< Updated upstream
-    @test Base.iterate(Sources.Source(spectrum=Spectrum.Uniform(rng=Random.MersenneTwister(0)))) === (expected_rays[1], Sources.SourceGenerationState(2, 0, Vec3()))
-
-    @test Base.getindex(Sources.Source(spectrum=Spectrum.Uniform(rng=Random.MersenneTwister(0))), 0) === expected_rays[1]
-    @test Emitters.generate(Sources.Source(spectrum=Spectrum.Uniform(rng=Random.MersenneTwister(0))), 0) === expected_rays[1]
-
-    @test Emitters.generate(Sources.Source(spectrum=Spectrum.Uniform(rng=Random.MersenneTwister(0)))) === (expected_rays[1], Sources.SourceGenerationState(0, -2, Vec3()))
-
-=======
->>>>>>> Stashed changes
     @test Base.firstindex(Sources.Source()) === 0
     @test Base.lastindex(Sources.Source()) === 0
     @test Base.copy(Sources.Source()) === Sources.Source()
@@ -286,14 +273,5 @@ end
     @test Base.length(cs1) === 1
     @test Base.length(cs2) === 2
     @test Base.length(cs3) === 3
-<<<<<<< Updated upstream
-
-    @test Base.iterate(cs1) === (expected_rays[1], Sources.SourceGenerationState(2, 0, Vec3()))
-
-    @test collect(cs2) == vcat(expected_rays[1:1], expected_rays[1:1])
-
-    @test collect(cs3) == vcat(expected_rays[1:1], expected_rays[2:2], expected_rays[2:2])
-=======
->>>>>>> Stashed changes
 end
 

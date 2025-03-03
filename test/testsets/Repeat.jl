@@ -2,7 +2,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # See LICENSE in the project root for full license information.
 
-@testitem "Repeat" begin
+@testitem "Repeat" setup = [Dependencies] begin
     function hex3RGB()
         clusterelements = SVector((0, 0), (-1, 0), (-1, 1))
         colors = [colorant"red", colorant"green", colorant"blue"]
