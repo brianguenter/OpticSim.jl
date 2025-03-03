@@ -29,9 +29,6 @@ end
 @testitem "Lambertian" setup = [Dependencies] begin
     @test typeof(AngularPower.Lambertian()) === AngularPower.Lambertian{Float64}
     @test_throws MethodError AngularPower.Lambertian(String)
-@testitem "Lambertian" setup = [Dependencies] begin
-    @test typeof(AngularPower.Lambertian()) === AngularPower.Lambertian{Float64}
-    @test_throws MethodError AngularPower.Lambertian(String)
 
     @test apply(AngularPower.Lambertian(), Transform(), 1, Ray(zeros(3), ones(3))) === 1
 end

@@ -13,8 +13,6 @@ using TestItemRunner
     const SEED = 12312487
 end
 
-<<<<<<< Updated upstream
-=======
 @testsnippet Dependencies begin
     using Random
     using OpticSim.Emitters
@@ -29,7 +27,6 @@ end
     include("TestData/TestData.jl")
 end
 
->>>>>>> Stashed changes
 """Evaluate all functions not requiring arguments in a given module and test they don't throw anything"""
 macro test_all_no_arg_functions(m)
     quote
