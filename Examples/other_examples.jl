@@ -25,12 +25,12 @@ end
     opticalhemisphere()
 
 Create an optical hemisphere that has optical material properties so it will reflect and refract light. In the previous
-example the hemisphere object had optical properties of Air, which is the default optical interface, so it won't refract
+example the hemisphere object had optical properties of AGFFileReader.Air, which is the default optical interface, so it won't refract
 or reflect light.
 """
 function opticalhemisphere()::CSGOpticalSystem
-    sph = Sphere(10.0, interface=FresnelInterface{Float64}(Examples_N_BK7, Air))
-    pln = Plane(0.0, 0.0, -1.0, 0.0, 0.0, 0.0, interface=FresnelInterface{Float64}(Examples_N_BK7, Air))
+    sph = Sphere(10.0, interface=FresnelInterface{Float64}(AGFFileReader.Examples_N_BK7, AGFFileReader.Air))
+    pln = Plane(0.0, 0.0, -1.0, 0.0, 0.0, 0.0, interface=FresnelInterface{Float64}(AGFFileReader.Examples_N_BK7, AGFFileReader.Air))
     assy = LensAssembly{Float64}((sph ∩ pln)())
     return CSGOpticalSystem(assy, Rectangle(1.0, 1.0, SVector{3,Float64}(0.0, 0.0, 1.0), SVector{3,Float64}(0.0, 0.0, -11.0)))
 end
@@ -43,7 +43,7 @@ function cooketriplet(::Type{T}=Float64, detpix::Int=1000) where {T<:Real}
             # OptimizeRadius = [false, true, true, true, true, true, true, false],
             Thickness=[Inf, 4.0, 2.0, 4.0, 2.0, 4.0, 44.748, missing],
             # OptimizeThickness = [false, true, true, true, true, true, true, false],
-            Material=[Air, Examples_N_SK16, Air, Examples_N_SF2, Air, Examples_N_SK16, Air, missing],
+            Material=[AGFFileReader.Air, AGFFileReader.Examples_N_SK16, AGFFileReader.Air, AGFFileReader.Examples_N_SF2, AGFFileReader.Air, AGFFileReader.Examples_N_SK16, AGFFileReader.Air, missing],
             SemiDiameter=[Inf, 8.580, 7.513, 7.054, 6.033, 7.003, 7.506, 15.0]
         ),
         detpix,
@@ -57,7 +57,7 @@ function cooketripletfirstelement(::Type{T}=Float64) where {T<:Real}
             SurfaceType=["Object", "Standard", "Standard", "Image"],
             Radius=[Inf, -35.571, 35.571, Inf],
             Thickness=[Inf, 4.0, 44.748, missing],
-            Material=[Air, Examples_N_SK16, Air, missing],
+            Material=[AGFFileReader.Air, AGFFileReader.Examples_N_SK16, AGFFileReader.Air, missing],
             SemiDiameter=[Inf, 7.054, 6.033, 15.0]
         )
     )
@@ -69,7 +69,7 @@ function convexplano(::Type{T}=Float64) where {T<:Real}
             SurfaceType=["Object", "Standard", "Standard", "Image"],
             Radius=[Inf, 60.0, Inf, Inf],
             Thickness=[Inf, 10.0, 57.8, missing],
-            Material=[Air, Examples_N_BK7, Air, missing],
+            Material=[AGFFileReader.Air, AGFFileReader.Examples_N_BK7, AGFFileReader.Air, missing],
             SemiDiameter=[Inf, 9.0, 9.0, 15.0]
         )
     )
@@ -86,7 +86,7 @@ function doubleconvex(frontradius::T, rearradius::T) where {T<:Real}
             Thickness=[convert(T, Inf64), convert(T, 10.0), convert(T, 57.8), missing],
             # OptimizeThickness = [false, false, false, false],
 
-            Material=[Air, Examples_N_BK7, Air, missing],
+            Material=[AGFFileReader.Air, AGFFileReader.Examples_N_BK7, AGFFileReader.Air, missing],
             SemiDiameter=[convert(T, Inf64), convert(T, 9.0), convert(T, 9.0), convert(T, 15.0)]
         )
     )
@@ -102,7 +102,7 @@ function doubleconvexconic(::Type{T}=Float64) where {T<:Real}
             # OptimizeThickness = [false, false, false, false],
             Conic=[missing, 0.01, 0.01, missing],
             # OptimizeConic = [false, true, true, false],
-            Material=[Air, Examples_N_BK7, Air, missing],
+            Material=[AGFFileReader.Air, AGFFileReader.Examples_N_BK7, AGFFileReader.Air, missing],
             SemiDiameter=[Inf64, 9.0, 9.0, 15.0]
         )
     )
@@ -116,7 +116,7 @@ function doubleconvexlensonly(frontradius::T, rearradius::T) where {T<:Real}
             # OptimizeRadius = [false, true, true, false],
             Thickness=[convert(T, Inf64), convert(T, 10.0), convert(T, 57.8), missing],
             # OptimizeThickness = [false, false, false, false],
-            Material=[Air, Examples_N_BK7, Air, missing],
+            Material=[AGFFileReader.Air, AGFFileReader.Examples_N_BK7, AGFFileReader.Air, missing],
             SemiDiameter=[convert(T, Inf64), convert(T, 9.0), convert(T, 9.0), convert(T, 15.0)]
         )
     )
@@ -134,7 +134,7 @@ function doubleconvex(
             # OptimizeRadius = [false, true, true, false],
             Thickness=[Inf64, 10.0, 57.8, missing],
             # OptimizeThickness = [false, true, true, false],
-            Material=[Air, Examples_N_BK7, Air, missing],
+            Material=[AGFFileReader.Air, AGFFileReader.Examples_N_BK7, AGFFileReader.Air, missing],
             SemiDiameter=[Inf64, 9.0, 9.0, 15.0]
         );
         temperature,
@@ -148,7 +148,7 @@ function doubleconcave(::Type{T}=Float64) where {T<:Real}
             SurfaceType=["Object", "Standard", "Standard", "Image"],
             Radius=[Inf64, -41.0, 41.0, Inf64],
             Thickness=[Inf64, 10.0, 57.8, missing],
-            Material=[Air, Examples_N_BK7, Air, missing],
+            Material=[AGFFileReader.Air, AGFFileReader.Examples_N_BK7, AGFFileReader.Air, missing],
             SemiDiameter=[Inf64, 9.0, 9.0, 15.0]
         )
     )
@@ -160,7 +160,7 @@ function planoconcaverefl(::Type{T}=Float64) where {T<:Real}
             SurfaceType=["Object", "Standard", "Standard", "Image"],
             Radius=[Inf64, Inf64, -41.0, Inf64],
             Thickness=[Inf64, 10.0, -57.8, missing],
-            Material=[Air, Examples_N_BK7, Air, missing],
+            Material=[AGFFileReader.Air, AGFFileReader.Examples_N_BK7, AGFFileReader.Air, missing],
             SemiDiameter=[Inf64, 9.0, 9.0, 25.0],
             Reflectance=[missing, missing, 1.0, missing]
         )
@@ -173,7 +173,7 @@ function concaveplano(::Type{T}=Float64) where {T<:Real}
             SurfaceType=["Object", "Standard", "Standard", "Image"],
             Radius=[Inf64, -41.0, Inf64, Inf64],
             Thickness=[Inf64, 10.0, 57.8, missing],
-            Material=[Air, Examples_N_BK7, Air, missing],
+            Material=[AGFFileReader.Air, AGFFileReader.Examples_N_BK7, AGFFileReader.Air, missing],
             SemiDiameter=[Inf64, 9.0, 9.0, 15.0]
         )
     )
@@ -185,7 +185,7 @@ function planoplano(::Type{T}=Float64) where {T<:Real}
             SurfaceType=["Object", "Standard", "Standard", "Image"],
             Radius=[Inf64, Inf64, Inf64, Inf64],
             Thickness=[Inf64, 10.0, 57.8, missing],
-            Material=[Air, Examples_N_BK7, Air, missing],
+            Material=[AGFFileReader.Air, AGFFileReader.Examples_N_BK7, AGFFileReader.Air, missing],
             SemiDiameter=[Inf64, 9.0, 9.0, 15.0]
         )
     )
@@ -194,7 +194,7 @@ end
 """This example no longer works correctly. The visualization code needs to be updated to support RayListSource"""
 function prism_refraction()
     # build the triangular prism
-    int = FresnelInterface{Float64}(Examples_N_SF14, AGFFileReader.Air)
+    int = FresnelInterface{Float64}(AGFFileReader.Examples_N_SF14, AGFFileReader.AGFFileReader.Air)
     s = 2.0
     prism = (
         Plane(
@@ -233,7 +233,7 @@ function prism_refraction()
 end
 
 function fresnel(convex=true; kwargs...)
-    lens = FresnelLens(Examples_N_BK7, 0.0, convex ? 15.0 : -15.0, 1.0, 8.0, 0.8, conic=0.1)
+    lens = FresnelLens(AGFFileReader.Examples_N_BK7, 0.0, convex ? 15.0 : -15.0, 1.0, 8.0, 0.8, conic=0.1)
     sys = CSGOpticalSystem(LensAssembly(lens()), Rectangle(15.0, 15.0, SVector(0.0, 0.0, 1.0), SVector(0.0, 0.0, -25.0), interface=opaqueinterface()))
     Vis.drawtracerays(sys; test=true, trackallrays=true, numdivisions=30, kwargs...)
 end
@@ -258,21 +258,21 @@ function eyetrackHOE(nrays=5000, det=false, showhead=true, zeroorder=false; kwar
     # offset = SVector(-5.0, 10.0, -10.0)
     # for θ in 0:(π / 6):(2π)
     #     ledloc = SVector(20 * cos(θ) + offset[1], 0 + offset[2], 15 * sin(θ) + offset[3])
-    #     int = HologramInterface(ledloc, ConvergingBeam, sourceloc, DivergingBeam, 0.78, 100.0, Air, Examples_N_BK7, Air, Air, Air, 0.05, zeroorder)
+    #     int = HologramInterface(ledloc, ConvergingBeam, sourceloc, DivergingBeam, 0.78, 100.0, AGFFileReader.Air, AGFFileReader.Examples_N_BK7, AGFFileReader.Air, AGFFileReader.Air, AGFFileReader.Air, 0.05, zeroorder)
     #     push!(interfaces, int)
     # end
 
     dirs = [SVector(0.7713, 0.6350, -0.0437), SVector(0.5667, 0.8111, -0.1445), SVector(0.3400, 0.9349, -0.1017), SVector(0.1492, 0.9878, 0.0445), SVector(0.0249, 0.9686, 0.2474), SVector(-0.0184, 0.8855, 0.4643), SVector(0.0254, 0.7537, 0.6567), SVector(0.1548, 0.5964, 0.7876), SVector(0.3570, 0.4462, 0.8207), SVector(0.5959, 0.3470, 0.7242), SVector(0.7976, 0.3449, 0.4948), SVector(0.8680, 0.4555, 0.1978)]
 
     for d in dirs
-        int = HologramInterface(normalize(d), CollimatedBeam, sourceloc, DivergingBeam, 0.78, 100.0, Air, Examples_N_BK7, Air, Air, Air, 0.05, zeroorder)
-        # int = HologramInterface(corneavertex - 10 * d, ConvergingBeam, sourceloc, DivergingBeam, 0.78, 100.0, Air, Examples_N_BK7, Air, Air, Air, 0.05, zeroorder)
+        int = HologramInterface(normalize(d), CollimatedBeam, sourceloc, DivergingBeam, 0.78, 100.0, AGFFileReader.Air, AGFFileReader.Examples_N_BK7, AGFFileReader.Air, AGFFileReader.Air, AGFFileReader.Air, 0.05, zeroorder)
+        # int = HologramInterface(corneavertex - 10 * d, ConvergingBeam, sourceloc, DivergingBeam, 0.78, 100.0, AGFFileReader.Air, AGFFileReader.Examples_N_BK7, AGFFileReader.Air, AGFFileReader.Air, AGFFileReader.Air, 0.05, zeroorder)
         push!(interfaces, int)
     end
 
     mint = MultiHologramInterface(interfaces...)
     obj = MultiHologramSurface(rect, mint)
-    cornea = leaf(Sphere(cornea_rad, interface=FresnelInterface{Float64}(EYE.CORNEA, Air, reflectance=1.0, transmission=0.0)), translation(0.0, er + cornea_rad, 0.0))()
+    cornea = leaf(Sphere(cornea_rad, interface=FresnelInterface{Float64}(EYE.CORNEA, AGFFileReader.Air, reflectance=1.0, transmission=0.0)), translation(0.0, er + cornea_rad, 0.0))()
 
     # cam settings
     fnum = 2.0

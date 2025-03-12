@@ -4,7 +4,7 @@
 
 using DataFrames: nrow
 using Unitful.DefaultSymbols
-using .AGFFileReader: AbstractGlass, TEMP_REF, PRESSURE_REF, Glass, Air
+using .AGFFileReader: AbstractGlass, TEMP_REF, PRESSURE_REF, Glass, AGFFileReader.Air
 
 export AbstractOpticalSystem
 export CSGOpticalSystem, temperature, pressure, detectorimage, resetdetector!, assembly
@@ -330,7 +330,7 @@ struct AxisymmetricOpticalSystem{T,C<:CSGOpticalSystem{T}} <: AbstractOpticalSys
         function skip_row(i::Int)
             return (
                 prescription[i, "SurfaceType"] != "Stop" &&
-                (prescription[i, "Material"] === missing || prescription[i, "Material"] == Air)
+                (prescription[i, "Material"] === missing || prescription[i, "Material"] == AGFFileReader.Air)
             )
         end
         skips::Vector{Bool} = skip_row.(1:nrow(prescription))

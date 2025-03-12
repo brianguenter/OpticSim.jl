@@ -95,7 +95,7 @@ function visualizerefraction()
 end
 
 function plotreflectedvsrefractedpower()
-    lens = OpticSim.SphericalLens(AGFFileReader.Examples_BAK50, 0.0, Inf64, Inf64, 5.0, 10.0)
+    lens = OpticSim.SphericalLens(AGFFileReader.AGFFileReader.Examples_BAK50, 0.0, Inf64, Inf64, 5.0, 10.0)
     reflectpow = Array{Float64,1}(undef, 0)
     refractpow = Array{Float64,1}(undef, 0)
     green = 500 * Unitful.u"nm"
@@ -138,7 +138,7 @@ using Ipopt
 using Zygote
 using NLopt
 
-doubleconvexprescription() = DataFrame(SurfaceType=["Object", "Standard", "Standard", "Image"], Radius=[(Inf64), 60.0, -60.0, (Inf64)], Thickness=[(Inf64), (10.0), (77.8), missing], Material=[AGFFileReader.Air, AGFFileReader.Examples_N_BK7, AGFFileReader.Air, missing], SemiDiameter=[(Inf64), (9.0), (9.0), (15.0)])
+doubleconvexprescription() = DataFrame(SurfaceType=["Object", "Standard", "Standard", "Image"], Radius=[(Inf64), 60.0, -60.0, (Inf64)], Thickness=[(Inf64), (10.0), (77.8), missing], Material=[AGFFileReader.Air, AGFFileReader.AGFFileReader.Examples_N_BK7, AGFFileReader.Air, missing], SemiDiameter=[(Inf64), (9.0), (9.0), (15.0)])
 
 function doubleconvex(a::AbstractVector{T}; detpix::Int=100) where {T<:Real}
     frontradius = a[1]
@@ -149,7 +149,7 @@ function doubleconvex(a::AbstractVector{T}; detpix::Int=100) where {T<:Real}
         Radius = [T(Inf64), frontradius, rearradius, T(Inf64)],
         Conic = [missing, -1.0, 1.0, missing],
         Thickness = [T(Inf64), T(10.0), T(77.8), missing],
-        Material = [AGFFileReader.Air, AGFFileReader.Examples_N_BK7, AGFFileReader.Air, missing],
+        Material = [AGFFileReader.Air, AGFFileReader.AGFFileReader.Examples_N_BK7, AGFFileReader.Air, missing],
         SemiDiameter = [T(Inf64), T(9.0), T(9.0), T(15.0)],
     ), detpix, detpix, T, temperature = OpticSim.GlassCat.TEMP_REF_UNITFUL, pressure = OpticSim.GlassCat.PRESSURE_REF)
     #! format: on
