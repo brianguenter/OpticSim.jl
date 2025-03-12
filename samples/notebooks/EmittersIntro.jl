@@ -46,7 +46,7 @@ begin
         DataFrame(SurfaceType=["Object", "Standard", "Standard", "Standard", "Stop", "Standard", "Standard", "Image"],
             Radius=[Inf, 26.777, 66.604, -35.571, 35.571, 35.571, -26.777, Inf],
             Thickness=[Inf, 4.0, 2.0, 4.0, 2.0, 4.0, 44.748, missing],
-            Material=[AGFFileReader.Air, OpticSim.Examples.Examples_N_SK16, AGFFileReader.Air, OpticSim.Examples.Examples_N_SF2, AGFFileReader.Air, OpticSim.Examples.Examples_N_SK16, AGFFileReader.Air, missing],
+            Material=[AGFFileReader.Air, OpticSim.Examples.AGFFileReader.Examples_N_SK16, AGFFileReader.Air, OpticSim.Examples.AGFFileReader.Examples_N_SF2, AGFFileReader.Air, OpticSim.Examples.AGFFileReader.Examples_N_SK16, AGFFileReader.Air, missing],
             SemiDiameter=[Inf, 8.580, 7.513, 7.054, 6.033, 7.003, 7.506, 15.0]))
     @show sys
 end
@@ -355,7 +355,7 @@ begin
     local combined_sources = Sources.CompositeSource(Transform(Geometry.Vec3(0.0, 0.0, 10.0), unitZ3() * -1), [s1, s2])
 
     # and draw the system + the generated rays
-    Vis.drawtracerays(sys, raygenerator=combined_sources, resolution=resolution(), test=true, trackallrays=true, colorbysourcenum=true, drawgen=false)
+    Vis.draw_trace_rays(sys, raygenerator=combined_sources, resolution=resolution(), test=true, trackallrays=true, colorbysourcenum=true, drawgen=false)
 end
 
 # ╔═╡ Cell order:

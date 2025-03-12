@@ -43,6 +43,7 @@
         coeff = [1.0 2.0 3.0]
         curve = PowerBasisCurve{OpticSim.Euclidean,Float64,1,2}(coeff)
         @test !all(isapprox.(coeff, OpticSim.coefficients(curve, 1), rtol=RTOLERANCE, atol=ATOLERANCE)) # TODO not sure if this is correct/what this is testing?
+        @test !all(isapprox.(coeff, OpticSim.coefficients(curve, 1), rtol=RTOLERANCE, atol=ATOLERANCE)) # TODO not sure if this is correct/what this is testing?
         correct = true
         for x in -10.0:0.1:10
             exact = 3 * x^2 + 2 * x + 1

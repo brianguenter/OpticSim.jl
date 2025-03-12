@@ -34,7 +34,7 @@ function ModelEye(assembly::LensAssembly{T}; nsamples::Int=17, pupil_radius::T=3
 
     vitreous_chamber_csg = (
         leaf(
-            Sphere(11.0, interface=FresnelInterface{T}(EYE.VITREOUS, Air, reflectance=0.0, transmission=0.0)),
+            Sphere(11.0, interface=FresnelInterface{T}(EYE.VITREOUS, AGFFileReader.Air, reflectance=0.0, transmission=0.0)),
             translation(0.0, 0.0, -13.138998863513297)
         ) ∩
         Plane(0.0, 0.0, 1.0, 0.0, 0.0, -3.72, interface=FresnelInterface{T}(EYE.VITREOUS, EYE.AQUEOUS)) ∩
@@ -66,7 +66,7 @@ Returns a `DataFrame` specifying the prescription of the eye model.
 function ArizonaEye(::Type{T} = Float64; accommodation::T = 0.0) where {T<:Real}
     # from https://photonengr.com/wp-content/uploads/kbasefiles/ArizonaEyeModel.pdf also in our documentation/papers directory
     return DataFrame(
-        Name = ["Air", "Cornea", "Aqueous", "Lens", "Vitreous", "Retina"],
+        Name = ["AGFFileReader.Air", "Cornea", "Aqueous", "Lens", "Vitreous", "Retina"],
         Surface = ["Object", "Standard", "Standard", "Standard", "Standard", "Image"],
         Radius = [Inf64, 7.8, 6.5, 12.0 - 0.4*accommodation, -5.22 + 0.2*accommodation, -13.4],
         Conic = [missing, -.25, -.25, -7.52 + 1.29*accommodation, -1.35 - 0.43*accommodation, missing],

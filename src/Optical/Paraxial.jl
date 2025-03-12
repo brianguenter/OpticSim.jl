@@ -6,7 +6,7 @@
     ParaxialLens{T} <: Surface{T}
 
 `surfacenormal` is the **output** direction of the lens.
-Paraxial lens cannot act as the interface between two materials, hence only a single outside material is specified, by default Air.
+Paraxial lens cannot act as the interface between two materials, hence only a single outside material is specified, by default AGFFileReader.Air.
 
 Create with the following functions
 ```julia

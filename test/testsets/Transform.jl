@@ -11,6 +11,8 @@
     ]
     x, y, z, w = Geometry.Vec4.([A[:, i] for i in 1:4])
     @test Geometry.matrix(Geometry.Transform(x, y, z, w)) == A
+    x, y, z, w = Geometry.Vec4.([A[:, i] for i in 1:4])
+    @test Geometry.matrix(Geometry.Transform(x, y, z, w)) == A
 
     B = [
         1 2 3 4;
@@ -18,6 +20,8 @@
         8 9 10 11;
         0 0 0 1
     ]
+    x, y, z, w = Geometry.Vec3.([B[1:3, i] for i in 1:4])
+    @test B == Geometry.matrix(Geometry.Transform(x, y, z, w))
     x, y, z, w = Geometry.Vec3.([B[1:3, i] for i in 1:4])
     @test B == Geometry.matrix(Geometry.Transform(x, y, z, w))
 

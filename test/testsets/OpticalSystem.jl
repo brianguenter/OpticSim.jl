@@ -19,7 +19,7 @@
                 # OptimizeRadius = [false, true, true, false],
                 Thickness=[Inf64, 10.0, 57.8, missing],
                 # OptimizeThickness = [false, true, true, false],
-                Material=[Air, Examples_N_BK7, Air, missing],
+                Material=[AGFFileReader.Air, AGFFileReader.Examples_N_BK7, AGFFileReader.Air, missing],
                 SemiDiameter=[Inf64, 9.0, 9.0, 15.0]
             );
             temperature,

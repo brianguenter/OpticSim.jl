@@ -43,7 +43,7 @@ begin
         DataFrame(SurfaceType=["Object", "Standard", "Standard", "Standard", "Stop", "Standard", "Standard", "Image"],
             Radius=[Inf, 26.777, 66.604, -35.571, 35.571, 35.571, -26.777, Inf],
             Thickness=[Inf, 4.0, 2.0, 4.0, 2.0, 4.0, 44.748, missing],
-            Material=[AGFFileReader.Air, OpticSim.Examples.Examples_N_SK16, AGFFileReader.Air, OpticSim.Examples.Examples_N_SF2, AGFFileReader.Air, OpticSim.Examples.Examples_N_SK16, AGFFileReader.Air, missing],
+            Material=[AGFFileReader.Air, OpticSim.Examples.AGFFileReader.Examples_N_SK16, AGFFileReader.Air, OpticSim.Examples.AGFFileReader.Examples_N_SF2, AGFFileReader.Air, OpticSim.Examples.AGFFileReader.Examples_N_SK16, AGFFileReader.Air, missing],
             SemiDiameter=[Inf, 8.580, 7.513, 7.054, 6.033, 7.003, 7.506, 15.0]))
     @show sys_cooke
 end
@@ -155,14 +155,14 @@ begin
     drawing# notebook only - create dependency on drawing backend - comment if running in REPL
 
     # glass entrance lens on telescope
-    topsurf = Plane(OpticSim.SVector(0.0, 0.0, 1.0), OpticSim.SVector(0.0, 0.0, 0.0), interface=FresnelInterface{Float64}(AGFFileReader.Examples_N_BK7, AGFFileReader.Air), vishalfsizeu=12.00075, vishalfsizev=12.00075)
-    botsurf = AcceleratedParametricSurface(ZernikeSurface(12.00075, radius=-1.14659768e+4, aspherics=[(4, 3.68090959e-7), (6, 2.73643352e-11), (8, 3.20036892e-14)]), 17, interface=FresnelInterface{Float64}(AGFFileReader.Examples_N_BK7, AGFFileReader.Air))
+    topsurf = Plane(OpticSim.SVector(0.0, 0.0, 1.0), OpticSim.SVector(0.0, 0.0, 0.0), interface=FresnelInterface{Float64}(AGFFileReader.AGFFileReader.Examples_N_BK7, AGFFileReader.Air), vishalfsizeu=12.00075, vishalfsizev=12.00075)
+    botsurf = AcceleratedParametricSurface(ZernikeSurface(12.00075, radius=-1.14659768e+4, aspherics=[(4, 3.68090959e-7), (6, 2.73643352e-11), (8, 3.20036892e-14)]), 17, interface=FresnelInterface{Float64}(AGFFileReader.AGFFileReader.Examples_N_BK7, AGFFileReader.Air))
     coverlens = Cylinder(12.00075, 1.4) ∩ topsurf ∩ leaf(botsurf, Transform(OpticSim.rotmatd(0, 180, 0), OpticSim.SVector(0.0, 0.0, -0.65)))
     # big mirror with a hole in it
-    bigmirror = ConicLens(AGFFileReader.Examples_N_BK7, -72.65, -95.2773500000134, 0.077235, Inf, 0.0, 0.2, 12.18263, frontsurfacereflectance=1.0)
+    bigmirror = ConicLens(AGFFileReader.AGFFileReader.Examples_N_BK7, -72.65, -95.2773500000134, 0.077235, Inf, 0.0, 0.2, 12.18263, frontsurfacereflectance=1.0)
     bigmirror = bigmirror - leaf(Cylinder(4.0, 0.3, interface=opaqueinterface()), OpticSim.translation(0.0, 0.0, -72.75))
     # small mirror supported on a spider
-    smallmirror = SphericalLens(AGFFileReader.Examples_N_BK7, -40.65, Inf, -49.6845, 1.13365, 4.3223859, backsurfacereflectance=1.0)
+    smallmirror = SphericalLens(AGFFileReader.AGFFileReader.Examples_N_BK7, -40.65, Inf, -49.6845, 1.13365, 4.3223859, backsurfacereflectance=1.0)
     obscuration1 = OpticSim.Circle(4.5, OpticSim.SVector(0.0, 0.0, 1.0), OpticSim.SVector(0.0, 0.0, -40.649), interface=opaqueinterface())
     obscurations2 = Spider(3, 0.5, 12.0, OpticSim.SVector(0.0, 0.0, -40.65))
     # put it together with the detector
@@ -170,7 +170,7 @@ begin
     det = OpticSim.Circle(3.0, OpticSim.SVector(0.0, 0.0, 1.0), OpticSim.SVector(0.0, 0.0, -92.4542988), interface=opaqueinterface())
     tele = CSGOpticalSystem(la, det)
 
-    Vis.drawtracerays(tele, raygenerator=UniformOpticalSource(CollimatedSource(GridRectOriginPoints(5, 5, 10.0, 10.0, position=OpticSim.SVector(0.0, 0.0, 20.0))), 0.55), trackallrays=true, colorbynhits=true, test=true)
+    Vis.draw_trace_rays(tele, raygenerator=UniformOpticalSource(CollimatedSource(GridRectOriginPoints(5, 5, 10.0, 10.0, position=OpticSim.SVector(0.0, 0.0, 20.0))), 0.55), trackallrays=true, colorbynhits=true, test=true)
 end
 
 # ╔═╡ f08a07c0-8ba3-11eb-382a-23dc079b623a
@@ -178,22 +178,22 @@ begin
     drawing# notebook only - create dependency on drawing backend - comment if running in REPL
 
     local rect = Rectangle(5.0, 5.0, OpticSim.SVector(0.0, 0.0, 1.0), OpticSim.SVector(0.0, 0.0, 0.0))
-    local int = HologramInterface(OpticSim.SVector(0.0, -3.0, -20.0), ConvergingBeam, OpticSim.SVector(0.0, 0.0, -1.0), CollimatedBeam, 0.55, 9.0, AGFFileReader.Air, AGFFileReader.Examples_N_BK7, AGFFileReader.Air, AGFFileReader.Air, AGFFileReader.Air, 0.05, false)
+    local int = HologramInterface(OpticSim.SVector(0.0, -3.0, -20.0), ConvergingBeam, OpticSim.SVector(0.0, 0.0, -1.0), CollimatedBeam, 0.55, 9.0, AGFFileReader.Air, AGFFileReader.AGFFileReader.Examples_N_BK7, AGFFileReader.Air, AGFFileReader.Air, AGFFileReader.Air, 0.05, false)
     local obj = HologramSurface(rect, int)
     local sys = CSGOpticalSystem(LensAssembly(obj), Rectangle(10.0, 10.0, OpticSim.SVector(0.0, 0.0, 1.0), OpticSim.SVector(0.0, 0.0, -25.0), interface=opaqueinterface()))
-    Vis.drawtracerays(sys; raygenerator=UniformOpticalSource(CollimatedSource(GridRectOriginPoints(5, 5, 3.0, 3.0, position=OpticSim.SVector(0.0, 0.0, 10.0), direction=OpticSim.SVector(0.0, 0.0, -1.0))), 0.55), trackallrays=true, rayfilter=nothing, test=true)
+    Vis.draw_trace_rays(sys; raygenerator=UniformOpticalSource(CollimatedSource(GridRectOriginPoints(5, 5, 3.0, 3.0, position=OpticSim.SVector(0.0, 0.0, 10.0), direction=OpticSim.SVector(0.0, 0.0, -1.0))), 0.55), trackallrays=true, rayfilter=nothing, test=true)
 end
 
 # ╔═╡ 5e2debd0-8ba3-11eb-0c4e-09d110230e2d
 begin
     drawing# notebook only - create dependency on drawing backend - comment if running in REPL
 
-    topsurface = leaf(AcceleratedParametricSurface(QTypeSurface(9.0, radius=-25.0, conic=0.3, αcoeffs=[(1, 0, 0.3), (1, 1, 1.0)], βcoeffs=[(1, 0, -0.1), (2, 0, 0.4), (3, 0, -0.6)], normradius=9.5), interface=FresnelInterface{Float64}(AGFFileReader.Examples_N_BK7, AGFFileReader.Air)), OpticSim.translation(0.0, 0.0, 5.0))
-    botsurface = leaf(Plane(0.0, 0.0, -1.0, 0.0, 0.0, -5.0, vishalfsizeu=9.5, vishalfsizev=9.5, interface=FresnelInterface{Float64}(AGFFileReader.Examples_N_BK7, AGFFileReader.Air)))
-    barrel = leaf(Cylinder(9.0, 20.0, interface=FresnelInterface{Float64}(AGFFileReader.Examples_N_BK7, AGFFileReader.Air, reflectance=zero(Float64), transmission=zero(Float64))))
+    topsurface = leaf(AcceleratedParametricSurface(QTypeSurface(9.0, radius=-25.0, conic=0.3, αcoeffs=[(1, 0, 0.3), (1, 1, 1.0)], βcoeffs=[(1, 0, -0.1), (2, 0, 0.4), (3, 0, -0.6)], normradius=9.5), interface=FresnelInterface{Float64}(AGFFileReader.AGFFileReader.Examples_N_BK7, AGFFileReader.Air)), OpticSim.translation(0.0, 0.0, 5.0))
+    botsurface = leaf(Plane(0.0, 0.0, -1.0, 0.0, 0.0, -5.0, vishalfsizeu=9.5, vishalfsizev=9.5, interface=FresnelInterface{Float64}(AGFFileReader.AGFFileReader.Examples_N_BK7, AGFFileReader.Air)))
+    barrel = leaf(Cylinder(9.0, 20.0, interface=FresnelInterface{Float64}(AGFFileReader.AGFFileReader.Examples_N_BK7, AGFFileReader.Air, reflectance=zero(Float64), transmission=zero(Float64))))
     lens = (barrel ∩ topsurface ∩ botsurface)(Transform(0.0, Float64(π), 0.0, 0.0, 0.0, -5.0))
     sys = CSGOpticalSystem(LensAssembly(lens), Rectangle(15.0, 15.0, [0.0, 0.0, 1.0], [0.0, 0.0, -67.8], interface=opaqueinterface()))
-    Vis.drawtracerays(sys, test=true, trackallrays=true)
+    Vis.draw_trace_rays(sys, test=true, trackallrays=true)
 end
 
 # ╔═╡ def239f0-87bc-11eb-2edb-2f859ac41bee
@@ -209,7 +209,7 @@ begin
     local combined_sources = Sources.CompositeSource(Transform(Geometry.Vec3(0.0, 0.0, 10.0), unitZ3() * -1), [s1 s2])
 
     # and draw the system + the generated rays
-    Vis.drawtracerays(sys_cooke, raygenerator=combined_sources, test=true, trackallrays=true, colorbysourcenum=true, drawgen=false)
+    Vis.draw_trace_rays(sys_cooke, raygenerator=combined_sources, test=true, trackallrays=true, colorbysourcenum=true, drawgen=false)
 end
 
 # ╔═╡ 96e423a0-885a-11eb-02a3-8704e8dbdab6

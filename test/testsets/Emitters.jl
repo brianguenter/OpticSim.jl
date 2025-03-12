@@ -2,6 +2,13 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # See LICENSE in the project root for full license information.
 
+@testsnippet Dependencies begin
+    using Random
+    using OpticSim.Emitters
+    using OpticSim.Geometry
+    using StaticArrays
+    import StableRNGs
+end
 
 @testitem "RayListSource" setup = [Dependencies] begin
     rays = Vector{OpticalRay{Float64,3}}(undef, 0)

@@ -5,7 +5,7 @@
 
 #############################################################################
 
-function drawcurve!(canvassize::Int, curve::Spline{P,S,N,M}, numpoints::Int; linewidth=0.5, curvecolor=RGB(1, 0, 1), controlpointcolor=RGB(0, 0, 0), controlpointsize=5, controlpolygoncolor=RGB(0, 0, 0)) where {P,S,N,M}
+function draw_curve!(canvassize::Int, curve::Spline{P,S,N,M}, numpoints::Int; linewidth=0.5, curvecolor=RGB(1, 0, 1), controlpointcolor=RGB(0, 0, 0), controlpointsize=5, controlpolygoncolor=RGB(0, 0, 0)) where {P,S,N,M}
     step = 1.0 / numpoints
 
     point1 = point(curve, 0.0) .* canvassize
@@ -41,17 +41,19 @@ function drawcurve!(canvassize::Int, curve::Spline{P,S,N,M}, numpoints::Int; lin
         Luxor.line(Luxor.Point(pt1...), Luxor.Point(pt2...), :fillstroke)
     end
 end
+publicdraw_curve!
 
-function drawcurves(curves::Vararg{Spline{P,S,N,M}}; numpoints::Int=200, canvassize::Int=2000) where {P,S,N,M}
+function draw_curves(curves::Vararg{Spline{P,S,N,M}}; numpoints::Int=200, canvassize::Int=2000) where {P,S,N,M}
     canvas = Luxor.Drawing(canvassize, canvassize)
     Luxor.background("white")
-    drawcurve!(canvassize, curves[1], numpoints, linewidth=5, curvecolor=RGB(0, 1, 1))
+    draw_curve!(canvassize, curves[1], numpoints, linewidth=5, curvecolor=RGB(0, 1, 1))
     for curve in curves[2:end]
-        drawcurve!(canvassize, curve, numpoints, linewidth=1, controlpointcolor=RGB(1, 0, 0), controlpointsize=3, controlpolygoncolor=RGB(0, 1, 0))
+        draw_curve!(canvassize, curve, numpoints, linewidth=1, controlpointcolor=RGB(1, 0, 0), controlpointsize=3, controlpolygoncolor=RGB(0, 1, 0))
     end
     Luxor.finish()
     Luxor.preview()
 end
+publicdraw_curves
 
 #############################################################################
 
@@ -161,6 +163,7 @@ function draw(ob; resolution=(1000, 1000), kwargs...)
         return scene
     end
 end
+publicdraw
 
 """
     draw!([scene = currentscene], ob; kwargs...)
@@ -183,6 +186,7 @@ function draw!(ob; kwargs...)
         return scene
     end
 end
+publicdraw!
 
 """
     save(path::String)
@@ -192,6 +196,8 @@ Save the current Makie scene to an image file.
 function save(path::String)
     Makie.save(path, current_main_scene; update=false)
 end
+publicsave
+
 function save(::Nothing) end
 
 #############################################################################
@@ -435,7 +441,7 @@ onlydetectorrays(system::Q, tracevalue::LensTrace{T,3}) where {T<:Real,Q<:Abstra
 
 ## RAY GEN
 """
-    drawtracerays(system::Q; raygenerator::S = Source(transform = Transform.translation(0.0,0.0,10.0), origins = Origins.RectGrid(10.0,10.0,25,25),directions = Constant(0.0,0.0,-1.0)), test::Bool = false, trackallrays::Bool = false, colorbysourcenum::Bool = false, colorbynhits::Bool = false, rayfilter::Union{Nothing,Function} = onlydetectorrays, kwargs...)
+    draw_trace_rays(system::Q; raygenerator::S = Source(transform = Transform.translation(0.0,0.0,10.0), origins = Origins.RectGrid(10.0,10.0,25,25),directions = Constant(0.0,0.0,-1.0)), test::Bool = false, trackallrays::Bool = false, colorbysourcenum::Bool = false, colorbynhits::Bool = false, rayfilter::Union{Nothing,Function} = onlydetectorrays, kwargs...)
 
 Displays a model of the optical system.
 `raygenerator` is an iterator that generates rays.
@@ -444,23 +450,24 @@ If `trackallrays` is true then ray paths from the emitter will be displayed othe
 
 By default only ray paths that eventually intersect the detector surface are displayed. If you want to display all ray paths set `rayfilter = nothing`.
 
-Also `drawtracerays!` to add to an existing Axis, with `drawsys` and `drawgen` to specify whether `system` and `raygenerator` should be drawn respectively.
+Also `draw_trace_rays!` to add to an existing Axis, with `drawsys` and `drawgen` to specify whether `system` and `raygenerator` should be drawn respectively.
 """
-function drawtracerays(system::Q; raygenerator::S=Source(transform=translation(0.0, 0.0, 10.0), origins=Origins.RectGrid(10.0, 10.0, 25, 25), directions=Constant(0.0, 0.0, -1.0)), test::Bool=false, trackallrays::Bool=false, colorbysourcenum::Bool=false, colorbynhits::Bool=false, rayfilter::Union{Nothing,Function}=onlydetectorrays, verbose::Bool=false, resolution::Tuple{Int,Int}=(1000, 1000), kwargs...) where {T<:Real,Q<:AbstractOpticalSystem{T},S<:AbstractRayGenerator{T}}
+function draw_trace_rays(system::Q; raygenerator::S=Source(transform=translation(0.0, 0.0, 10.0), origins=Origins.RectGrid(10.0, 10.0, 25, 25), directions=Constant(0.0, 0.0, -1.0)), test::Bool=false, trackallrays::Bool=false, colorbysourcenum::Bool=false, colorbynhits::Bool=false, rayfilter::Union{Nothing,Function}=onlydetectorrays, verbose::Bool=false, resolution::Tuple{Int,Int}=(1000, 1000), kwargs...) where {T<:Real,Q<:AbstractOpticalSystem{T},S<:AbstractRayGenerator{T}}
     verbose && println("Drawing System...")
     s, ls = Vis.scene(resolution)
 
-    drawtracerays!(ls, system, raygenerator=raygenerator, test=test, colorbysourcenum=colorbysourcenum, colorbynhits=colorbynhits, rayfilter=rayfilter, trackallrays=trackallrays, verbose=verbose, drawsys=true, drawgen=true; kwargs...)
+    draw_trace_rays!(ls, system, raygenerator=raygenerator, test=test, colorbysourcenum=colorbysourcenum, colorbynhits=colorbynhits, rayfilter=rayfilter, trackallrays=trackallrays, verbose=verbose, drawsys=true, drawgen=true; kwargs...)
 
     display(s)
     if (get_current_mode() == :pluto || get_current_mode() == :docs)
         return s
     end
 end
+publicdrawtracerays
 
-drawtracerays!(system::Q; kwargs...) where {T<:Real,Q<:AbstractOpticalSystem{T}} = drawtracerays!(current_3d_scene, system; kwargs...)
+draw_trace_rays!(system::Q; kwargs...) where {T<:Real,Q<:AbstractOpticalSystem{T}} = draw_trace_rays!(current_3d_scene, system; kwargs...)
 
-function drawtracerays!(ax::Makie.AbstractAxis, system::Q; raygenerator::S=Source(transform=translation(0.0, 0.0, 10.0), origins=Origins.RectGrid(10.0, 10.0, 25, 25), directions=Constant(0.0, 0.0, -1.0)), test::Bool=false, trackallrays::Bool=false, colorbysourcenum::Bool=false, colorbynhits::Bool=false, rayfilter::Union{Nothing,Function}=onlydetectorrays, verbose::Bool=false, drawsys::Bool=false, drawgen::Bool=false, kwargs...) where {T<:Real,Q<:AbstractOpticalSystem{T},S<:AbstractRayGenerator{T}}
+function draw_trace_rays!(ax::Makie.AbstractAxis, system::Q; raygenerator::S=Source(transform=translation(0.0, 0.0, 10.0), origins=Origins.RectGrid(10.0, 10.0, 25, 25), directions=Constant(0.0, 0.0, -1.0)), test::Bool=false, trackallrays::Bool=false, colorbysourcenum::Bool=false, colorbynhits::Bool=false, rayfilter::Union{Nothing,Function}=onlydetectorrays, verbose::Bool=false, drawsys::Bool=false, drawgen::Bool=false, kwargs...) where {T<:Real,Q<:AbstractOpticalSystem{T},S<:AbstractRayGenerator{T}}
     raylines = Vector{LensTrace{T,3}}(undef, 0)
 
     drawgen && draw!(scene, raygenerator; kwargs...)
@@ -496,13 +503,14 @@ function drawtracerays!(ax::Makie.AbstractAxis, system::Q; raygenerator::S=Sourc
     verbose && println("Drawing Rays...")
     draw!(ax, raylines, colorbysourcenum=colorbysourcenum, colorbynhits=colorbynhits; kwargs...)
 end
+publicdrawtracerays!
 
 """
-    drawtraceimage(system::Q; raygenerator::S = Source(transform = translation(0.0,0.0,10.0), origins = Origins.RectGrid(10.0,10.0,25,25),directions = Constant(0.0,0.0,-1.0)), test::Bool = false)
+    draw_trace_image(system::Q; raygenerator::S = Source(transform = translation(0.0,0.0,10.0), origins = Origins.RectGrid(10.0,10.0,25,25),directions = Constant(0.0,0.0,-1.0)), test::Bool = false)
 
 Traces rays from `raygenerator` through `system` and shows and returns the detector image. `verbose` will print progress updates.
 """
-function drawtraceimage(system::Q; raygenerator::S=Source(transform=translation(0.0, 0.0, 10.0), origins=Origins.RectGrid(10.0, 10.0, 25, 25), directions=Constant(0.0, 0.0, -1.0)), test::Bool=false, verbose::Bool=false) where {T<:Real,Q<:AbstractOpticalSystem{T},S<:AbstractRayGenerator{T}}
+function draw_trace_image(system::Q; raygenerator::S=Source(transform=translation(0.0, 0.0, 10.0), origins=Origins.RectGrid(10.0, 10.0, 25, 25), directions=Constant(0.0, 0.0, -1.0)), test::Bool=false, verbose::Bool=false) where {T<:Real,Q<:AbstractOpticalSystem{T},S<:AbstractRayGenerator{T}}
     resetdetector!(system)
     start_time = time()
     for (i, r) in enumerate(raygenerator)
@@ -519,6 +527,7 @@ function drawtraceimage(system::Q; raygenerator::S=Source(transform=translation(
     show(detectorimage(system))
     return detectorimage(system)
 end
+publicdrawtraceimage
 
 ## RAYS, LINES AND POINTS
 
