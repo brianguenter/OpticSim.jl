@@ -229,13 +229,13 @@ function prism_refraction()
     end
     raygen = Emitters.Sources.RayListSource(rays)
     # draw the result
-    Vis.drawtracerays(sys, raygenerator=raygen, test=true, trackallrays=true)
+    Vis.draw_trace_rays(sys, raygenerator=raygen, test=true, trackallrays=true)
 end
 
 function fresnel(convex=true; kwargs...)
     lens = FresnelLens(AGFFileReader.Examples_N_BK7, 0.0, convex ? 15.0 : -15.0, 1.0, 8.0, 0.8, conic=0.1)
     sys = CSGOpticalSystem(LensAssembly(lens()), Rectangle(15.0, 15.0, SVector(0.0, 0.0, 1.0), SVector(0.0, 0.0, -25.0), interface=opaqueinterface()))
-    Vis.drawtracerays(sys; test=true, trackallrays=true, numdivisions=30, kwargs...)
+    Vis.draw_trace_rays(sys; test=true, trackallrays=true, numdivisions=30, kwargs...)
 end
 
 """This example no longer works correctly. The visualization code needs to be updated to support RayListSource"""
@@ -317,7 +317,7 @@ function eyetrackHOE(nrays=5000, det=false, showhead=true, zeroorder=false; kwar
     if det
         Vis.show(OpticSim.traceMT(sys, source))
     else
-        Vis.drawtracerays(sys; raygenerator=source, trackallrays=true, kwargs...)
+        Vis.draw_trace_rays(sys; raygenerator=source, trackallrays=true, kwargs...)
         # for θ in 0:(π / 6):(2π)
         #     ledloc = SVector(20 * cos(θ) + offset[1], 0 + offset[2], 15 * sin(θ) + offset[3])
         #     Vis.draw!(leaf(Sphere(1.0), translation(ledloc...)), color = :red)

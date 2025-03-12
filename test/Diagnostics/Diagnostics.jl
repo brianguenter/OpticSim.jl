@@ -62,7 +62,7 @@ function vistest(sys::AbstractOpticalSystem{Float64}; kwargs...)
     r4 = OpticalRay([0.0, -5.0, 1.0], [0.0, 0.08715574274765818, -0.9961946980917454], 1.0, λ)
     r5 = OpticalRay([-5.0, -5.0, 1.0], [0.08715574274765818, -0.01738599476176408, -0.9960429728140486], 1.0, λ)
     raygen = Emitters.Sources.RayListSource([r1, r2, r3, r4, r5])
-    Vis.drawtracerays(sys, raygenerator=raygen, trackallrays=true, test=true; kwargs...)
+    Vis.draw_trace_rays(sys, raygenerator=raygen, trackallrays=true, test=true; kwargs...)
     for (i, r) in enumerate(raygen)
         t = OpticSim.trace(sys, r, test=true)
         if t !== nothing
@@ -225,15 +225,15 @@ function testoptimization(; lens=Examples.cooketriplet(), constrained=false, alg
     @info "Result: $final"
 
     field = HexapolarField(newlens, collimated=true, samples=samples)
-    Vis.drawtraceimage(newlens, raygenerator=field)
-    Vis.drawtracerays(newlens, raygenerator=field, trackallrays=true, test=true)
+    Vis.draw_trace_image(newlens, raygenerator=field)
+    Vis.draw_trace_rays(newlens, raygenerator=field, trackallrays=true, test=true)
 end
 
 function testnlopt()
     lens = Examples.doubleconvex(60.0, -60.0)
     # lens = Examples.doubleconvex()
     # lens = Examples.telephoto(6,.5)
-    # Vis.drawtraceimage(lens)
+    # Vis.draw_trace_image(lens)
     start = OpticSim.optimizationvariables(lens)
 
     optimobjective = (arg) -> RMS_spot_size(arg, lens)
@@ -280,7 +280,7 @@ function testJuMP()
         error /= hits
         # println("error in my code $error")
 
-        # Vis.drawtracerays(doubleconvex(radiu1,radius2),trackallrays = true, test = true)
+        # Vis.draw_trace_rays(doubleconvex(radiu1,radius2),trackallrays = true, test = true)
 
         return error
     end
@@ -294,7 +294,7 @@ function testJuMP()
         # end
     end
 
-    # Vis.drawtracerays(doubleconvex(60.0,-60.0), trackallrays = true, test = true)
+    # Vis.draw_trace_rays(doubleconvex(60.0,-60.0), trackallrays = true, test = true)
 
     model = Model(Ipopt.Optimizer)
     set_time_limit_sec(model, 10.0)
@@ -305,7 +305,7 @@ function testJuMP()
     optimize!(model)
 
     println("rad1 $(value(rad1)) rad2 $(value(rad2))")
-    Vis.drawtracerays(Examples.doubleconvex(value(rad1), value(rad2)), trackallrays=true, test=true)
+    Vis.draw_trace_rays(Examples.doubleconvex(value(rad1), value(rad2)), trackallrays=true, test=true)
 end
 
 function simpletest()
@@ -383,7 +383,7 @@ function testgenericoptimization(lens::S, objective::Function) where {S<:Abstrac
     # optimize!(model)
     lens = Optimization.updateoptimizationvariables(lens, value.(x))
 
-    Vis.drawtracerays(lens, trackallrays=true, test=true)
+    Vis.draw_trace_rays(lens, trackallrays=true, test=true)
 end
 
 function testIpopt()

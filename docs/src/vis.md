@@ -5,7 +5,7 @@ There are a number of powerful visualization tools available, we primarily rely 
 There are a number of helper methods, as well as the ability to draw objects, surfaces, points, rays and more individually. For example, looking at rays passing through a system in 3D and 2D:
 
 ```julia
-Vis.drawtracerays(Examples.cooketriplet(), trackallrays=true, test=true, numdivisions=100)
+Vis.draw_trace_rays(Examples.cooketriplet(), trackallrays=true, test=true, numdivisions=100)
 ```
 
 ```@setup base
@@ -13,9 +13,9 @@ using OpticSim
 ```
 
 ```@example base
-Vis.drawtracerays(Examples.cooketriplet(), trackallrays=true, test=true, numdivisions=100)
+Vis.draw_trace_rays(Examples.cooketriplet(), trackallrays=true, test=true, numdivisions=100)
 Vis.save("assets/vis_ex_3d.png") # hide
-Vis.drawtracerays(Examples.cooketriplet(), trackallrays=true, test=true, numdivisions=100, drawsys=true, resolution = (1000, 700))
+Vis.draw_trace_rays(Examples.cooketriplet(), trackallrays=true, test=true, numdivisions=100, drawsys=true, resolution = (1000, 700))
 Vis.make2dy()
 Vis.save("assets/vis_ex_2d.png"); nothing #hide
 ```
@@ -26,12 +26,12 @@ Vis.save("assets/vis_ex_2d.png"); nothing #hide
 And the image on the detector for a trace of a system:
 
 ```julia
-Vis.drawtraceimage(Examples.cooketriplet(), test=true)
+Vis.draw_trace_image(Examples.cooketriplet(), test=true)
 ```
 
 ```@example base
 using Images # hide
-im = Vis.drawtraceimage(Examples.cooketriplet(Float64, 400), test=true)
+im = Vis.draw_trace_image(Examples.cooketriplet(Float64, 400), test=true)
 save("assets/vis_ex_im.png", colorview(Gray, real.(im ./ maximum(im)))); nothing # hide
 ```
 
@@ -80,8 +80,8 @@ Plots.savefig(p, "assets/surface_sag.svg"); nothing # hide
 ![surface sag example](assets/surface_sag.svg)
 
 ```@docs
-OpticSim.Vis.drawtracerays
-OpticSim.Vis.drawtraceimage
+OpticSim.Vis.draw_trace_rays
+OpticSim.Vis.draw_trace_image
 OpticSim.Vis.spotdiag
 OpticSim.Vis.surfacesag
 OpticSim.Vis.eyebox_eval_eye

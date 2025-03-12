@@ -26,7 +26,7 @@ function draw_cooketriplet(filename::Union{Nothing,AbstractString}=nothing)
 
     trackallrays = test = colorbysourcenum = true
     resolution = (1000, 700)
-    Vis.drawtracerays(sys; raygenerator, trackallrays, test, colorbysourcenum, resolution)
+    Vis.draw_trace_rays(sys; raygenerator, trackallrays, test, colorbysourcenum, resolution)
     Vis.make2dy()
     Vis.save(filename)
     return sys
@@ -58,7 +58,7 @@ function draw_zoomlenses(filenames::Vector{<:Union{Nothing,AbstractString}}=repe
         for (stop, zoom, dist) in zip(stops, zooms, dists)]
 
     for (sys, filename) in zip(syss, filenames)
-        Vis.drawtracerays(sys; raygenerator, trackallrays=true, test=true, numdivisions=50, resolution=(1200, 600))
+        Vis.draw_trace_rays(sys; raygenerator, trackallrays=true, test=true, numdivisions=50, resolution=(1200, 600))
         Vis.make2dy()
         Vis.save(filename)
     end
@@ -107,7 +107,7 @@ function draw_schmidtcassegraintelescope(filename::Union{Nothing,AbstractString}
     raygenerator = Sources.Source(; transform, origins, directions)
 
     # draw and output
-    Vis.drawtracerays(sys; raygenerator, trackallrays=true, colorbynhits=true, test=true, numdivisions=100, drawgen=false)
+    Vis.draw_trace_rays(sys; raygenerator, trackallrays=true, colorbynhits=true, test=true, numdivisions=100, drawgen=false)
     Vis.save(filename)
     return nothing
 end
@@ -137,7 +137,7 @@ function draw_lensconstruction(filename::Union{Nothing,AbstractString}=nothing)
     detector = Rectangle(15.0, 15.0, [0.0, 0.0, 1.0], [0.0, 0.0, -67.8], interface=opaqueinterface())
     sys = CSGOpticalSystem(LensAssembly(lens), detector)
 
-    Vis.drawtracerays(sys, test=true, trackallrays=true, colorbynhits=true)
+    Vis.draw_trace_rays(sys, test=true, trackallrays=true, colorbynhits=true)
     Vis.save(filename)
     return nothing
 end
@@ -160,7 +160,7 @@ function draw_HOEfocus(filename::Union{Nothing,AbstractString}=nothing)
         origins=Origins.RectGrid(3.0, 3.0, 5, 5),
         directions=Directions.Constant(0.0, 0.0, -1.0))
 
-    Vis.drawtracerays(sys; raygenerator, trackallrays=true, rayfilter=nothing, test=true)
+    Vis.draw_trace_rays(sys; raygenerator, trackallrays=true, rayfilter=nothing, test=true)
     Vis.save(filename)
     return nothing
 end
@@ -183,7 +183,7 @@ function draw_HOEcollimate(filename::Union{Nothing,AbstractString}=nothing)
         origins=Origins.Point(),
         directions=Directions.RectGrid(π / 4, π / 4, 8, 8))
 
-    Vis.drawtracerays(sys; raygenerator, trackallrays=true, rayfilter=nothing, test=true)
+    Vis.draw_trace_rays(sys; raygenerator, trackallrays=true, rayfilter=nothing, test=true)
     Vis.save(filename)
     return nothing
 end
@@ -215,7 +215,7 @@ function draw_multiHOE(filename::Union{Nothing,AbstractString}=nothing)
         transform=translation(0.0, 0.0, 3.0))
     raygenerator = Sources.CompositeSource(Transform(), [s1, s2, s3])
 
-    Vis.drawtracerays(sys; raygenerator, trackallrays=true, colorbysourcenum=true, rayfilter=nothing, drawgen=true)
+    Vis.draw_trace_rays(sys; raygenerator, trackallrays=true, colorbysourcenum=true, rayfilter=nothing, drawgen=true)
     Vis.save(filename)
     return nothing
 end
@@ -249,7 +249,7 @@ function draw_stackedbeamsplitters(filenames::Vector{<:Union{Nothing,AbstractStr
         detector = Rectangle(20.0, 40.0, SVector(0.0, 0.0, 1.0), SVector(0.0, 20.0, -130.0); interface=opaqueinterface())
         sys = CSGOpticalSystem(la, detector)
 
-        Vis.drawtracerays(sys; trackallrays=true, rayfilter=nothing, colorbynhits=true)
+        Vis.draw_trace_rays(sys; trackallrays=true, rayfilter=nothing, colorbynhits=true)
         Vis.save(filename)
     end
     return nothing

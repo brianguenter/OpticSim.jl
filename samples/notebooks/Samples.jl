@@ -170,7 +170,7 @@ begin
     det = OpticSim.Circle(3.0, OpticSim.SVector(0.0, 0.0, 1.0), OpticSim.SVector(0.0, 0.0, -92.4542988), interface=opaqueinterface())
     tele = CSGOpticalSystem(la, det)
 
-    Vis.drawtracerays(tele, raygenerator=UniformOpticalSource(CollimatedSource(GridRectOriginPoints(5, 5, 10.0, 10.0, position=OpticSim.SVector(0.0, 0.0, 20.0))), 0.55), trackallrays=true, colorbynhits=true, test=true)
+    Vis.draw_trace_rays(tele, raygenerator=UniformOpticalSource(CollimatedSource(GridRectOriginPoints(5, 5, 10.0, 10.0, position=OpticSim.SVector(0.0, 0.0, 20.0))), 0.55), trackallrays=true, colorbynhits=true, test=true)
 end
 
 # ╔═╡ f08a07c0-8ba3-11eb-382a-23dc079b623a
@@ -181,7 +181,7 @@ begin
     local int = HologramInterface(OpticSim.SVector(0.0, -3.0, -20.0), ConvergingBeam, OpticSim.SVector(0.0, 0.0, -1.0), CollimatedBeam, 0.55, 9.0, AGFFileReader.Air, AGFFileReader.AGFFileReader.Examples_N_BK7, AGFFileReader.Air, AGFFileReader.Air, AGFFileReader.Air, 0.05, false)
     local obj = HologramSurface(rect, int)
     local sys = CSGOpticalSystem(LensAssembly(obj), Rectangle(10.0, 10.0, OpticSim.SVector(0.0, 0.0, 1.0), OpticSim.SVector(0.0, 0.0, -25.0), interface=opaqueinterface()))
-    Vis.drawtracerays(sys; raygenerator=UniformOpticalSource(CollimatedSource(GridRectOriginPoints(5, 5, 3.0, 3.0, position=OpticSim.SVector(0.0, 0.0, 10.0), direction=OpticSim.SVector(0.0, 0.0, -1.0))), 0.55), trackallrays=true, rayfilter=nothing, test=true)
+    Vis.draw_trace_rays(sys; raygenerator=UniformOpticalSource(CollimatedSource(GridRectOriginPoints(5, 5, 3.0, 3.0, position=OpticSim.SVector(0.0, 0.0, 10.0), direction=OpticSim.SVector(0.0, 0.0, -1.0))), 0.55), trackallrays=true, rayfilter=nothing, test=true)
 end
 
 # ╔═╡ 5e2debd0-8ba3-11eb-0c4e-09d110230e2d
@@ -193,7 +193,7 @@ begin
     barrel = leaf(Cylinder(9.0, 20.0, interface=FresnelInterface{Float64}(AGFFileReader.AGFFileReader.Examples_N_BK7, AGFFileReader.Air, reflectance=zero(Float64), transmission=zero(Float64))))
     lens = (barrel ∩ topsurface ∩ botsurface)(Transform(0.0, Float64(π), 0.0, 0.0, 0.0, -5.0))
     sys = CSGOpticalSystem(LensAssembly(lens), Rectangle(15.0, 15.0, [0.0, 0.0, 1.0], [0.0, 0.0, -67.8], interface=opaqueinterface()))
-    Vis.drawtracerays(sys, test=true, trackallrays=true)
+    Vis.draw_trace_rays(sys, test=true, trackallrays=true)
 end
 
 # ╔═╡ def239f0-87bc-11eb-2edb-2f859ac41bee
@@ -209,7 +209,7 @@ begin
     local combined_sources = Sources.CompositeSource(Transform(Geometry.Vec3(0.0, 0.0, 10.0), unitZ3() * -1), [s1 s2])
 
     # and draw the system + the generated rays
-    Vis.drawtracerays(sys_cooke, raygenerator=combined_sources, test=true, trackallrays=true, colorbysourcenum=true, drawgen=false)
+    Vis.draw_trace_rays(sys_cooke, raygenerator=combined_sources, test=true, trackallrays=true, colorbysourcenum=true, drawgen=false)
 end
 
 # ╔═╡ 96e423a0-885a-11eb-02a3-8704e8dbdab6

@@ -355,7 +355,7 @@ begin
     local combined_sources = Sources.CompositeSource(Transform(Geometry.Vec3(0.0, 0.0, 10.0), unitZ3() * -1), [s1, s2])
 
     # and draw the system + the generated rays
-    Vis.drawtracerays(sys, raygenerator=combined_sources, resolution=resolution(), test=true, trackallrays=true, colorbysourcenum=true, drawgen=false)
+    Vis.draw_trace_rays(sys, raygenerator=combined_sources, resolution=resolution(), test=true, trackallrays=true, colorbysourcenum=true, drawgen=false)
 end
 
 # ╔═╡ Cell order:
