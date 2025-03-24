@@ -21,7 +21,7 @@ StringEncodings = "69024149-9ee7-55f6-a4c4-859efe599b68"
 Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [compat]
-AGFFileReader = "1.0.0"
+AGFFileReader = "1"
 Colors = "0.13.0"
 
 [extras]
