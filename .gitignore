@@ -3,10 +3,7 @@ src/GlassCat/data/jl/
 !src/GlassCat/data/jl/OTHER.jl
 *.agf
 
-# Don't track sysimage file: dll on windows, so on linux
-*.dll
-*.so
-
+*.csv
 
 ## VisualStudioCode.gitignore ##
 

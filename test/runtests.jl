@@ -51,6 +51,4 @@ macro test_all_no_arg_functions(m)
     end
 end
 
-include("Benchmarks/Benchmarks.jl")
-
 @run_package_tests

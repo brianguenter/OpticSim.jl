@@ -218,7 +218,7 @@ For reference, see:
 HologramInterface(signalpointordir::SVector{3,T}, signalbeamstate::BeamState, referencepointordir::SVector{3,T}, referencebeamstate::BeamState, recordingλ::T, thickness::T, beforematerial, substratematerial, aftermaterial, signalrecordingmaterial, referencerecordingmaterial, RImodulation::T, include0order  = false)
 ```
 """
-struct HologramInterface{T,X<:AGFFileReader.AbstractGlass,Y<:AGFFileReader.AbstractGlass,Z<:AGFFileReader.AbstractGlass} <: OpticalInterface{T}
+struct HologramInterface{T,X<:AGFFileReader.AbstractGlass,Y<:AGFFileReader.AbstractGlass,Z<:AGFFileReader.AbstractGlass,P<:AGFFileReader.AbstractGlass,Q<:AGFFileReader.AbstractGlass} <: OpticalInterface{T}
     beforematerial::X
     substratematerial::Y
     aftermaterial::Z
@@ -227,8 +227,8 @@ struct HologramInterface{T,X<:AGFFileReader.AbstractGlass,Y<:AGFFileReader.Abstr
     referencepointordir::SVector{3,T}
     referencebeamstate::BeamState
     recordingλ::T
-    signalrecordingmaterial::Glass
-    referencerecordingmaterial::Glass
+    signalrecordingmaterial::P
+    referencerecordingmaterial::Q
     thickness::T
     RImodulation::T
     include0order::Bool
@@ -241,7 +241,7 @@ struct HologramInterface{T,X<:AGFFileReader.AbstractGlass,Y<:AGFFileReader.Abstr
         if referencebeamstate === CollimatedBeam
             referencepointordir = normalize(referencepointordir)
         end
-        new{T,X,Y,Z}(beforematerial, substratematerial, aftermaterial, signalpointordir, signalbeamstate, referencepointordir, referencebeamstate, recordingλ, signalrecordingmaterial, referencerecordingmaterial, thickness, RImodulation, include0order)
+        new{T,X,Y,Z,P,Q}(beforematerial, substratematerial, aftermaterial, signalpointordir, signalbeamstate, referencepointordir, referencebeamstate, recordingλ, signalrecordingmaterial, referencerecordingmaterial, thickness, RImodulation, include0order)
     end
 end
 export HologramInterface
