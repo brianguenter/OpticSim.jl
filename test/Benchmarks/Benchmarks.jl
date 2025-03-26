@@ -21,7 +21,7 @@ using OpticSim: Sphere, Ray, replprint, trace, Cylinder, AcceleratedParametricSu
     using BenchmarkTools
     using StaticArrays
 
-    rayz() = Ray([0.0, 0.0, 10.0], [0.0, 0.0, -1.0])
+    rayz() = Ray(SVector(0.0, 0.0, 10.0), SVector(0.0, 0.0, -1.0))
     perturbrayz() = Ray([0.0, 0.0, 10.0], [0.001, 0.001, -1.0])
     rayx() = Ray([10.0, 0.0, 0.0], [-1.0, 0.0, 0.0])
     bezierray() = Ray([0.5, 0.5, 10.0], [0.0, 0.0, -1.0])
