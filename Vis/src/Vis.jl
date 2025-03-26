@@ -5,10 +5,10 @@
 module Vis
 
 
-using ..OpticSim
-using ..OpticSim: euclideancontrolpoints, evalcsg, vertex, makiemesh, detector, centroid, lower, upper, intervals, α
-using ..OpticSim.Geometry
-using ..OpticSim.Repeat
+using OpticSim
+using OpticSim: euclideancontrolpoints, evalcsg, vertex, makiemesh, detector, centroid, lower, upper, intervals, α
+using OpticSim.Geometry
+using OpticSim.Repeat
 
 using Unitful
 using ImageView
