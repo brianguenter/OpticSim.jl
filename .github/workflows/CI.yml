@@ -18,7 +18,7 @@ jobs:
           - os: ubuntu-latest
             prefix: xvfb-run
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v2
         with:
           version: ${{ matrix.version }}
@@ -38,18 +38,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt install libxt6 libxrender1 libxext6 libgl1-mesa-glx libqt5widgets5
-      - uses: actions/cache@v3
-        env:
-          cache-name: cache-artifacts
-        with:
-          path: ~/.julia/artifacts
-          key: ${{ runner.os }}-${{ matrix.arch }}-test-${{ env.cache-name }}-${{ hashFiles('**/Project.toml') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.arch }}-test-${{ env.cache-name }}-
-            ${{ runner.os }}-${{ matrix.arch }}-test-
-            ${{ runner.os }}-${{ matrix.arch }}-
-            ${{ runner.os }}-
-      - uses: alfredclwong/julia-buildpkg@master
+      - uses: julia-actions/cache@v2
+      - uses: julia-actions/julia-buildpkg@v1
         with:
           prefix: ${{ matrix.prefix }}
       - uses: julia-actions/julia-runtest@latest
