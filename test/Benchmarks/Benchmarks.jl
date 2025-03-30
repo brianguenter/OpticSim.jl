@@ -120,6 +120,8 @@ end
     runforpipeline(true)
 end
 
+triangle(a::Float64) = surfaceintersection(Triangle(SVector(-1.0, -1.0, 0.0), SVector(1.0, 0.0, 0.0), SVector(0.0, 1.0, 0.0)), rayz())
+
 end #module
 
 export Benchmarks

@@ -39,6 +39,9 @@ function __init__()
     end
 end
 
+"""Load AGF glass catalogs into the AGFFileReader module so they can be accessed from OpticSim"""
+initialize_AGF() = AGFFileReader.initialize_AGFFileReader()
+export initialize_AGF
 
 ################################################
 
