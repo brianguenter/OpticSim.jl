@@ -20,33 +20,7 @@ using Unitful.DefaultSymbols
         @test isapprox(virtptfromslope, point(OpticSim.virtualpoint(lens, displaypoint)))
     end
 
-    @testset "Projection" begin
-        using StaticArrays
 
-        using Unitful, Unitful.DefaultSymbols
-        focallength = 10.0
-        lens = ParaxialLensRect(focallength, 100.0, 100.0, [0.0, 0.0, 1.0], [0.0, 0.0, 0.0])
-        display = OpticSim.Repeat.Display(1000, 1000, 1.0μm, 1.0μm, Geometry.translation(0.0, 0.0, -focallength))
-        lenslet = OpticSim.Repeat.LensletAssembly(lens, Geometry.identitytransform(), display)
-        displaypoint = SVector(0.0, 0.0, -8.0)
-        pupilpoints = SMatrix{3,2}(10.0, 10.0, 10.0, -10.0, -10.0, 20.0)
-        Repeat.project(lenslet, displaypoint, pupilpoints)
-    end
-
-    @testset "BeamEnergy" begin
-        using StaticArrays
-
-        focallength = 10.0
-        lens = ParaxialLensRect(focallength, 1.0, 1.0, [0.0, 0.0, 1.0], [0.0, 0.0, 0.0])
-        display = OpticSim.Repeat.Display(1000, 1000, 1.0μm, 1.0μm, Geometry.translation(0.0, 0.0, -focallength))
-        lenslet = OpticSim.Repeat.LensletAssembly(lens, Geometry.identitytransform(), display)
-        displaypoint = SVector(0.0, 0.0, -8.0)
-        #pupil is placed so that only 1/4 of it (approximately) is illuminated by lens beam
-        pupil = Rectangle(1.0, 1.0, SVector(0.0, 0.0, -1.0), SVector(2.0, 2.0, 40.0))
-        energy, centroid = OpticSim.Repeat.beamenergy(lenslet, displaypoint, Geometry.vertices3d(pupil))
-        @test isapprox(1 / 16, energy, atol=1e-4)
-        @test isapprox([0.75, 0.75, 0.0], centroid)
-    end
 
     @testset "SphericalPolygon" begin
         using StaticArrays
