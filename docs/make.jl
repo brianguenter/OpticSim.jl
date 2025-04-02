@@ -38,7 +38,7 @@ makedocs(
         "Reference" => "ref.md",
         "Roadmap" => "roadmap.md"
     ],
-    expandfirst=["glasscat.md", "systems.md", "vis.md"]
+    expandfirst=["glasscat.md", "systems.md"]
 )
 
 deploydocs(
