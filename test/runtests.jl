@@ -5,6 +5,19 @@
 using Test
 using TestItems
 using TestItemRunner
+using OpticSim
+
+using Aqua
+using JET
+
+@info "Running Aqua tests"
+try
+    Aqua.test_all(OpticSim)
+catch
+end
+
+@info "Running JET tests"
+report_package(OpticSim)
 
 @testsnippet TestConstants begin
     const COMP_TOLERANCE = 25 * eps(Float64)
@@ -53,4 +66,5 @@ end
 
 include("Benchmarks/Benchmarks.jl")
 
+@info "Running package tests"
 @run_package_tests
