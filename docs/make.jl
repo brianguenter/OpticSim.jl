@@ -32,7 +32,6 @@ makedocs(
             "Interfaces" => "interfaces.md",
             "Lenses" => "lenses.md"
         ],
-        "Visualization" => "vis.md",
         "Glass Functions" => "glasscat.md",
         "Cloud Execution" => "cloud.md",
         "Notebook utilities" => "notebooksutils.md",
