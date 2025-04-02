@@ -37,7 +37,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt install libxt6 libxrender1 libxext6 libgl1-mesa-glx libqt5widgets5
+          sudo apt install libxt6 libxrender1 libxext6 libgl1 libglx-mesa0 libqt5widgets5
       - uses: actions/cache@v3
         env:
           cache-name: cache-artifacts

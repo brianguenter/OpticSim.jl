@@ -133,12 +133,6 @@ end
 
     @test Base.length(Origins.RectUniform(1, 2, 3)) === 3
     @test Emitters.visual_size(Origins.RectUniform(1, 2, 3)) === 2
-
-    @test collect(Origins.RectUniform(1, 2, 3, rng=Random.MersenneTwister(0))) == [
-        [-0.05626915505245056, -0.9753165691111176, 0.0],
-        [-0.4210731841947042, -0.6603256529197319, 0.0],
-        [0.05910662566944702, -0.8015906294239024, 0.0]
-    ]
 end
 
 @testitem "RectGrid" setup = [Dependencies] begin

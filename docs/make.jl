@@ -32,14 +32,13 @@ makedocs(
             "Interfaces" => "interfaces.md",
             "Lenses" => "lenses.md"
         ],
-        "Visualization" => "vis.md",
         "Glass Functions" => "glasscat.md",
         "Cloud Execution" => "cloud.md",
         "Notebook utilities" => "notebooksutils.md",
         "Reference" => "ref.md",
         "Roadmap" => "roadmap.md"
     ],
-    expandfirst=["glasscat.md", "systems.md", "vis.md"]
+    expandfirst=["glasscat.md", "systems.md"]
 )
 
 deploydocs(
