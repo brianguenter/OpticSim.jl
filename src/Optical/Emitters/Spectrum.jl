@@ -2,7 +2,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # See LICENSE in the project root for full license information.
 
-module Spectrum     
+module Spectrum
 export Uniform, DeltaFunction, Measured
 
 using ....OpticSim
@@ -30,7 +30,7 @@ Uniform(::Type{T} = Float64) where {T<:Real}
 """
 struct Uniform{T} <: AbstractSpectrum{T}
     low_end::T
-    high_end::T 
+    high_end::T
     rng::Random.AbstractRNG
 
     # user defined range of spectrum
@@ -39,7 +39,7 @@ struct Uniform{T} <: AbstractSpectrum{T}
     end
 
     # with no specific range we will use the constants' values
-    function Uniform(::Type{T} = Float64; rng=Random.GLOBAL_RNG) where {T<:Real}
+    function Uniform(::Type{T}=Float64; rng=Random.GLOBAL_RNG) where {T<:Real}
         return new{T}(UNIFORMSHORT, UNIFORMLONG, rng)
     end
 end
@@ -66,7 +66,7 @@ Emitters.generate(s::DeltaFunction{T}) where {T<:Real} = (one(T), s.λ)
 """
     Measured{T} <: AbstractSpectrum{T}
 
-Encapsulates a measured spectrum to compute emitter power. Create spectrum by reading CSV files.
+Encapsulates a measured spectrum to compute emitter power. Create spectrum by reading CSV files. Assumes spectrum samples are evenly spaced - exception otherwise.
 Evaluate spectrum at arbitrary wavelength with [`spectrumpower`](@ref) (**more technical details coming soon**)
 
 ```julia
@@ -90,16 +90,17 @@ struct Measured{T} <: AbstractSpectrum{T}
         maxpower = maximum(power)
         p = sortperm(wavelengths)
         wavelengths = wavelengths[p]
-        power = power[p] ./ maxpower #make sure power values have the same sorted permutation as wavelengths normalized with maximum power equal to 1
-        λmin = wavelengths[p[1]]
-        λmax = wavelengths[p[end]]
-        step = wavelengths[2] - wavelengths[1]
+        norm_power = power[p] ./ maxpower #make sure power values have the same sorted permutation as wavelengths normalized with maximum power equal to 1
+        #added ::Int64 type checks so JET could do better analysis. Didn't seem to work.
+        λmin::Int64 = wavelengths[p[1]]
+        λmax::Int64 = wavelengths[p[end]]
+        step::Int64 = wavelengths[2] - wavelengths[1] #assume step is constant for all wavelengths. Otherwise, trouble.
 
         for i in 3:length(wavelengths)
-            @assert wavelengths[i] - wavelengths[i - 1] == step  # no missing values allowed and step size must be consistent
+            @assert wavelengths[i] - wavelengths[i-1] == step  # no missing values allowed and step size must be consistent
         end
 
-        return new{T}(λmin, λmax, step, power)
+        return new{T}(λmin, λmax, step, norm_power)
     end
 end
 

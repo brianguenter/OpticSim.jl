@@ -9,17 +9,13 @@ Any subclass of OpticalInterface **must** implement the following:
 
 ```julia
 processintersection(opticalinterface::OpticalInterface{T}, point::SVector{N,T}, normal::SVector{N,T}, incidentray::OpticalRay{T,N}, temperature::T, pressure::T, ::Bool, firstray::Bool = false) -> Tuple{SVector{N,T}, T, T}
-```
-
-See documentation for [`processintersection`](@ref) for details.
-
-These methods are also commonly implemented, but not essential:
-```julia
-insidematerialid(i::OpticalInterface{T}) -> AGFFileReader.AbstractGlass
-outsidematerialid(i::OpticalInterface{T}) -> AGFFileReader.AbstractGlass
+insidematerial(i::OpticalInterface{T}) -> AGFFileReader.AbstractGlass
+outsidematerial(i::OpticalInterface{T}) -> AGFFileReader.AbstractGlass
 reflectance(i::OpticalInterface{T}) -> T
 transmission(i::OpticalInterface{T}) -> T
 ```
+
+See documentation for [`processintersection`](@ref) for details.
 """
 abstract type OpticalInterface{T<:Real} end
 export OpticalInterface
@@ -47,8 +43,9 @@ struct NullInterface{T} <: OpticalInterface{T}
     NullInterface{T}() where {T<:Real} = new{T}()
 end
 
-insidematerialid(::NullInterface{T}) where {T<:Real} = glassid(AGFFileReader.Air)
-outsidematerialid(::NullInterface{T}) where {T<:Real} = glassid(AGFFileReader.Air)
+insidematerial(a::NullInterface) = AGFFileReader.Air
+outsidematerial(a::NullInterface) = AGFFileReader.Air
+
 reflectance(::NullInterface{T}) where {T<:Real} = zero(T)
 transmission(::NullInterface{T}) where {T<:Real} = one(T)
 
@@ -81,8 +78,8 @@ function Base.show(io::IO, a::ParaxialInterface{R}) where {R<:Real}
     print(io, "ParaxialInterface($(a.focallength), $(glassname(a.outsidematerial)))")
 end
 
-insidematerialid(a::ParaxialInterface{T}) where {T<:Real} = a.outsidematerial
-outsidematerialid(a::ParaxialInterface{T}) where {T<:Real} = a.outsidematerial
+insidematerial(a::ParaxialInterface{T}) where {T<:Real} = AGFFileReader.AIR
+outsidematerial(a::ParaxialInterface{T}) where {T<:Real} = a.outsidematerial
 reflectance(::ParaxialInterface{T}) where {T<:Real} = zero(T)
 transmission(::ParaxialInterface{T}) where {T<:Real} = one(T)
 opticalcenter(a::ParaxialInterface) = a.centroid
@@ -126,8 +123,9 @@ function Base.show(io::IO, a::FresnelInterface{R}) where {R<:Real}
     print(io, "FresnelInterface($(glassname(a.insidematerial)), $(glassname(a.outsidematerial)), $(a.reflectance), $(a.transmission), $(a.interfacemode))")
 end
 
-insidematerialid(a::FresnelInterface{T}) where {T<:Real} = a.insidematerial
-outsidematerialid(a::FresnelInterface{T}) where {T<:Real} = a.outsidematerial
+insidematerial(a::FresnelInterface) = a.insidematerial
+outsidematerial(a::FresnelInterface) = a.outsidematerial
+
 reflectance(a::FresnelInterface{T}) where {T<:Real} = a.reflectance
 transmission(a::FresnelInterface{T}) where {T<:Real} = a.transmission
 interfacemode(a::FresnelInterface{T}) where {T<:Real} = a.interfacemode
@@ -183,8 +181,9 @@ struct ThinGratingInterface{T,Y<:AGFFileReader.AbstractGlass,Z<:AGFFileReader.Ab
 end
 export ThinGratingInterface
 
-insidematerialid(a::ThinGratingInterface{T}) where {T<:Real} = a.insidematerial
-outsidematerialid(a::ThinGratingInterface{T}) where {T<:Real} = a.outsidematerial
+insidematerial(a::ThinGratingInterface) = a.insidematerial
+outsidematerial(a::ThinGratingInterface) = a.outsidematerial
+
 reflectance(a::ThinGratingInterface{T}, order::Int) where {T<:Real} = a.reflectance[order-a.minorder+1]
 transmission(a::ThinGratingInterface{T}, order::Int) where {T<:Real} = a.transmission[order-a.minorder+1]
 
@@ -246,8 +245,8 @@ struct HologramInterface{T,X<:AGFFileReader.AbstractGlass,Y<:AGFFileReader.Abstr
 end
 export HologramInterface
 
-insidematerialid(a::HologramInterface{T}) where {T<:Real} = a.beforematerial
-outsidematerialid(a::HologramInterface{T}) where {T<:Real} = a.aftermaterial
+insidematerial(a::HologramInterface{T}) where {T<:Real} = a.beforematerial
+outsidematerial(a::HologramInterface{T}) where {T<:Real} = a.aftermaterial
 substratematerialid(a::HologramInterface{T}) where {T<:Real} = a.substratematerial
 
 function Base.show(io::IO, a::HologramInterface{R}) where {R<:Real}

@@ -146,7 +146,7 @@ makemesh(l::ParaxialLens{T}, ::Int=0) where {T<:Real} = makemesh(l.shape)
 
 function processintersection(opticalinterface::ParaxialInterface{T}, point::SVector{N,T}, normal::SVector{N,T}, incidentray::OpticalRay{T,N}, temperature::T, pressure::T, ::Bool, firstray::Bool=false) where {T<:Real,N}
     raypower = power(incidentray)
-    m = outsidematerialid(opticalinterface) # necessarily both the same
+    m = outsidematerial(opticalinterface) # necessarily both the same
     n = one(T)
     if !isair(m)
         n = index(m, wavelength(incidentray), temperature=temperature, pressure=pressure)::T

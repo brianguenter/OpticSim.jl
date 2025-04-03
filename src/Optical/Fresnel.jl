@@ -125,7 +125,7 @@ i.e. If the interface should modulate power to 76% then 24% of calls to this fun
 """
 function processintersection(opticalinterface::FresnelInterface{T}, point::SVector{N,T}, normal::SVector{N,T}, incidentray::OpticalRay{T,N}, temperature::T, pressure::T, test::Bool, firstray::Bool=false) where {T<:Real,N}
     λ = wavelength(incidentray)
-    mᵢ, mₜ = mᵢandmₜ(outsidematerialid(opticalinterface), insidematerialid(opticalinterface), normal, incidentray)
+    mᵢ, mₜ = mᵢandmₜ(outsidematerial(opticalinterface), insidematerial(opticalinterface), normal, incidentray)
     nᵢ = one(T)
     nₜ = one(T)
     α = zero(T)

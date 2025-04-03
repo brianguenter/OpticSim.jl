@@ -43,18 +43,14 @@ function point(curve::BSplineCurve{P,S,N,M}, u::T)::SVector{N,S} where {T<:Real,
     span = findspan(curve, u)
     bases = basisfunctions(curve.knotvector, u, M)
     c = zeros(MVector{N,S})
-    for i in 1:(M + 1)
-        pt = curve.controlpolygon[span - (M + 1) + i]
+    for i in 1:(M+1)
+        pt = curve.controlpolygon[span-(M+1)+i]
         c .= c .+ bases[i] .* pt
     end
     return SVector{N,S}(c)
 end
 
-function euclideanpoint(curve::BSplineCurve{Euclidean,S,N,M}, ::T)::SVector where {T<:Real,S,N,M}
-    # might seem weird to have this function for Euclidean curves. But in user code can use euclidean point without worrying about whether curve is homogeneous and still get correct results.
-    return point(curve)
-end
-
+# might seem weird to have this function for Euclidean curves. But in user code can use euclidean point without worrying about whether curve is homogeneous and still get correct results.
 function euclideanpoint(curve::BSplineCurve{Rational,S,N,M}, u::T)::SVector where {T<:Real,S,N,M}
     return toeuclidean(point(curve, u))
 end
@@ -81,9 +77,7 @@ struct BSplineSurface{P,S,N,M} <: SplineSurface{P,S,N,M}
     vknotvector::KnotVector{S}
     controlpolygon::Array{MVector{N,S},2} # may have to allow different orders on different curve segments
 
-    function BSplineSurface{P,S,N,M}(knots::KnotVector{S}, controlpoints::AbstractArray{<:AbstractArray{S,1},2}) where {P,S,N,M}
-        return BSplineSurface(knots, knots, controlpoints)
-    end
+
 
     function BSplineSurface{P,S,N,M}(uknots::KnotVector{S}, vknots::KnotVector{S}, controlpoints::AbstractArray{<:AbstractArray{S,1},2}) where {P,S,N,M}
         # m == n + M + 1
@@ -97,6 +91,10 @@ struct BSplineSurface{P,S,N,M} <: SplineSurface{P,S,N,M}
 end
 export BSplineSurface
 
+function BSplineSurface{P,S,N,M}(knots::KnotVector{S}, controlpoints::AbstractArray{<:AbstractArray{S,1},2}) where {P,S,N,M}
+    return BSplineSurface{P,S,N,M}(knots, knots, controlpoints)
+end
+
 numknots(surf::BSplineSurface) = (numknots(surf.uknotvector), numknots(surf.vknotvector))
 
 uvrange(surface::BSplineSurface) = (urange(surface.uknotvector), urange(surface.vknotvector))
@@ -108,16 +106,16 @@ end
 function insertknot(knots::AbstractArray{S,1}, knotindex::Int, controlpoints::Array{MVector{N,S},1}, curveorder::Int) where {N,S}
     knotvalue = knots[knotindex]
     M = curveorder
-    K = [zeros(MVector{N,S}) for i in 1:(M + 1)]
-    newknots = vcat(knots[1:knotindex], [knotvalue], knots[(knotindex + 1):end])
-    newcontrolpoints = vcat(controlpoints[1:(knotindex - M)], K, controlpoints[(knotindex + 1):end])
+    K = [zeros(MVector{N,S}) for i in 1:(M+1)]
+    newknots = vcat(knots[1:knotindex], [knotvalue], knots[(knotindex+1):end])
+    newcontrolpoints = vcat(controlpoints[1:(knotindex-M)], K, controlpoints[(knotindex+1):end])
 
-    for i in (knotindex - M + 1):knotindex
-        αᵢ = (knotvalue - knots[i]) / (knots[i + M] - knots[i])
-        @. newcontrolpoints[i] = αᵢ * controlpoints[i] + (1 - αᵢ) * controlpoints[i - 1]
+    for i in (knotindex-M+1):knotindex
+        αᵢ = (knotvalue - knots[i]) / (knots[i+M] - knots[i])
+        @. newcontrolpoints[i] = αᵢ * controlpoints[i] + (1 - αᵢ) * controlpoints[i-1]
     end
-    for i in (knotindex + 1):length(newcontrolpoints)
-        newcontrolpoints[i] .= controlpoints[i - 1]
+    for i in (knotindex+1):length(newcontrolpoints)
+        newcontrolpoints[i] .= controlpoints[i-1]
     end
 
     return (newknots, newcontrolpoints)
@@ -213,7 +211,7 @@ function tobeziersegments(knots::AbstractArray{S,1}, controlpoints::Array{MVecto
 
     for i in 1:numsegments
         start = (i - 1) * M + 1
-        segments[i] = newcontrolpoints[start:(start + M)]
+        segments[i] = newcontrolpoints[start:(start+M)]
     end
 
     return segments
@@ -234,7 +232,7 @@ function tobeziersegments(surf::BSplineSurface{P,S,N,M}) where {P,S,N,M}
         for j in 1:numvsegments
             startu = (i - 1) * M + 1
             startv = (j - 1) * M + 1
-            segments[i, j] = BezierSurface{P,S,N,M}(newcontrolpoints[startu:(startu + M), startv:(startv + M)])
+            segments[i, j] = BezierSurface{P,S,N,M}(newcontrolpoints[startu:(startu+M), startv:(startv+M)])
         end
     end
 
@@ -249,9 +247,9 @@ function point(surface::BSplineSurface{P,S,N,M}, u::T, v::T)::SVector{N,S} where
     sum = zeros(MVector{N,S})
     c = zeros(MVector{N,S})
 
-    for j in 1:(M + 1)
-        for i in 1:(M + 1)
-            pt = surface.controlpolygon[spanu - (M + 1) + i, spanv - (M + 1) + j]
+    for j in 1:(M+1)
+        for i in 1:(M+1)
+            pt = surface.controlpolygon[spanu-(M+1)+i, spanv-(M+1)+j]
             c .= c .+ ubases[i] .* pt
         end
         sum .= sum .+ vbases[j] .* c

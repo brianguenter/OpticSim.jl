@@ -63,7 +63,7 @@ struct CSGOpticalSystem{T,D<:Number,S<:Surface{T},L<:LensAssembly{T}} <: Abstrac
         @assert hasmethod(uvtopix, (S, SVector{2,T}, Tuple{Int,Int})) "Detector must implement uvtopix()"
         @assert hasmethod(onsurface, (S, SVector{3,T})) "Detector must implement onsurface()"
         opticalinterface = interface(detector)
-        @assert insidematerialid(opticalinterface) == outsidematerialid(opticalinterface) "Detector must have same material either side"
+        @assert insidematerial(opticalinterface) == outsidematerial(opticalinterface) "Detector must have same material either side"
         @assert interface(detector) !== NullInterface(T) "Detector can't have null interface"
         image = HierarchicalImage{D}(detectorpixelsy, detectorpixelsx)
         if temperature isa Unitful.Temperature
@@ -142,10 +142,12 @@ function trace(
     trackrays::Union{Nothing,Vector{LensTrace{T,N}}}=nothing,
     test::Bool=false
 ) where {T<:Real,N,D<:Number}
+
     if power(r) < POWER_THRESHOLD
         return nothing
     end
 
+    #This seems confusing but is a result of using a macro which generats unique trace code for each lens assembly.
     result = trace(system.assembly, r, temperature(system), pressure(system), trackrays=trackrays, test=test)
 
     if result === nothing || result === nopower
@@ -175,7 +177,7 @@ function trace(
             opticalpathlength = geometricpathlength
             pow = power(result)
 
-            m = outsidematerialid(opticalinterface)
+            m = outsidematerial(opticalinterface)
             # compute updated power based on absorption coefficient of material using Beer's law
             # this will almost always not apply as the detector will be in air, but it's possible that the detector is
             # not in air, in which case this is necessary
@@ -787,6 +789,7 @@ function tracehits(
     printprog::Bool=true,
     test::Bool=false
 ) where {T<:Real}
+    throw(ErrorException("incorrect code references variable sources which is not defined."))
     start_time = time()
     update_timesteps = 1000
     total_traced = 0
