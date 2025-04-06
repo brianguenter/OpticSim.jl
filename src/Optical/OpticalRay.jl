@@ -55,7 +55,7 @@ struct OpticalRay{T,N} <: AbstractRay{T,N}
 end
 export OpticalRay
 
-ray(r::OpticalRay{T,N}) where {T<:Real,N} = r.ray
+ray(r::OpticalRay) = r.ray
 direction(r::OpticalRay{T,N}) where {T<:Real,N} = direction(ray(r))
 origin(r::OpticalRay{T,N}) where {T<:Real,N} = origin(ray(r))
 power(r::OpticalRay{T,N}) where {T<:Real,N} = r.power
