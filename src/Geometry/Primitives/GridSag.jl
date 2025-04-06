@@ -37,7 +37,7 @@ struct GridSagSurface{T,N,S<:Union{ZernikeSurface{T,N},ChebyshevSurface{T,N}},Nu
     interpolation::GridSagInterpolation
     decenteruv::Tuple{T,T}
 
-    function GridSagSurface(basesurface::S, sag_grid::AbstractArray{T,2}; interpolation::GridSagInterpolation = GridSagBicubic, decenteruv::Tuple{T,T} = (zero(T), zero(T))) where {T<:Real,N,S<:Union{ZernikeSurface{T,N},ChebyshevSurface{T,N}}}
+    function GridSagSurface(basesurface::S, sag_grid::AbstractArray{T,2}; interpolation::GridSagInterpolation=GridSagBicubic, decenteruv::Tuple{T,T}=(zero(T), zero(T))) where {T<:Real,N,S<:Union{ZernikeSurface{T,N},ChebyshevSurface{T,N}}}
         grid = []
         Nv, Nu, d = size(sag_grid)
         @assert d == 4
@@ -49,10 +49,10 @@ struct GridSagSurface{T,N,S<:Union{ZernikeSurface{T,N},ChebyshevSurface{T,N}},Nu
             push!(grid, row)
         end
         grid = SVector{Nu,SVector{Nv,SVector{4,T}}}(grid)
-        return GridSagSurface(basesurface, grid, interpolation = interpolation, decenteruv = decenteruv)
+        return GridSagSurface(basesurface, grid, interpolation=interpolation, decenteruv=decenteruv)
     end
 
-    function GridSagSurface(basesurface::S, sag_grid::AbstractArray{T,3}; interpolation::GridSagInterpolation = GridSagBicubic, decenteruv::Tuple{T,T} = (zero(T), zero(T))) where {T<:Real,N,S<:Union{ZernikeSurface{T,N},ChebyshevSurface{T,N}}}
+    function GridSagSurface(basesurface::S, sag_grid::AbstractArray{T,3}; interpolation::GridSagInterpolation=GridSagBicubic, decenteruv::Tuple{T,T}=(zero(T), zero(T))) where {T<:Real,N,S<:Union{ZernikeSurface{T,N},ChebyshevSurface{T,N}}}
         grid = []
         Nv, Nu, d = size(sag_grid)
         @assert d == 4
@@ -64,10 +64,10 @@ struct GridSagSurface{T,N,S<:Union{ZernikeSurface{T,N},ChebyshevSurface{T,N}},Nu
             push!(grid, row)
         end
         grid = SVector{Nu,SVector{Nv,SVector{4,T}}}(grid)
-        return GridSagSurface(basesurface, grid, interpolation = interpolation, decenteruv = decenteruv)
+        return GridSagSurface(basesurface, grid, interpolation=interpolation, decenteruv=decenteruv)
     end
 
-    function GridSagSurface(basesurface::S, sag_grid::AbstractArray{<:AbstractVector{T},2}; interpolation::GridSagInterpolation = GridSagBicubic, decenteruv::Tuple{T,T} = (zero(T), zero(T))) where {T<:Real,N,S<:Union{ZernikeSurface{T,N},ChebyshevSurface{T,N}}}
+    function GridSagSurface(basesurface::S, sag_grid::AbstractArray{<:AbstractVector{T},2}; interpolation::GridSagInterpolation=GridSagBicubic, decenteruv::Tuple{T,T}=(zero(T), zero(T))) where {T<:Real,N,S<:Union{ZernikeSurface{T,N},ChebyshevSurface{T,N}}}
         grid = []
         Nv, Nu = size(sag_grid)
         @assert length(sag_grid[1, 1]) == 4
@@ -75,10 +75,10 @@ struct GridSagSurface{T,N,S<:Union{ZernikeSurface{T,N},ChebyshevSurface{T,N}},Nu
             push!(grid, sag_grid[:, r])
         end
         grid = SVector{Nu,SVector{Nv,SVector{4,T}}}(grid)
-        return GridSagSurface(basesurface, grid, interpolation = interpolation, decenteruv = decenteruv)
+        return GridSagSurface(basesurface, grid, interpolation=interpolation, decenteruv=decenteruv)
     end
 
-    function GridSagSurface(basesurface::S, sag_grid::SVector{Nu,SVector{Nv,SVector{4,T}}}; interpolation::GridSagInterpolation = GridSagBicubic, decenteruv::Tuple{T,T} = (zero(T), zero(T))) where {T<:Real,N,S<:Union{ZernikeSurface{T,N},ChebyshevSurface{T,N}},Nu,Nv}
+    function GridSagSurface(basesurface::S, sag_grid::SVector{Nu,SVector{Nv,SVector{4,T}}}; interpolation::GridSagInterpolation=GridSagBicubic, decenteruv::Tuple{T,T}=(zero(T), zero(T))) where {T<:Real,N,S<:Union{ZernikeSurface{T,N},ChebyshevSurface{T,N}},Nu,Nv}
         # TODO can probably simplify this?
         if interpolation === GridSagLinear
             @warn "Linear interpolation doesn't ensure C1 continuity, may cause problems..."
@@ -136,7 +136,7 @@ struct GridSagSurface{T,N,S<:Union{ZernikeSurface{T,N},ChebyshevSurface{T,N}},Nu
         return new{T,N,S,Nu,Nv}(basesurface, SVector{Nu,SVector{Nv,SVector{4,T}}}(grid), interpolation, decenteruv)
     end
 
-    function GridSagSurface{T}(filename::String; radius::T = typemax(T), conic::T = zero(T), interpolation::GridSagInterpolation = GridSagBicubic) where {T<:Real}
+    function GridSagSurface{T}(filename::String; radius::T=typemax(T), conic::T=zero(T), interpolation::GridSagInterpolation=GridSagBicubic) where {T<:Real}
         @assert !isnan(radius) && !isnan(conic)
         @assert isfile(filename)
         if !isvalid(readuntil(filename, " "))
@@ -179,7 +179,7 @@ struct GridSagSurface{T,N,S<:Union{ZernikeSurface{T,N},ChebyshevSurface{T,N}},Nu
                 z, dzdx, dzdy, d2zdxdy = vs[1:4]
             end
             # flip the y direction as GRD goes from -x, +y right and down while we go from -x, -y right and up
-            grid[Nv - thisrownum + 1, thisrowcount, :] = [z / unitmod, dzdx / unitmod, dzdy / unitmod, d2zdxdy / unitmod^2]
+            grid[Nv-thisrownum+1, thisrowcount, :] = [z / unitmod, dzdx / unitmod, dzdy / unitmod, d2zdxdy / unitmod^2]
             if thisrowcount == Nu
                 thisrownum += 1
                 thisrowcount = 1
@@ -188,21 +188,21 @@ struct GridSagSurface{T,N,S<:Union{ZernikeSurface{T,N},ChebyshevSurface{T,N}},Nu
             end
         end
         close(f)
-        return GridSagSurface(ChebyshevSurface(halfsizeu, halfsizev, nothing, radius = radius, conic = conic), grid, interpolation = interpolation, decenteruv = decenteruv)
+        return GridSagSurface(ChebyshevSurface(halfsizeu, halfsizev, nothing, radius=radius, conic=conic), grid, interpolation=interpolation, decenteruv=decenteruv)
     end
 end
 export GridSagSurface
 
 uvrange(::Type{GridSagSurface{T,N,S,Nu,Nv}}) where {T<:Real,N,S<:Union{ZernikeSurface{T,N},ChebyshevSurface{T,N}},Nu,Nv} = uvrange(S)
 
-@inline function gridsag(s::GridSagSurface{T,3,S,Nu,Nv}, ui::Int, vi::Int, i::Int = 0) where {T<:Real,S,Nu,Nv}
+@inline function gridsag(s::GridSagSurface{T,3,S,Nu,Nv}, ui::Int, vi::Int, i::Int=0) where {T<:Real,S,Nu,Nv}
     @assert 0 <= ui < Nu
     @assert 0 <= vi < Nv
     @assert i <= 4
     if i <= 0
-        return @inbounds s.gridsag[ui + 1][vi + 1]
+        return @inbounds s.gridsag[ui+1][vi+1]
     else
-        return @inbounds s.gridsag[ui + 1][vi + 1][i]
+        return @inbounds s.gridsag[ui+1][vi+1][i]
     end
 end
 
@@ -215,13 +215,13 @@ end
 end
 
 @inline function bicubicζ(surf::GridSagSurface{T,3,S,Nu,Nv}, uli::Int, uui::Int, vli::Int, vui::Int, κ::T, γ::T) where {T<:Real,S,Nu,Nv}
-    return (SMatrix{1,4,T,4}(1, κ, κ^2, κ^3) * bicubicα(surf, uli, uui, vli, vui) * SMatrix{4,1,T,4}(1, γ, γ^2, γ^3))[1]
+    return (SMatrix{1,4,T,4}(1, κ, κ^2, κ^3)*bicubicα(surf, uli, uui, vli, vui)*SMatrix{4,1,T,4}(1, γ, γ^2, γ^3))[1]
 end
 
 @inline function bicubicdζ(surf::GridSagSurface{T,3,S,Nu,Nv}, uli::Int, uui::Int, vli::Int, vui::Int, κ::T, γ::T) where {T<:Real,S,Nu,Nv}
     α = bicubicα(surf, uli, uui, vli, vui)
-    dκ = (SMatrix{1,4,T,4}(0, 1, 2κ, 3κ^2) * α * SMatrix{4,1,T,4}(1, γ, γ^2, γ^3))[1]
-    dγ = (SMatrix{1,4,T,4}(1, κ, κ^2, κ^3) * α * SMatrix{4,1,T,4}(0, 1, 2γ, 3γ^2))[1]
+    dκ = (SMatrix{1,4,T,4}(0, 1, 2κ, 3κ^2)*α*SMatrix{4,1,T,4}(1, γ, γ^2, γ^3))[1]
+    dγ = (SMatrix{1,4,T,4}(1, κ, κ^2, κ^3)*α*SMatrix{4,1,T,4}(0, 1, 2γ, 3γ^2))[1]
     return dκ, dγ
 end
 
@@ -335,7 +335,7 @@ end
 # Assumes the ray has been transformed into the canonical coordinate frame which has the vertical axis passing through (0,0,0) and aligned with the z axis.
 function surfaceintersection(surf::AcceleratedParametricSurface{T,3,GridSagSurface{T,3,S,Nu,Nv}}, r::AbstractRay{T,3}) where {T<:Real,S,Nu,Nv}
     boundingintvl = surfaceintersection(boundingobj(surf.surface.basesurface), r)
-    if boundingintvl isa EmptyInterval{T}
+    if isemptyinterval(boundingintvl)
         return EmptyInterval(T)
     else
         if doesintersect(surf.triangles_bbox, r) || inside(surf.triangles_bbox, origin(r))
@@ -365,9 +365,9 @@ function surfaceintersection(surf::AcceleratedParametricSurface{T,3,GridSagSurfa
     end
 end
 
-function AcceleratedParametricSurface(surf::GridSagSurface{T,N,Z}, numsamples::Int = 17; interface::NullOrFresnel{T} = NullInterface(T)) where {T<:Real,N,Z<:ZernikeSurface{T,N}}
+function AcceleratedParametricSurface(surf::GridSagSurface{T,N,Z}, numsamples::Int=17; interface::NullOrFresnel{T}=NullInterface(T)) where {T<:Real,N,Z<:ZernikeSurface{T,N}}
     # Zernike uses ρ, ϕ uv space so need to modify extension of triangulation
-    a = AcceleratedParametricSurface(surf, triangulate(surf, numsamples, true, false, true, false), interface = interface)
+    a = AcceleratedParametricSurface(surf, triangulate(surf, numsamples, true, false, true, false), interface=interface)
     emptytrianglepool!(T)
     return a
 end

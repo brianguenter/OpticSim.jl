@@ -15,7 +15,7 @@ Evaluate Chebyshev polynomial of the first kind ``T_n(q)``.
 
 `fast` will use trigonometric definition, rather than the recursive definition which is much faster but slightly less precise.
 """
-@inline function T(n::Int, q::R, fast::Bool = true)::R where {R<:Real}
+@inline function T(n::Int, q::R, fast::Bool=true)::R where {R<:Real}
     @assert n >= 0
     if n === 0
         return one(R)
@@ -41,7 +41,7 @@ Evaluate Chebyshev polynomial of the second kind ``U_n(q)``.
 
 `fast` will use trigonometric definition, rather than the recursive definition which is much faster but slightly less precise.
 """
-@inline function U(n::Int, q::R, fast::Bool = true)::R where {R<:Real}
+@inline function U(n::Int, q::R, fast::Bool=true)::R where {R<:Real}
     @assert n >= 0
     if n === 0
         return one(R)
@@ -63,7 +63,7 @@ Evaluate derivative of Chebyshev polynomial of the first kind ``\\frac{dT_n}{dq}
 
 `fast` will use trigonometric definition, rather than the recursive definition which is much faster but slightly less precise.
 """
-@inline function dTdq(n::Int, q::R, fast::Bool = true)::R where {R<:Real}
+@inline function dTdq(n::Int, q::R, fast::Bool=true)::R where {R<:Real}
     @assert n >= 0
     if n === 0
         return zero(R)
@@ -121,7 +121,7 @@ struct ChebyshevSurface{T,N,P} <: ParametricSurface{T,N}
     chebycoeff::SVector{P,Tuple{Int,Int,T}}
     offset::T
 
-    function ChebyshevSurface(halfsizeu::T, halfsizev::T, chebycoeff::Union{Nothing,Vector{Tuple{Int,Int,T}}}; radius::T = typemax(T), conic::T = zero(T)) where {T<:Real}
+    function ChebyshevSurface(halfsizeu::T, halfsizev::T, chebycoeff::Union{Nothing,Vector{Tuple{Int,Int,T}}}; radius::T=typemax(T), conic::T=zero(T)) where {T<:Real}
         @assert !isnan(halfsizeu) && !isnan(halfsizev) && !isnan(radius) && !isnan(conic)
         @assert halfsizeu > zero(T) && halfsizev > zero(T)
         @assert one(T) - (1 / radius)^2 * (conic + one(T)) * (halfsizeu^2 + halfsizev^2) > 0 "Invalid surface (conic/radius combination: $radius, $conic)"
@@ -219,7 +219,7 @@ end
 # Assumes the ray has been transformed into the canonical coordinate frame which has the vertical axis passing through (0,0,0) and aligned with the z axis.
 function surfaceintersection(surf::AcceleratedParametricSurface{T,3,ChebyshevSurface{T,3,P}}, r::AbstractRay{T,3}) where {T<:Real,P}
     bboxint = surfaceintersection(surf.surface.boundingprism, r)
-    if bboxint isa EmptyInterval{T}
+    if isemptyinterval(bboxint)
         return EmptyInterval(T)
     else
         if doesintersect(surf.triangles_bbox, r) || inside(surf.triangles_bbox, origin(r))
