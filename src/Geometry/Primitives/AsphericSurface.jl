@@ -262,7 +262,7 @@ end
 # Assumes the ray has been transformed into the canonical coordinate frame which has the vertical axis passing through (0,0,0) and aligned with the z axis.
 function surfaceintersection(surf::AcceleratedParametricSurface{T,3,AsphericSurface{T,3}}, r::AbstractRay{T,3}) where {T<:Real}
     cylint = surfaceintersection(surf.surface.boundingcylinder, r)
-    if cylint isa EmptyInterval{T}
+    if isemptyinterval(cylint)
         return EmptyInterval(T)
     else
         if doesintersect(surf.triangles_bbox, r) || inside(surf.triangles_bbox, origin(r))
