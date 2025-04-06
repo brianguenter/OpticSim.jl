@@ -24,7 +24,7 @@ Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 [compat]
 AGFFileReader = "1"
 Colors = "0.13.0"
-JET = "0.9.19"
+JET = "0.9"
 
 [extras]
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
