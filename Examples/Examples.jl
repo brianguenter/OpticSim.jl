@@ -9,8 +9,6 @@ using Vis
 using ..OpticSim.Geometry
 using ..OpticSim.Emitters
 
-using ..OpticSim.Repeat
-
 using AGFFileReader
 using StaticArrays
 using DataFrames: DataFrame
@@ -22,7 +20,6 @@ import Luxor
 
 include("docs_examples.jl")
 include("other_examples.jl")
-include("repeating_structure_examples.jl")
 include("eyemodels.jl")
 
 end #module Examples
