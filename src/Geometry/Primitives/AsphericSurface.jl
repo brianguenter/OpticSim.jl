@@ -172,7 +172,7 @@ function point(z::AsphericSurface{T,3,Q,M}, ρ::T, ϕ::T)::SVector{3,T} where {T
     # sum aspheric
     if M != CONIC
         prod, step = prod_step(z, r, r2)  #multiple dispatch on M
-        if z.aspherics === nothing
+        if isnothing(z.aspherics)
             throw(ErrorException("attempt to compute point on aspheric which has no aspheric surfaces"))
         end
         asp, rest = Iterators.peel(z.aspherics) #JET doesn't seem to be able to infer that z.aspheric cannot be nothing at this point and gives an error.
