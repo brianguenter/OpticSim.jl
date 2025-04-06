@@ -161,30 +161,30 @@ prod_step(z::AsphericSurface{T,N,Q,ODD}, r, r2) where {T<:Real,N,Q} = r, r2
 prod_step(z::AsphericSurface{T,N,Q,EVEN}, r, r2) where {T<:Real,N,Q} = r2, r2
 
 function point(z::AsphericSurface{T,3,Q,M}, ρ::T, ϕ::T)::SVector{3,T} where {T<:Real,Q,M}
-        rad = z.semidiameter
-        r = ρ * rad
-        r2 = r^2
-        t = one(T) - z.curvature^2 * (z.conic + one(T)) * r^2
-        if t < zero(T)
-            return SVector{3,T}(NaN, NaN, NaN)
-        end
-        h = z.curvature * r2 / (one(T) + sqrt(t))
-        # sum aspheric
-        if M != CONIC
-            prod, step = prod_step(z, r, r2)  #multiple dispatch on M
-            if z.aspherics === nothing
-                throw(ErrorException("attempt to compute point on aspheric which has no aspheric surfaces"))
-            end
-            asp, rest = Iterators.peel(z.aspherics) #JET doesn't seem to be able to infer that z.aspheric cannot be nothing at this point and gives an error.
-            h += asp * prod
-            for asp in rest
-                prod *= step
-                h += asp * prod
-            end
-        end
-        return SVector{3,T}(r * cos(ϕ), r * sin(ϕ), h)
+    rad = z.semidiameter
+    r = ρ * rad
+    r2 = r^2
+    t = one(T) - z.curvature^2 * (z.conic + one(T)) * r^2
+    if t < zero(T)
+        return SVector{3,T}(NaN, NaN, NaN)
     end
+    h = z.curvature * r2 / (one(T) + sqrt(t))
+    # sum aspheric
+    if M != CONIC
+        prod, step = prod_step(z, r, r2)  #multiple dispatch on M
+        if z.aspherics === nothing
+            throw(ErrorException("attempt to compute point on aspheric which has no aspheric surfaces"))
+        end
+        asp, rest = Iterators.peel(z.aspherics) #JET doesn't seem to be able to infer that z.aspheric cannot be nothing at this point and gives an error.
+        h += asp * prod
+        for asp in rest
+            prod *= step
+            h += asp * prod
+        end
+    end
+    return SVector{3,T}(r * cos(ϕ), r * sin(ϕ), h)
 end
+
 
 partial_prod_step(z::AsphericSurface{T,3,Q,EVEN}, r::T, r2::T) where {T<:Real,Q} = r, r2, 2:2:2Q
 partial_prod_step(z::AsphericSurface{T,3,Q,ODD}, r::T, r2::T) where {T<:Real,Q} = one(T), r2, 1:2:(2Q-1)
