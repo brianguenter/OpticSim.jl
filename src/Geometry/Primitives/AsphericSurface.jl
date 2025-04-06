@@ -161,10 +161,6 @@ prod_step(z::AsphericSurface{T,N,Q,ODD}, r, r2) where {T<:Real,N,Q} = r, r2
 prod_step(z::AsphericSurface{T,N,Q,EVEN}, r, r2) where {T<:Real,N,Q} = r2, r2
 
 function point(z::AsphericSurface{T,3,Q,M}, ρ::T, ϕ::T)::SVector{3,T} where {T<:Real,Q,M}
-    if z.aspherics === nothing
-        throw(ErrorException("attempt to compute point on aspheric which has no aspheric surfaces"))
-    else
-
         rad = z.semidiameter
         r = ρ * rad
         r2 = r^2
@@ -176,6 +172,9 @@ function point(z::AsphericSurface{T,3,Q,M}, ρ::T, ϕ::T)::SVector{3,T} where {T
         # sum aspheric
         if M != CONIC
             prod, step = prod_step(z, r, r2)  #multiple dispatch on M
+            if z.aspherics === nothing
+                throw(ErrorException("attempt to compute point on aspheric which has no aspheric surfaces"))
+            end
             asp, rest = Iterators.peel(z.aspherics) #JET doesn't seem to be able to infer that z.aspheric cannot be nothing at this point and gives an error.
             h += asp * prod
             for asp in rest
