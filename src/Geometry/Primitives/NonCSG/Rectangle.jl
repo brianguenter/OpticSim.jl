@@ -24,17 +24,17 @@ struct Rectangle{T} <: PlanarShape{T}
     uvec::SVector{3,T}
     vvec::SVector{3,T}
 
-    function Rectangle(halfsizex::T, halfsizey::T; interface::NullOrFresnel{T} = NullInterface(T)) where {T<:Real}
+    function Rectangle(halfsizex::T, halfsizey::T; interface::NullOrFresnel{T}=NullInterface(T)) where {T<:Real}
         @assert halfsizex > zero(T) && halfsizey > zero(T)
-        new{T}(Plane(zero(T), zero(T), one(T), zero(T), zero(T), zero(T), interface = interface), halfsizex, halfsizey, SVector{3,T}(1.0, 0.0, 0.0), SVector{3,T}(0.0, 1.0, 0.0))
+        new{T}(Plane(zero(T), zero(T), one(T), zero(T), zero(T), zero(T), interface=interface), halfsizex, halfsizey, SVector{3,T}(1.0, 0.0, 0.0), SVector{3,T}(0.0, 1.0, 0.0))
     end
 
-    function Rectangle(halfsizeu::T, halfsizev::T, surfacenormal::AbstractArray{T,1}, centrepoint::AbstractArray{T,1}; interface::NullOrFresnel{T} = NullInterface(T), rotationvec::AbstractArray{T,1} = SVector{3,T}(0.0, 1.0, 0.0)) where {T<:Real}
+    function Rectangle(halfsizeu::T, halfsizev::T, surfacenormal::AbstractArray{T,1}, centrepoint::AbstractArray{T,1}; interface::NullOrFresnel{T}=NullInterface(T), rotationvec::AbstractArray{T,1}=SVector{3,T}(0.0, 1.0, 0.0)) where {T<:Real}
         @assert length(surfacenormal) == 3 && length(centrepoint) == 3
-        return Rectangle(halfsizeu, halfsizev, SVector{3,T}(surfacenormal), SVector{3,T}(centrepoint), interface = interface, rotationvec = SVector{3,T}(rotationvec))
+        return Rectangle(halfsizeu, halfsizev, SVector{3,T}(surfacenormal), SVector{3,T}(centrepoint), interface=interface, rotationvec=SVector{3,T}(rotationvec))
     end
 
-    function Rectangle(halfsizeu::T, halfsizev::T, surfacenormal::SVector{3,T}, centrepoint::SVector{3,T}; interface::NullOrFresnel{T} = NullInterface(T), rotationvec::SVector{3,T} = SVector{3,T}(0.0, 1.0, 0.0)) where {T<:Real}
+    function Rectangle(halfsizeu::T, halfsizev::T, surfacenormal::SVector{3,T}, centrepoint::SVector{3,T}; interface::NullOrFresnel{T}=NullInterface(T), rotationvec::SVector{3,T}=SVector{3,T}(0.0, 1.0, 0.0)) where {T<:Real}
         @assert halfsizeu > zero(T) && halfsizev > zero(T)
         n̂ = normalize(surfacenormal)
         if abs(dot(rotationvec, n̂)) == one(T)
@@ -42,7 +42,7 @@ struct Rectangle{T} <: PlanarShape{T}
         end
         uvec = normalize(cross(normalize(rotationvec), n̂))
         vvec = normalize(cross(n̂, uvec))
-        new{T}(Plane(n̂, centrepoint, interface = interface), halfsizeu, halfsizev, uvec, vvec)
+        new{T}(Plane(n̂, centrepoint, interface=interface), halfsizeu, halfsizev, uvec, vvec)
     end
 
     function Rectangle(plane::Plane{T,3}, halfsizeu::T, halfsizev::T, uvec::SVector{3,T}, vvec::SVector{3,T}) where {T<:Real}
@@ -58,10 +58,10 @@ centroid(r::Rectangle{T}) where {T<:Real} = r.plane.pointonplane
 uvrange(::Type{Rectangle{T}}) where {T<:Real} = ((-one(T), one(T)), (-one(T), one(T)))
 
 """returns a 3D point. This takes into account the offset of centerpoint and the rotation vector used to construct the Rectangle. u and v are scaled by the size of the rectangle so that u=0,v=0 is one corner and u=v=1 is the diagonal corner. This function should go away once we have a sensible object transform hierarchy system."""
-function point(r::Rectangle{T},uvs::SMatrix{2,N,T}) where{N,T<:Real}
+function point(r::Rectangle{T}, uvs::SMatrix{2,N,T}) where {N,T<:Real}
     result = MMatrix{3,N,T}(undef)
     for i in 1:N
-        result[:,i] = point(r,uvs[1,i],uvs[2,i])
+        result[:, i] = point(r, uvs[1, i], uvs[2, i])
     end
     return SMatrix{3,N,T}(result)
 end
@@ -113,22 +113,22 @@ function surfaceintersection(rect::Rectangle{T}, r::AbstractRay{T,3}) where {T<:
 end
 
 """returns the 2D vertices in the plane of the rectangle"""
-vertices(r::Rectangle{T},::Int = 0) where{T<:Real} = SMatrix{2,4}(vertices3d(r)[1:2,:])
-  
+vertices(r::Rectangle{T}, ::Int=0) where {T<:Real} = SMatrix{2,4}(vertices3d(r)[1:2, :])
+
 
 """returns the vertices of the rectangle in 3D"""
-function vertices3d(r::Rectangle{T},::Int = 0) where{T<:Real}
+function vertices3d(r::Rectangle{T}, ::Int=0) where {T<:Real}
     pts = SVector{4,SVector{3,T}}(
-        point(r, -one(T), -one(T)), 
+        point(r, -one(T), -one(T)),
         point(r, -one(T), one(T)),
         point(r, one(T), one(T)),
         point(r, one(T), -one(T))
     )
     temp = MMatrix{3,4,T}(undef)
 
-    for (j,pt) in pairs(pts)
+    for (j, pt) in pairs(pts)
         for i in 1:3
-        temp[i,j] = pts[j][i]
+            temp[i, j] = pts[j][i]
         end
     end
     return SMatrix{3,4,T}(temp)
@@ -136,7 +136,7 @@ end
 
 export vertices3d
 
-function makemesh(r::Rectangle{T}, ::Int = 0) where {T<:Real}
+function makemesh(r::Rectangle{T}, ::Int=0) where {T<:Real}
     # p00,p01,p10,p11 = vertices(r)
     p00 = point(r, -one(T), -one(T))
     p01 = point(r, -one(T), one(T))

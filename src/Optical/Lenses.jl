@@ -122,6 +122,7 @@ Create a Fresnel lens as a CSG object, can be concave or convex. Groove position
 **Aspherics currently not supported**.
 """
 function FresnelLens(insidematerial::G, frontvertex::T, radius::T, thickness::T, semidiameter::T, groovedepth::T; conic::T=0.0, aspherics::Union{Nothing,Vector{Pair{Int,T}}}=nothing, outsidematerial::H=AGFFileReader.Air, reverse::Bool=false) where {T<:Real,G<:AGFFileReader.AbstractGlass,H<:AGFFileReader.AbstractGlass}
+    throw(ErrorException("incorrect code calls leaf(fresnel,...) but no function is defined for this arg type."))
     @assert abs(radius) > semidiameter
     interface = FresnelInterface{T}(insidematerial, outsidematerial)
 
@@ -198,6 +199,7 @@ function FresnelLens(insidematerial::G, frontvertex::T, radius::T, thickness::T,
     backplane = leaf(Plane(zero(T), zero(T), -one(T), zero(T), zero(T), frontvertex - thickness, vishalfsizeu=semidiameter, vishalfsizev=semidiameter))
     fresnel = backplane ∩ fresnel
     if !reverse
+        #there is no function leaf defined for the fresnel argument
         fresnel = leaf(fresnel, rotationd(T, zero(T), T(180.0), zero(T)))
     end
     return fresnel

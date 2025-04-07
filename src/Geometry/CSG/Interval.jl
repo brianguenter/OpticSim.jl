@@ -15,7 +15,7 @@ EmptyInterval{T}()
 ```
 """
 struct EmptyInterval{T} <: AbstractRayInterval{T}
-    EmptyInterval(::Type{T} = Float64) where {T<:Real} = new{T}()
+    EmptyInterval(::Type{T}=Float64) where {T<:Real} = new{T}()
     EmptyInterval{T}() where {T<:Real} = new{T}()
 end
 export EmptyInterval
@@ -106,7 +106,7 @@ end
 const threadedintervalpool = Vector{Dict{DataType,IntervalPool}}()
 #const threadedintervalpool = [Dict{DataType,IntervalPool}([Float64 => IntervalPool{Float64}()]) for _ in 1:Threads.nthreads()]
 
-function newinintervalpool!(::Type{T} = Float64, tid::Int = Threads.threadid())::Vector{Interval{T}} where {T<:Real}
+function newinintervalpool!(::Type{T}=Float64, tid::Int=Threads.threadid())::Vector{Interval{T}} where {T<:Real}
     if T ∉ keys(threadedintervalpool[tid])
         # if the type of the interval pool has changed then we need to refill it with the correct type
         threadedintervalpool[tid][T] = IntervalPool{T}()
@@ -114,21 +114,21 @@ function newinintervalpool!(::Type{T} = Float64, tid::Int = Threads.threadid()):
     return allocate!(threadedintervalpool[tid][T])
 end
 
-function indexednewinintervalpool!(::Type{T} = Float64, tid::Int = Threads.threadid())::Tuple{Int,Vector{Interval{T}}} where {T<:Real}
+function indexednewinintervalpool!(::Type{T}=Float64, tid::Int=Threads.threadid())::Tuple{Int,Vector{Interval{T}}} where {T<:Real}
     a = newinintervalpool!(T, tid)
     index = length(threadedintervalpool[tid][T].allocated)
     return index, a
 end
 
-function emptyintervalpool!(::Type{T} = Float64, tid::Int = Threads.threadid()) where {T}
+function emptyintervalpool!(::Type{T}=Float64, tid::Int=Threads.threadid()) where {T}
     if T ∈ keys(threadedintervalpool[tid])
         OpticSim.empty!(threadedintervalpool[tid][T])
     end
 end
 
-getfromintervalpool(id::Int, tid::Int = Threads.threadid())::Vector{Interval{Float64}} = getfromintervalpool(Float64, id, tid)
+getfromintervalpool(id::Int, tid::Int=Threads.threadid())::Vector{Interval{Float64}} = getfromintervalpool(Float64, id, tid)
 
-function getfromintervalpool(::Type{T}, id::Int, tid::Int = Threads.threadid())::Vector{Interval{T}} where {T<:Real}
+function getfromintervalpool(::Type{T}, id::Int, tid::Int=Threads.threadid())::Vector{Interval{T}} where {T<:Real}
     return threadedintervalpool[tid][T].allocated[id]
 end
 
@@ -140,10 +140,10 @@ macro inplaceinsertionsort(array, f)
             value = $array[i]
             j = i - 1
             while j > 0 && $f($array[j]) > $f(value)
-                $array[j + 1] = $array[j]
+                $array[j+1] = $array[j]
                 j = j - 1
             end
-            $array[j + 1] = value
+            $array[j+1] = value
         end
     end)
 end
@@ -245,6 +245,7 @@ Returns true if `lower(a)` is [`RayOrigin`](@ref). In performance critical conte
 israyorigininterval(a::Interval{T}) where {T<:Real} = lower(a) isa RayOrigin{T}
 
 isinfiniteinterval(a::Interval{T}) where {T<:Real} = israyorigininterval(a) && ispositivehalfspace(a)
+isinfiniteinterval(a::EmptyInterval{T}) where {T<:Real} = false
 
 positivehalfspace(a::RayOrigin{T}) where {T<:Real} = Interval(a, Infinity(T))
 positivehalfspace(a::Intersection{T,N}) where {T<:Real,N} = Interval(a, Infinity(T))
@@ -269,14 +270,15 @@ function halfspaceintersection(a::Interval{T})::Intersection{T,3} where {T<:Real
     end
 end
 
+halfspaceintersection(a::EmptyInterval{T}) where {T<:Real} = throw(ErrorException("Not a half-space: $a"))
 """
     closestintersection(a::Union{EmptyInterval{T},Interval{T},DisjointUnion{T}}, ignorenull::Bool = true) -> Union{Nothing,Intersection{T,3}}
 
 Returns the closest [`Intersection`](@ref) from an [`Interval`](@ref) or [`DisjointUnion`](@ref).
 Ignores intersection with null interfaces if `ignorenull` is true. Will return `nothing` if there is no valid intersection.
 """
-closestintersection(::EmptyInterval, ::Bool = true) = nothing
-function closestintersection(a::Interval{T}, ignorenull::Bool = true)::Union{Nothing,Intersection{T,3}} where {T<:Real}
+closestintersection(::EmptyInterval, ::Bool=true) = nothing
+function closestintersection(a::Interval{T}, ignorenull::Bool=true)::Union{Nothing,Intersection{T,3}} where {T<:Real}
     la = lower(a)
     ua = upper(a)
     if la isa RayOrigin{T}
@@ -291,7 +293,7 @@ function closestintersection(a::Interval{T}, ignorenull::Bool = true)::Union{Not
         return nothing
     end
 end
-function closestintersection(a::DisjointUnion{T}, ignorenull::Bool = true)::Union{Nothing,Intersection{T,3}} where {T<:Real}
+function closestintersection(a::DisjointUnion{T}, ignorenull::Bool=true)::Union{Nothing,Intersection{T,3}} where {T<:Real}
     for i in intervals(a)
         c = closestintersection(i, ignorenull)
         if c !== nothing
@@ -413,10 +415,12 @@ function intervalintersection(a::Interval{T}, b::AbstractVector{Interval{T}})::U
     end
     if int1 === nothing
         return EmptyInterval(T)
-    elseif int1 !== nothing && (temp === nothing)
-        return int1
-    else
-        return DisjointUnion(temp)
+    elseif int1 !== nothing
+        if temp === nothing
+            return int1
+        else
+            return DisjointUnion(temp)
+        end
     end
 end
 

@@ -99,7 +99,7 @@ Evaluate radial polynomial ``R_{n}^{m}(\\rho)``.
         return zero(T)
     end
     total = zero(T)
-    @simd for k in 0:((N - M) ÷ 2)
+    @simd for k in 0:((N-M)÷2)
         total += ((-1)^k * factorial(N - k)) / (factorial(k) * factorial((N + M) ÷ 2 - k) * factorial((N - M) ÷ 2 - k)) * ρ^(N - 2 * k)
     end
     return total
@@ -148,7 +148,7 @@ struct ZernikeSurface{T,N,P,Q,M} <: ParametricSurface{T,N}
     coeffs::SVector{P,Tuple{Int,Int,T}}
     boundingcylinder::Cylinder{T,N}
 
-    function ZernikeSurface(semidiameter::T; radius::T = typemax(T), conic::T = zero(T), zcoeff::Union{Nothing,Vector{Tuple{Int,T}}} = nothing, aspherics::Union{Nothing,Vector{Tuple{Int,T}}} = nothing, normradius::T = semidiameter, indexing::ZernikeIndexType = ZernikeIndexingOSA) where {T<:Real}
+    function ZernikeSurface(semidiameter::T; radius::T=typemax(T), conic::T=zero(T), zcoeff::Union{Nothing,Vector{Tuple{Int,T}}}=nothing, aspherics::Union{Nothing,Vector{Tuple{Int,T}}}=nothing, normradius::T=semidiameter, indexing::ZernikeIndexType=ZernikeIndexingOSA) where {T<:Real}
         asp = AsphericSurface(semidiameter; radius, conic, aspherics, normradius)
         Q = length(asp.aspherics) #this is not the same as the aspherics variable passed to the function!
 
@@ -167,7 +167,7 @@ struct ZernikeSurface{T,N,P,Q,M} <: ParametricSurface{T,N}
         end
         P = length(zcs)
         M = asphericType(asp)
-        new{T,3,P,Q,M}(asp::AsphericSurface{T,3,Q,M}, SVector{P,Tuple{Int,Int,T}}(zcs), Cylinder(semidiameter, interface = opaqueinterface(T))) # TODO!! incorrect interface on cylinder
+        new{T,3,P,Q,M}(asp::AsphericSurface{T,3,Q,M}, SVector{P,Tuple{Int,Int,T}}(zcs), Cylinder(semidiameter, interface=opaqueinterface(T))) # TODO!! incorrect interface on cylinder
     end
 
 end
@@ -193,13 +193,13 @@ function point(z::ZernikeSurface{T,3,P,Q,M}, ρ::T, ϕ::T)::SVector{3,T} where {
         (R, S, k) = z.coeffs[m]
         h += k * Zernike.ζ(R, S, u, ϕ)
     end
-    return SVector{3,T}(pnt[1], pnt[2], pnt[3] + h) 
+    return SVector{3,T}(pnt[1], pnt[2], pnt[3] + h)
 end
 
 function partials(z::ZernikeSurface{T,3,P,Q,M}, ρ::T, ϕ::T)::Tuple{SVector{3,T},SVector{3,T}} where {T<:Real,P,Q,M}
-    pρ,pϕ = partials(z.asp, ρ, ϕ)
+    pρ, pϕ = partials(z.asp, ρ, ϕ)
     # sum zernike partials
-    rad=z.asp.semidiameter
+    rad = z.asp.semidiameter
     n = rad / z.asp.normradius
     u = ρ * n
     dhdρ = zero(T)
@@ -210,7 +210,7 @@ function partials(z::ZernikeSurface{T,3,P,Q,M}, ρ::T, ϕ::T)::Tuple{SVector{3,T
         dhdρ += k * du * n # want the derivative wrt ρ, not u
         dhdϕ += k * dϕ
     end
-    return SVector{3,T}(pρ[1], pρ[2], pρ[3] + dhdρ),  SVector{3,T}(pϕ[1], pϕ[2], pϕ[3] + dhdϕ)
+    return SVector{3,T}(pρ[1], pρ[2], pρ[3] + dhdρ), SVector{3,T}(pϕ[1], pϕ[2], pϕ[3] + dhdϕ)
 end
 
 function normal(z::ZernikeSurface{T,3,P,Q,M}, ρ::T, ϕ::T)::SVector{3,T} where {T<:Real,P,Q,M}
@@ -259,7 +259,7 @@ end
 # Assumes the ray has been transformed into the canonical coordinate frame which has the vertical axis passing through (0,0,0) and aligned with the z axis.
 function surfaceintersection(surf::AcceleratedParametricSurface{T,3,ZernikeSurface{T,3,P,Q,M}}, r::AbstractRay{T,3}) where {T<:Real,P,Q,M}
     cylint = surfaceintersection(surf.surface.boundingcylinder, r)
-    if cylint isa EmptyInterval{T}
+    if isemptyinterval(cylint)
         return EmptyInterval(T)
     else
         if doesintersect(surf.triangles_bbox, r) || inside(surf.triangles_bbox, origin(r))
@@ -289,9 +289,9 @@ function surfaceintersection(surf::AcceleratedParametricSurface{T,3,ZernikeSurfa
     end
 end
 
-function AcceleratedParametricSurface(surf::T, numsamples::Int = 17; interface::NullOrFresnel{S} = NullInterface(S)) where {S<:Real,N,T<:ZernikeSurface{S,N}}
+function AcceleratedParametricSurface(surf::T, numsamples::Int=17; interface::NullOrFresnel{S}=NullInterface(S)) where {S<:Real,N,T<:ZernikeSurface{S,N}}
     # Zernike uses ρ, ϕ uv space so need to modify extension of triangulation
-    a = AcceleratedParametricSurface(surf, triangulate(surf, numsamples, true, false, true, false), interface = interface)
+    a = AcceleratedParametricSurface(surf, triangulate(surf, numsamples, true, false, true, false), interface=interface)
     emptytrianglepool!(S)
     return a
 end
@@ -301,7 +301,6 @@ function BoundingBox(surf::ZernikeSurface{T,3,P,Q,M}) where {T<:Real,P,Q,M}
     # zernike terms have condition than |Zᵢ| <= 1
     # so this gives us a (loose) bounding box
     ak = P > 0 ? sum(abs.(Zernike.normalisation(T, n, m) * k for (n, m, k) in surf.coeffs)) : zero(T)
-    bb.zmin -= ak
-    bb.zmax += ak
-    return BoundingBox(bb.xmin, bb.xmax, bb.ymin, bb.ymax, bb.zmin, bb.zmax) #could just return bb, but this way is safer
+
+    return BoundingBox(bb.xmin, bb.xmax, bb.ymin, bb.ymax, bb.zmin - ak, bb.zmax + ak) #could just return bb, but this way is safer
 end

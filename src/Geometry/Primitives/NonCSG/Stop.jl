@@ -176,9 +176,9 @@ Creates a rectangular aperture in a plane i.e. `InfiniteStop{T,RectangularStopSh
 The rotation of the rectangle around its normal is defined by `rotationvec`.
 `rotationvec×surfacenormal` is taken as the vector along the u axis.
 """
-function RectangularAperture(aphalfsizeu::T, aphalfsizev::T, surfacenormal::SVector{3,T}, centrepoint::SVector{3,T}; rotationvec::SVector{3,T} = SVector{3,T}(0.0, 1.0, 0.0)) where {T<:Real}
+function RectangularAperture(aphalfsizeu::T, aphalfsizev::T, surfacenormal::SVector{3,T}, centrepoint::SVector{3,T}; rotationvec::SVector{3,T}=SVector{3,T}(0.0, 1.0, 0.0)) where {T<:Real}
     @assert aphalfsizeu > 0 && aphalfsizev > 0
-    p = Plane(surfacenormal, centrepoint, interface = opaqueinterface(T))
+    p = Plane(surfacenormal, centrepoint, interface=opaqueinterface(T))
     n̂ = normal(p)
     if abs(dot(rotationvec, n̂)) == one(T)
         rotationvec = SVector{3,T}(1.0, 0.0, 0.0)
@@ -195,9 +195,9 @@ Creates a rectangular aperture in a rectangle i.e. `FiniteStop{T,RectangularStop
 The rotation of the rectangle around its normal is defined by `rotationvec`.
 `rotationvec×surfacenormal` is taken as the vector along the u axis.
 """
-function RectangularAperture(innerhalfsizeu::T, innerhalfsizev::T, outerhalfsizeu::T, outerhalfsizev::T, surfacenormal::SVector{3,T}, centrepoint::SVector{3,T}; rotationvec::SVector{3,T} = SVector{3,T}(0.0, 1.0, 0.0)) where {T<:Real}
+function RectangularAperture(innerhalfsizeu::T, innerhalfsizev::T, outerhalfsizeu::T, outerhalfsizev::T, surfacenormal::SVector{3,T}, centrepoint::SVector{3,T}; rotationvec::SVector{3,T}=SVector{3,T}(0.0, 1.0, 0.0)) where {T<:Real}
     @assert innerhalfsizeu < outerhalfsizeu && innerhalfsizev < outerhalfsizev && innerhalfsizeu > 0 && innerhalfsizev > 0
-    p = Plane(surfacenormal, centrepoint, interface = opaqueinterface(T))
+    p = Plane(surfacenormal, centrepoint, interface=opaqueinterface(T))
     n̂ = normal(p)
     if abs(dot(rotationvec, n̂)) == one(T)
         rotationvec = SVector{3,T}(1.0, 0.0, 0.0)
@@ -216,7 +216,7 @@ Creates a circular aperture in a plane i.e. `InfiniteStop{T,CircularStopShape}`.
 """
 function CircularAperture(radius::T, surfacenormal::SVector{3,T}, centrepoint::SVector{3,T}) where {T<:Real}
     @assert radius > 0
-    p = Plane(surfacenormal, centrepoint, interface = opaqueinterface(T))
+    p = Plane(surfacenormal, centrepoint, interface=opaqueinterface(T))
     return InfiniteStop{T,CircularStopShape}(p, SVector{3,T}(0.0, 0.0, 0.0), SVector{3,T}(0.0, 0.0, 0.0), radius, radius)
 end
 
@@ -227,9 +227,9 @@ Creates a circular aperture in a rectangle i.e. `FiniteStop{T,CircularStopShape,
 The rotation of the rectangle around its normal is defined by `rotationvec`.
 `rotationvec×surfacenormal` is taken as the vector along the u axis.
 """
-function CircularAperture(radius::T, outerhalfsizeu::T, outerhalfsizev::T, surfacenormal::SVector{3,T}, centrepoint::SVector{3,T}; rotationvec::SVector{3,T} = SVector{3,T}(0.0, 1.0, 0.0)) where {T<:Real}
+function CircularAperture(radius::T, outerhalfsizeu::T, outerhalfsizev::T, surfacenormal::SVector{3,T}, centrepoint::SVector{3,T}; rotationvec::SVector{3,T}=SVector{3,T}(0.0, 1.0, 0.0)) where {T<:Real}
     @assert radius < outerhalfsizeu && radius < outerhalfsizev && radius > 0
-    p = Plane(surfacenormal, centrepoint, interface = opaqueinterface(T))
+    p = Plane(surfacenormal, centrepoint, interface=opaqueinterface(T))
     n̂ = normal(p)
     if abs(dot(rotationvec, n̂)) == one(T)
         rotationvec = SVector{3,T}(1.0, 0.0, 0.0)
@@ -247,7 +247,7 @@ Creates a circular aperture in a circle i.e. `FiniteStop{T,CircularStopShape,Cir
 """
 function Annulus(innerradius::T, outerradius::T, surfacenormal::SVector{3,T}, centrepoint::SVector{3,T}) where {T<:Real}
     @assert outerradius > innerradius && innerradius > 0
-    p = Plane(surfacenormal, centrepoint, interface = opaqueinterface(T))
+    p = Plane(surfacenormal, centrepoint, interface=opaqueinterface(T))
     n̂ = normal(p)
     rotationvec = SVector{3,T}(0.0, 1.0, 0.0)
     if abs(dot(rotationvec, n̂)) == one(T)
@@ -261,24 +261,24 @@ export Annulus
 
 # override makemesh so that we use as few triangles as possible - these can't be CSG objects so we don't need small triangles
 
-function makemesh(s::FiniteStop{T,CircularStopShape,CircularStopShape}, subdivisions::Int = 30) where {T<:Real}
+function makemesh(s::FiniteStop{T,CircularStopShape,CircularStopShape}, subdivisions::Int=30) where {T<:Real}
     point(u::T, v::T) = centroid(s) + ((s.innerhalfsizeu + v * (s.outerhalfsizeu - s.innerhalfsizeu)) * (sin(u) * s.uvec + cos(u) * s.vvec))
     dθ = T(2π) / subdivisions
     tris = Vector{Triangle{T}}(undef, subdivisions * 2)
-    @inbounds for i in 0:(subdivisions - 1)
+    @inbounds for i in 0:(subdivisions-1)
         θ1 = i * dθ - π
         θ2 = (i + 1) * dθ - π
         ip1 = point(θ1, zero(T))
         ip2 = point(θ2, zero(T))
         op1 = point(θ1, one(T))
         op2 = point(θ2, one(T))
-        tris[i * 2 + 1] = Triangle(ip1, op2, op1)
-        tris[i * 2 + 2] = Triangle(ip1, ip2, op2)
+        tris[i*2+1] = Triangle(ip1, op2, op1)
+        tris[i*2+2] = Triangle(ip1, ip2, op2)
     end
     return TriangleMesh(tris)
 end
 
-function makemesh(s::FiniteStop{T,CircularStopShape,RectangularStopShape}, subdivisions::Int = 30) where {T<:Real}
+function makemesh(s::FiniteStop{T,CircularStopShape,RectangularStopShape}, subdivisions::Int=30) where {T<:Real}
     point(u::T) = centroid(s) + (s.innerhalfsizeu * (sin(u) * s.uvec + cos(u) * s.vvec))
     outeru = s.outerhalfsizeu * s.uvec
     outerv = s.outerhalfsizev * s.vvec
@@ -288,22 +288,22 @@ function makemesh(s::FiniteStop{T,CircularStopShape,RectangularStopShape}, subdi
     o10 = centroid(s) + outeru - outerv
     dθ = T(2π) / subdivisions
     tris = Vector{Triangle{T}}(undef, subdivisions + 4)
-    @inbounds for i in 0:(subdivisions - 1)
+    @inbounds for i in 0:(subdivisions-1)
         θ1 = i * dθ - π
         θ2 = (i + 1) * dθ - π
         ip1 = point(θ1)
         ip2 = point(θ2)
         closestcorner = θ1 < -π / 2 ? o00 : θ1 < 0.0 ? o01 : θ1 < π / 2 ? o11 : o10
-        tris[i + 1] = Triangle(ip1, ip2, closestcorner)
+        tris[i+1] = Triangle(ip1, ip2, closestcorner)
     end
-    tris[end - 3] = Triangle(o00, point(ceil(subdivisions / 4) * dθ - π), o01)
-    tris[end - 2] = Triangle(o01, point(ceil(subdivisions / 2) * dθ - π), o11)
-    tris[end - 1] = Triangle(o11, point(ceil(3 * subdivisions / 4) * dθ - π), o10)
+    tris[end-3] = Triangle(o00, point(ceil(subdivisions / 4) * dθ - π), o01)
+    tris[end-2] = Triangle(o01, point(ceil(subdivisions / 2) * dθ - π), o11)
+    tris[end-1] = Triangle(o11, point(ceil(3 * subdivisions / 4) * dθ - π), o10)
     tris[end] = Triangle(o10, point(-π), o00)
     return TriangleMesh(tris)
 end
 
-function makemesh(s::FiniteStop{T,RectangularStopShape,RectangularStopShape}, ::Int = 0) where {T<:Real}
+function makemesh(s::FiniteStop{T,RectangularStopShape,RectangularStopShape}, ::Int=0) where {T<:Real}
     outeru = s.outerhalfsizeu * s.uvec
     outerv = s.outerhalfsizev * s.vvec
     inneru = s.innerhalfsizeu * s.uvec
@@ -331,18 +331,18 @@ function makemesh(s::FiniteStop{T,RectangularStopShape,RectangularStopShape}, ::
     return TriangleMesh([t1, t2, t3, t4, t5, t6, t7, t8])
 end
 
-makemesh(::InfiniteStop, ::Int = 0) = nothing
+makemesh(::InfiniteStop, ::Int=0) = nothing
 
 
 # -----------------------------------------------------
 # define the convex polygon stop shape
 # -----------------------------------------------------
-struct InfiniteStopConvexPoly{N, T<:Real} <: OpticSim.StopSurface{T}
+struct InfiniteStopConvexPoly{N,T<:Real} <: OpticSim.StopSurface{T}
     poly::ConvexPolygon{N,T}
 end
 export InfiniteStopConvexPoly
 
-function surfaceintersection(stop::InfiniteStopConvexPoly{N, T}, r::AbstractRay{T,3}) where {N, T<:Real}
+function surfaceintersection(stop::InfiniteStopConvexPoly{N,T}, r::AbstractRay{T,3}) where {N,T<:Real}
     interval = surfaceintersection(stop.poly.plane, r)
     if interval isa EmptyInterval{T}    # check if ray intersect with the polygon plane
         return EmptyInterval(T) # no ray polygon intersection
@@ -355,6 +355,6 @@ function surfaceintersection(stop::InfiniteStopConvexPoly{N, T}, r::AbstractRay{
     end
 end
 
-interface(::InfiniteStopConvexPoly) = opaqueinterface(T)
-centroid(r::InfiniteStopConvexPoly{N, T}) where {N, T<:Real} = r.plane.pointonplane
-makemesh(::InfiniteStopConvexPoly, ::Int = 0) = nothing
+interface(::InfiniteStopConvexPoly{N,T}) where {N,T<:Real} = opaqueinterface(T)
+centroid(r::InfiniteStopConvexPoly{N,T}) where {N,T<:Real} = centroid(r)
+makemesh(::InfiniteStopConvexPoly, ::Int=0) = nothing

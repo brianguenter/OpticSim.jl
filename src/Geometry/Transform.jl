@@ -21,20 +21,20 @@ Vec3{T} = SVector{3,T}
 export Vec3
 
 # empty constructor - initialized with zeros
-Vec3(::Type{T} = Float64) where {T<:Real} = zeros(Vec3{T})
+Vec3(::Type{T}=Float64) where {T<:Real} = zeros(Vec3{T})
 
 """
 returns the unit vector `[1, 0, 0]`
 """
-unitX3(::Type{T} = Float64) where {T<:Real} = Vec3{T}(one(T), zero(T), zero(T))
+unitX3(::Type{T}=Float64) where {T<:Real} = Vec3{T}(one(T), zero(T), zero(T))
 """
 returns the unit vector `[0, 1, 0]`
 """
-unitY3(::Type{T} = Float64) where {T<:Real} = Vec3{T}(zero(T), one(T), zero(T))
+unitY3(::Type{T}=Float64) where {T<:Real} = Vec3{T}(zero(T), one(T), zero(T))
 """
 returns the unit vector `[0, 0, 1]`
 """
-unitZ3(::Type{T} = Float64) where {T<:Real} = Vec3{T}(zero(T), zero(T), one(T))
+unitZ3(::Type{T}=Float64) where {T<:Real} = Vec3{T}(zero(T), zero(T), one(T))
 
 export unitX3, unitY3, unitZ3
 
@@ -51,7 +51,7 @@ It also supports comprehensions, and the `zeros()`, `ones()`, `fill()`, `rand()`
 Vec4{T} = SVector{4,T}
 
 # empty constructor - initialized with zeros
-Vec4(::Type{T} = Float64) where {T<:Real} = zeros(Vec4{T})
+Vec4(::Type{T}=Float64) where {T<:Real} = zeros(Vec4{T})
 export Vec4
 
 """
@@ -59,7 +59,7 @@ export Vec4
 
 Accept `SVector` and create a `Vec4` type [v[1], v[2], v[3], 1]
 """
-function Vec4(v::SVector{3, T}) where {T<:Real}
+function Vec4(v::SVector{3,T}) where {T<:Real}
     return Vec4{T}(v[1], v[2], v[3], one(T))
 end
 
@@ -68,24 +68,24 @@ end
 Input is matrix of 3d points, each column is one point. Returns matrix of 3d points with 1 appended in the last row.
 """
 function Vec4(m::SMatrix{3,N,T}) where {N,T<:Real}
-    return vcat(m,ones(SMatrix{1,N,T}))::SMatrix{4,N,T}
+    return vcat(m, ones(SMatrix{1,N,T}))::SMatrix{4,N,T}
 end
 """
 returns the unit vector `[1, 0, 0, 0]`
 """
-unitX4(::Type{T} = Float64) where {T<:Real} = Vec4{T}(one(T), zero(T), zero(T), zero(T))
+unitX4(::Type{T}=Float64) where {T<:Real} = Vec4{T}(one(T), zero(T), zero(T), zero(T))
 """
 returns the unit vector `[0, 1, 0, 0]`
 """
-unitY4(::Type{T} = Float64) where {T<:Real} = Vec4{T}(zero(T), one(T), zero(T), zero(T))
+unitY4(::Type{T}=Float64) where {T<:Real} = Vec4{T}(zero(T), one(T), zero(T), zero(T))
 """
 returns the unit vector `[0, 0, 1, 0]`
 """
-unitZ4(::Type{T} = Float64) where {T<:Real} = Vec4{T}(zero(T), zero(T), one(T), zero(T))
+unitZ4(::Type{T}=Float64) where {T<:Real} = Vec4{T}(zero(T), zero(T), one(T), zero(T))
 """
 returns the unit vector `[0, 0, 0, 1]`
 """
-unitW4(::Type{T} = Float64) where {T<:Real} = Vec4{T}(zero(T), zero(T), zero(T), one(T))
+unitW4(::Type{T}=Float64) where {T<:Real} = Vec4{T}(zero(T), zero(T), zero(T), one(T))
 
 export unitX4, unitY4, unitZ4, unitW4
 #endregion Vec4
@@ -100,15 +100,15 @@ function get_orthogonal_vectors(direction::Vec3{T}) where {T<:Real}
 
     dp = dot(unitX3(T), axis1)
     # check the special case where the input vector is parallel to the X axis
-    if	( dp >= one(T) - eps(T))
+    if (dp >= one(T) - eps(T))
         # axis1 = unitX(T);
-        axis2 = unitY3(T);
-        axis3 = unitZ3(T);
+        axis2 = unitY3(T)
+        axis3 = unitZ3(T)
         return (axis2, axis3)
-    elseif  ( dp <= -one(T) + eps(T))
+    elseif (dp <= -one(T) + eps(T))
         # axis1 = -unitX(T);
-        axis2 = -unitY3(T);
-        axis3 = -unitZ3(T);
+        axis2 = -unitY3(T)
+        axis3 = -unitZ3(T)
         return (axis2, axis3)
     end
 
@@ -133,15 +133,15 @@ Transform(rotation::AbstractArray{S,2}, translation::AbstractArray{S,1})
 ```
 `θ`, `ϕ` and `ψ` in first constructor are in **radians**.
 """
-struct Transform{T} 
+struct Transform{T}
     matrix::SMatrix{4,4,T,16}
 
     """ This is a private internal function. In general don't want to allow users to populate Transform matrices with arbitrary elements. Not to be called by code outside of the Transform module. Don't use Transform{Float64}(...) for example. Instead use Transform(..)"""
-    function Transform{T}(a11::T,a21::T,a31::T,a41::T,a12::T,a22::T,a32::T,a42::T,a13::T,a23::T,a33::T,a43::T,a14::T,a24::T,a34::T,a44::T) where{T<:Real} 
-        return new{T}(SMatrix{4,4,T,16}(a11,a21,a31,a41,a12,a22,a32,a42,a13,a23,a33,a43,a14,a24,a34,a44))
+    function Transform{T}(a11::T, a21::T, a31::T, a41::T, a12::T, a22::T, a32::T, a42::T, a13::T, a23::T, a33::T, a43::T, a14::T, a24::T, a34::T, a44::T) where {T<:Real}
+        return new{T}(SMatrix{4,4,T,16}(a11, a21, a31, a41, a12, a22, a32, a42, a13, a23, a33, a43, a14, a24, a34, a44))
     end
 
-    Transform{T}(mat::SMatrix{4,4,T,16}) where{T<:Real} = new{T}(mat)
+    Transform{T}(mat::SMatrix{4,4,T,16}) where {T<:Real} = new{T}(mat)
 end
 export Transform
 
@@ -149,27 +149,27 @@ export Transform
 matrix(a::Transform) = a.matrix
 
 # Base.length(a::Transform) = length(matrix(a))
-Base.getindex(a::Transform, indices::Vararg{Int,N}) where{N} = getindex(matrix(a),indices...)
+Base.getindex(a::Transform, indices::Vararg{Int,N}) where {N} = getindex(matrix(a), indices...)
 # Base.iterate(a::Transform) = iterate(matrix(a))
 # Base.iterate(a::Transform{Float64}, b::Tuple{StaticArrays.SOneTo{16}, Int64}) = iterate(matrix(a),b)
 
 Base.collect(a::Transform) = collect(matrix(a))
 
-Base.:*(transa::Transform{T},transb::Transform{T}) where{T<:Real} = Transform{T}(matrix(transa)*matrix(transb))
+Base.:*(transa::Transform{T}, transb::Transform{T}) where {T<:Real} = Transform{T}(matrix(transa) * matrix(transb))
 
 function Base.:*(transform::Transform{T}, v::SVector{3,S}) where {T<:Real,S<:Number}
     t = matrix(transform)
 
     res = t * Vec4(v)
-    if (t[4,4] == one(T))
+    if (t[4, 4] == one(T))
         return SVector{3,S}(res[1], res[2], res[3])
-    else    
-        return SVector{3,S}(res[1]/res[4], res[2]/res[4], res[3]/res[4])
+    else
+        return SVector{3,S}(res[1] / res[4], res[2] / res[4], res[3] / res[4])
     end
 end
 
 #Transform is not necessarily constrained to be a rigid body transformation so use general invers.
-Base.inv(a::Transform{T}) where{T<:Real}= Transform{T}(inv(matrix(a)))
+Base.inv(a::Transform{T}) where {T<:Real} = Transform{T}(inv(matrix(a)))
 
 """ The t and m matrices are allowed to be of different element type. This allows transforming a Unitful matrix for example:
 ```
@@ -178,7 +178,7 @@ m = fill(1mm,3,4)
 id*m #returns a matrix filled with Unitful quantities. If both matrices had to be the same type this would not work
 ```
 """
-function Base.:*(transform::Transform{T}, m::SMatrix{3,N,S}) where{N,T<:Real,S<:Number}
+function Base.:*(transform::Transform{T}, m::SMatrix{3,N,S}) where {N,T<:Real,S<:Number}
     res = MMatrix{3,N,T}(undef)
     t = matrix(transform)
 
@@ -186,14 +186,14 @@ function Base.:*(transform::Transform{T}, m::SMatrix{3,N,S}) where{N,T<:Real,S<:
         for row in 1:3
             sum = T(0)
             for incol in 1:3
-                sum += t[row,incol]*m[incol,outcol]
+                sum += t[row, incol] * m[incol, outcol]
             end
             #implicit 1 w coordinate value
-            sum += t[row,4]
-            res[row,outcol] = sum
+            sum += t[row, 4]
+            res[row, outcol] = sum
         end
-        if t[4,4] != 1
-            res[:,outcol] /= t[4,4]
+        if t[4, 4] != 1
+            res[:, outcol] /= t[4, 4]
         end
     end
     return SMatrix{3,N,S}(res)
@@ -207,9 +207,9 @@ m = fill(1mm,3,4)
 id*m #returns a matrix filled with Unitful quantities. If both matrices had to be the same type this would not work
 ```
 """
-Base.:*(transform::Transform{T},m::SMatrix{4,N,S}) where{N,T<:Real,S<:Number} = matrix(transform)*m
+Base.:*(transform::Transform{T}, m::SMatrix{4,N,S}) where {N,T<:Real,S<:Number} = matrix(transform) * m
 
-Base.transpose(a::Transform{T}) where{T<:Real} = Transform{T}(a.matrix')
+Base.transpose(a::Transform{T}) where {T<:Real} = Transform{T}(a.matrix')
 
 # END of functions for compatibility with base matrix API
 
@@ -220,7 +220,7 @@ identitytransform([S::Type]) -> Transform{S}
 
 Returns the [`Transform`](@ref) of type `S` (default `Float64`) representing the identity transform.
 """
-identitytransform(::Type{T} = Float64) where {T<:Real} = Transform{T}(
+identitytransform(::Type{T}=Float64) where {T<:Real} = Transform{T}(
     one(T), zero(T), zero(T), zero(T),
     zero(T), one(T), zero(T), zero(T),
     zero(T), zero(T), one(T), zero(T),
@@ -233,7 +233,7 @@ export identitytransform
 
 Returns the [`Transform`](@ref) of type `S` (default `Float64`) representing the identity transform.
 """
-function Transform(::Type{T} = Float64) where {T<:Real}
+function Transform(::Type{T}=Float64) where {T<:Real}
     return identitytransform(T)
 end
 
@@ -242,8 +242,8 @@ end
 
 Construct a transform from the input columns.     
 """
-function Transform(colx::Vec3{T}, coly::Vec3{T}, colz::Vec3{T}, colw::Vec3{T} = zero(Vec3{T})) where {T<:Real}
-    return Transform{T}(vcat(hcat(colx,coly,colz,colw),SMatrix{1,4,T}(zero(T),zero(T),zero(T),one(T)) ))
+function Transform(colx::Vec3{T}, coly::Vec3{T}, colz::Vec3{T}, colw::Vec3{T}=zero(Vec3{T})) where {T<:Real}
+    return Transform{T}(vcat(hcat(colx, coly, colz, colw), SMatrix{1,4,T}(zero(T), zero(T), zero(T), one(T))))
 end
 
 
@@ -253,7 +253,7 @@ end
 Construct a transform from the input columns.     
 """
 function Transform(colx::Vec4{T}, coly::Vec4{T}, colz::Vec4{T}, colw::Vec4{T}) where {T<:Real}
-    return Transform{T}(hcat(colx,coly,colz,colw))
+    return Transform{T}(hcat(colx, coly, colz, colw))
 end
 
 """
@@ -261,13 +261,13 @@ end
 
 Returns the [`Transform`](@ref) of type `S` (default `Float64`) representing the local frame with origin and forward direction. the other 2 axes are computed automatically.
 """
-function Transform(origin::Vec3{T}, forward::Vec3{T} = unitZ3()) where {T<:Real}
+function Transform(origin::Vec3{T}, forward::Vec3{T}=unitZ3()) where {T<:Real}
     forward = normalize(forward)
     right, up = get_orthogonal_vectors(forward)
     return Transform(right, up, forward, origin)
 end
 
-function Transform(θ::T, ϕ::T, ψ::T, x::T, y::T, z::T) where {T<:Number} 
+function Transform(θ::T, ϕ::T, ψ::T, x::T, y::T, z::T) where {T<:Number}
     return Transform(rotmat(T, θ, ϕ, ψ), Vec3{T}(x, y, z))
 end
 
@@ -276,11 +276,11 @@ end
 
 Returns the [`Transform`](@ref) of type `S` (default `Float64`) created by a rotation matrix and translation vector.
 """
-function Transform(rotation::SMatrix{3,3,T}, translation::SVector{3,T}) where {T<:Real} 
+function Transform(rotation::SMatrix{3,3,T}, translation::SVector{3,T}) where {T<:Real}
     return Transform{T}(
-        rotation[1,1], rotation[2,1], rotation[3,1], zero(T), 
-        rotation[1,2], rotation[2,2], rotation[3,2], zero(T), 
-        rotation[1,3], rotation[2,3], rotation[3,3], zero(T), 
+        rotation[1, 1], rotation[2, 1], rotation[3, 1], zero(T),
+        rotation[1, 2], rotation[2, 2], rotation[3, 2], zero(T),
+        rotation[1, 3], rotation[2, 3], rotation[3, 3], zero(T),
         translation[1], translation[2], translation[3], one(T))
 end
 
@@ -292,9 +292,9 @@ Returns the [`Transform`](@ref) of type `S` (default `Float64`) created by a rot
 function Transform(rotation::AbstractArray{T,2}, translation::AbstractArray{T,1}) where {T<:Real}
     @assert size(rotation)[1] == size(rotation)[2] == length(translation) == 3
     return Transform{T}(
-        rotation[1,1], rotation[2,1], rotation[3,1], zero(T), 
-        rotation[1,2], rotation[2,2], rotation[3,2], zero(T), 
-        rotation[1,3], rotation[2,3], rotation[3,3], zero(T), 
+        rotation[1, 1], rotation[2, 1], rotation[3, 1], zero(T),
+        rotation[1, 2], rotation[2, 2], rotation[3, 2], zero(T),
+        rotation[1, 3], rotation[2, 3], rotation[3, 3], zero(T),
         translation[1], translation[2], translation[3], one(T))
 end
 
@@ -306,28 +306,28 @@ end
 
 Assuming t is a 3D rigid transform representing a local left-handed coordinate system, this function will return the first column, representing the "X" axis.
 """
-right(t::Transform{<:Real}) = normalize(Vec3(t[1,1], t[2,1], t[3,1]))
+right(t::Transform{<:Real}) = normalize(Vec3(t[1, 1], t[2, 1], t[3, 1]))
 
 """
     up(t::Transform{<:Real}) -> Vec3
 
 Assuming t is a 3D rigid transform representing a local left-handed coordinate system, this function will return the second column, representing the "Y" axis.
 """
-up(t::Transform{<:Real}) = normalize(Vec3(t[1,2], t[2,2], t[3,2]))
+up(t::Transform{<:Real}) = normalize(Vec3(t[1, 2], t[2, 2], t[3, 2]))
 
 """
     forward(t::Transform{<:Real}) -> Vec3
 
 Assuming t is a 3D rigid transform representing a local left-handed coordinate system, this function will return the third column, representing the "Z" axis.
 """
-forward(t::Transform{<:Real}) = normalize(Vec3(t[1,3], t[2,3], t[3,3]))
+forward(t::Transform{<:Real}) = normalize(Vec3(t[1, 3], t[2, 3], t[3, 3]))
 
 """
     origin(t::Transform{<:Real}) -> Vec3
 
 Assuming t is a 3D rigid transform representing a local left-handed coordinate system, this function will return the fourth column, containing the translation part of the transform in 3D.
 """
-OpticSim.origin(t::Transform{<:Real}) = Vec3(t[1,4], t[2,4], t[3,4])
+OpticSim.origin(t::Transform{<:Real}) = Vec3(t[1, 4], t[2, 4], t[3, 4])
 
 export right, up, forward, origin
 
@@ -340,8 +340,8 @@ Parameters:
     The counter-clockwise `angle` in radians.
 """
 function rotationX(angle::T) where {T<:Real}
-    c = cos(angle);
-    s = sin(angle);
+    c = cos(angle)
+    s = sin(angle)
 
     row1 = unitX4()
     row2 = Vec4(zero(T), c, s, zero(T))
@@ -361,14 +361,14 @@ Parameters:
     The counter-clockwise `angle` in radians.
 """
 function rotationY(angle::T) where {T<:Real}
-    c = cos(angle);
-    s = sin(angle);
+    c = cos(angle)
+    s = sin(angle)
 
     row1 = Vec4(c, zero(T), -s, zero(T))
     row2 = unitY4()
     row3 = Vec4(s, zero(T), c, zero(T))
     row4 = unitW4()
-   
+
     # transposing because the constructors treat these vectors as columns instead of rows
     return transpose(Transform(row1, row2, row3, row4))
 end
@@ -382,14 +382,14 @@ Parameters:
     The counter-clockwise `angle` in radians.
 """
 function rotationZ(angle::T) where {T<:Real}
-    c = cos(angle);
-    s = sin(angle);
+    c = cos(angle)
+    s = sin(angle)
 
     row1 = Vec4(c, s, zero(T), zero(T))
     row2 = Vec4(-s, c, zero(T), zero(T))
     row3 = unitZ4()
     row4 = unitW4()
-    
+
     # transposing because the constructors treat these vectors as columns instead of rows
     return transpose(Transform(row1, row2, row3, row4))
 end
@@ -401,8 +401,8 @@ export rotationZ
 returns the rotation part of the transform `t` - a 3x3 matrix.
 """
 function rotation(t::Transform{T}) where {T<:Real}
-    rot = SMatrix{3, 3, T}(
-        t[1, 1], t[2, 1], t[3, 1], 
+    rot = SMatrix{3,3,T}(
+        t[1, 1], t[2, 1], t[3, 1],
         t[1, 2], t[2, 2], t[3, 2],
         t[1, 3], t[2, 3], t[3, 3])
     return Transform(rot, zero(Vec3{T}))
@@ -413,7 +413,7 @@ end
 
 apply the rotation part of the transform `a` to the vector `vector` - this operation is usually used to rotate direction vectors.
 """
-rotate(a::Transform{T}, vector::Union{Vec3{T}, SVector{3,T}}) where {T<:Real} = rotation(a) * vector
+rotate(a::Transform{T}, vector::Union{Vec3{T},SVector{3,T}}) where {T<:Real} = rotation(a) * vector
 
 
 """
@@ -436,14 +436,14 @@ export translation, rotation, rotationd
 
 Creates a translation transform
 """
-translation(::Type{S}, x::T, y::T, z::T) where {T<:Number,S<:Real} = convert(Transform{S},translation(x, y, z))
+translation(::Type{S}, x::T, y::T, z::T) where {T<:Number,S<:Real} = convert(Transform{S}, translation(x, y, z))
 
 function translation(x::T, y::T, z::T) where {T<:Real}
     col1 = unitX4(T)
     col2 = unitY4(T)
     col3 = unitZ4(T)
     col4 = Vec4(x, y, z, one(T))
-    
+
     return Transform(col1, col2, col3, col4)
 end
 
@@ -486,7 +486,7 @@ end
 Creates a scaling transform
 """
 function scale(t::Vec3{T}) where {T<:Real}
-    return scale(t[1], [2], [3])
+    return scale(t[1], t[2], t[3])
 end
 export scale
 
@@ -511,19 +511,19 @@ end
 export world2local
 
 
-    
+
 """
     decomposeRTS(tr::Transform{T}) where {T<:Real}
 
 return a tuple containing the rotation matrix, the translation vector and the scale vecto represnting the transform.
 """
 function decomposeRTS(tr::Transform{T}) where {T<:Real}
-    t = Vec3(tr[1,4], tr[2,4], tr[3,4])
-    sx = norm(Vec3(tr[1,1], tr[2,1], tr[3,1]))
-    sy = norm(Vec3(tr[1,2], tr[2,2], tr[3,2]))
-    sz = norm(Vec3(tr[1,3], tr[2,3], tr[3,3]))
+    t = Vec3(tr[1, 4], tr[2, 4], tr[3, 4])
+    sx = norm(Vec3(tr[1, 1], tr[2, 1], tr[3, 1]))
+    sy = norm(Vec3(tr[1, 2], tr[2, 2], tr[3, 2]))
+    sz = norm(Vec3(tr[1, 3], tr[2, 3], tr[3, 3]))
     s = Vec3(sx, sy, sz)
-    rot = SMatrix{4, 4, T}(tr[1,1]/sx, tr[2, 1]/sx, tr[3,1]/sx, 0, tr[1,2]/sy, tr[2, 2]/sy, tr[3,2]/sy, 0, tr[1,3]/sz, tr[2, 3]/sz, tr[3,3]/sz, 0, 0, 0, 0, 1)
+    rot = SMatrix{4,4,T}(tr[1, 1] / sx, tr[2, 1] / sx, tr[3, 1] / sx, 0, tr[1, 2] / sy, tr[2, 2] / sy, tr[3, 2] / sy, 0, tr[1, 3] / sz, tr[2, 3] / sz, tr[3, 3] / sz, 0, 0, 0, 0, 1)
 
     return rot, t, s
 end
