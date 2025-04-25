@@ -39,7 +39,7 @@ OpticSim.jl is a [Julia](https://julialang.org/) package for geometric optics. O
 
 A large variety of surface types are supported, and these can be composed into complex 3D objects through the use of constructive solid geometry (CSG). A substantial catalog of optical materials is provided through the AGFFileReader package.
 
-
+This package is currently undergoing a significant rewrite. The latest versions of the package do not have full functionality yet.
 ## Contributing
 
 [![ColPrac: Contributor's Guide on Collaborative Practices for Community Packages](https://img.shields.io/badge/ColPrac-Contributor's%20Guide-blueviolet)](https://github.com/SciML/ColPrac)
