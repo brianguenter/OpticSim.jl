@@ -2,7 +2,7 @@ name = "OpticSim"
 uuid = "24114763-4efb-45e7-af0e-cde916beb153"
 authors = ["Brian Guenter", "Charlie Hewitt", "Ran Gal", "Alfred Wong"]
 repository = "https://github.com/microsoft/OpticSim.jl"
-version = "0.7.1"
+version = "0.7.0"
 
 [deps]
 AGFFileReader = "36dd7d7d-c279-4b5c-a024-2ba417cea492"
