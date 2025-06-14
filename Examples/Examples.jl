@@ -5,7 +5,6 @@
 """Contains example usage of the features in the OpticSim.jl package."""
 module Examples
 using ..OpticSim
-using Vis
 using ..OpticSim.Geometry
 using ..OpticSim.Emitters
 

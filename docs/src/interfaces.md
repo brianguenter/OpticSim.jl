@@ -2,7 +2,7 @@
 
 Every [`Surface`](@ref) must have an `OpticalInterface` associated with it to defined the behavior of any ray when it intersects that surface.
 
-```@docs
+```@docs; canonical = false
 OpticSim.OpticalInterface
 OpticSim.NullInterface
 FresnelInterface
@@ -14,6 +14,6 @@ MultiHologramInterface
 
 The critical behavior of each interface is defined in the `processintersection` function:
 
-```@docs
+```@docs; canonical = false
 OpticSim.processintersection
 ```

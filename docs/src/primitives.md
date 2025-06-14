@@ -9,7 +9,7 @@ Primitives are split into two types, `Surface`s and `ParametricSurface`s, the la
 
 A surface can be any surface in 3D space, it can be bounded and not create a half-space (i.e. not partition space into _inside_ and _outside_).
 
-```@docs
+```@docs; canonical = false
 Surface
 ```
 
@@ -18,7 +18,7 @@ Surface
 These are the simple shapes with are provided already, they act only as standalone objects and cannot be used in CSG objects.
 Adding a new `Surface` is easy, the new structure must simply follow the interface defined above.
 
-```@docs
+```@docs; canonical = false
 Ellipse
 Circle
 Rectangle
@@ -31,7 +31,7 @@ TriangleMesh
 
 A number of simple occlusive apertures are provided as constructing such objects using CSG can be inefficient and error-prone.
 
-```@docs
+```@docs; canonical = false
 InfiniteStop
 FiniteStop
 RectangularAperture
@@ -45,7 +45,7 @@ A parametric surface must partition space into two valid half-spaces, i.e. _insi
 The surface must also be parameterized by two variables, nominally `u` and `v`.
 Typically these surfaces cannot be intersected with a ray analytically and so must be triangulated and an iterative solution found.
 
-```@docs
+```@docs; canonical = false
 ParametricSurface
 AcceleratedParametricSurface
 ```
@@ -55,7 +55,7 @@ AcceleratedParametricSurface
 These are the available types of parametric surfaces which are already implemented, all of which can be used in the creation of CSG objects.
 New `ParametricSurface`s can be added with relative ease providing they follow the interface defined above.
 
-```@docs
+```@docs; canonical = false
 Cylinder
 Plane
 Sphere
@@ -73,7 +73,7 @@ GridSagSurface
 
 These are some useful functions related to `Surface` objects.
 
-```@docs
+```@docs; canonical = false
 point(::ParametricSurface{T}, ::T, ::T) where {T<:Real}
 normal
 partials(::ParametricSurface{T}, ::T, ::T) where {T<:Real}
@@ -94,7 +94,7 @@ makemesh
 Bounding boxes are mostly used internally for efficiency, but are also exposed to the user for visualization (and any other) purposes.
 All bounding boxes are axis aligned.
 
-```@docs
+```@docs; canonical = false
 BoundingBox
 doesintersect
 surfaceintersection(::BoundingBox{T}, ::AbstractRay{T,3}) where {T<:Real}

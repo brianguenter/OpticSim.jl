@@ -19,14 +19,11 @@ sph = Sphere(1.3)
 rounded_cube = cube ∩ sph
 
 result = rounded_cube - cyl_cross
-Vis.draw(result, numdivisions=100)
-
-Vis.save("assets/csg_ex.png"); nothing # hide
 ```
 
-![CSG code example image](assets/csg_ex.png)
 
-```@docs
+
+```@docs; canonical = false
 leaf
 ∪
 ∩
@@ -37,7 +34,7 @@ leaf
 
 There are also some shortcut methods available to create common CSG objects more easily:
 
-```@docs
+```@docs; canonical = false
 BoundedCylinder
 Cuboid
 HexagonalPrism
@@ -50,7 +47,7 @@ Spider
 
 These are the types of the primary CSG elements, i.e. the nodes in the CSG tree.
 
-```@docs
+```@docs; canonical = false
 OpticSim.CSGTree
 OpticSim.CSGGenerator
 OpticSim.ComplementNode
@@ -65,7 +62,7 @@ These are the internal types and functions used for geometric/CSG operations.
 
 ### Functions
 
-```@docs
+```@docs; canonical = false
 surfaceintersection(::CSGTree{T}, ::AbstractRay{T,N}) where {T<:Real,N}
 inside(a::CSGTree{T}, x::T, y::T, z::T) where {T<:Real}
 onsurface(a::CSGTree{T}, x::T, y::T, z::T) where {T<:Real}
@@ -73,7 +70,7 @@ onsurface(a::CSGTree{T}, x::T, y::T, z::T) where {T<:Real}
 
 ### Intervals
 
-```@docs
+```@docs; canonical = false
 Interval
 EmptyInterval
 DisjointUnion
@@ -87,7 +84,7 @@ OpticSim.IntervalPool
 
 ### Intersections
 
-```@docs
+```@docs; canonical = false
 OpticSim.IntervalPoint
 RayOrigin
 Infinity
