@@ -12,33 +12,44 @@ Pages   = ["ref.md"]
 
 ```@autodocs
 Modules = [OpticSim]
+Private = false
+```
+
+## Optical Emitters
+```@autodocs
+Modules = [OpticSim.Emitters,OpticSim.Emitters.AngularPower,OpticSim.Emitters.Directions,OpticSim.Emitters.Origins,OpticSim.Emitters.Sources,OpticSim.Emitters.Spectrum]
+Private = false
 ```
 
 ## Geometry
 ```@autodocs
 Modules = [OpticSim.Geometry]
+Private = false
 ```
 
 ## Zernike
 
 ```@autodocs
 Modules = [OpticSim.Zernike]
+Private = false
 ```
 
 ## QType
 
 ```@autodocs
 Modules = [OpticSim.QType]
+Private = false
 ```
 
 ## Chebyshev
 
 ```@autodocs
 Modules = [OpticSim.Chebyshev]
+Private = false
 ```
 
-## Examples
-
+## Data
 ```@autodocs
-Modules = [OpticSim.Examples]
+Modules = [OpticSim.Data]
+Private = false
 ```

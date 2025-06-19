@@ -10,7 +10,7 @@ using OpticSim, OpticSim.Geometry
 
 Representing a 3D vector.
 
-```@docs
+```@docs; canonical = false
 OpticSim.Geometry.Vec3
 OpticSim.Geometry.unitX3
 OpticSim.Geometry.unitY3
@@ -21,7 +21,7 @@ OpticSim.Geometry.unitZ3
 
 Representing a 4D vector 
 
-```@docs
+```@docs; canonical = false
 OpticSim.Geometry.Vec4
 OpticSim.Geometry.unitX4
 OpticSim.Geometry.unitY4
@@ -34,7 +34,7 @@ OpticSim.Geometry.unitW4
 Representing a general 3D transform (4x4 matrix). Currently only used as a rigid-body transform.
 Transforms are used to position surfaces within the CSG tree, position emitters in 3D, etc. 
 
-```@docs
+```@docs; canonical = false
 OpticSim.Geometry.Transform
 OpticSim.Geometry.identitytransform
 OpticSim.Geometry.rotationX
