@@ -267,7 +267,7 @@ struct MultiHologramInterface{T} <: OpticalInterface{T}
     interfaces::Ptr{HologramInterface{T}} # pointer to the array of hologram interfaces TODO!! fix this to not be hacky...
     numinterfaces::Int
 
-    MultiHologramInterface(interfaces::Vararg{HologramInterface{T},N}) where {T<:Real,N} = MultiHologramInterface(collect(interfaces))
+    MultiHologramInterface(interfaces::Vararg{HologramInterface,N}) where {N} = MultiHologramInterface(collect(interfaces))
 
     function MultiHologramInterface(interfaces::Vector{T}) where {T<:HologramInterface}
         N = length(interfaces)
