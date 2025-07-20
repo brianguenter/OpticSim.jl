@@ -269,7 +269,7 @@ struct MultiHologramInterface{T} <: OpticalInterface{T}
 
     MultiHologramInterface(interfaces::Vararg{HologramInterface,N}) where {N} = MultiHologramInterface(collect(interfaces))
 
-    function MultiHologramInterface(interfaces::Vector{HologramInterface})
+    function MultiHologramInterface(interfaces::Vector{T}) where {T<:HologramInterface}
         N = length(interfaces)
         @assert N > 1 "Don't need to use MultiHologramInterface if only 1 hologram"
         p = pointer(interfaces)
