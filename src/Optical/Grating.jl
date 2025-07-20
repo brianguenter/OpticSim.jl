@@ -152,22 +152,6 @@ struct HologramSurface{T,S} <: WrapperSurface{T,S}
 end
 export HologramSurface
 
-"""
-    MultiHologramSurface{T,S} <: WrapperSurface{T,S}
-
-Surface type for use with [`MultiHologramInterface`](@ref).
-
-```julia
-MultiHologramSurface(surface::Surface{T}, interface::MultiHologramInterface{T})
-```
-"""
-struct MultiHologramSurface{T,S} <: WrapperSurface{T,S}
-    surface::S
-    interface::MultiHologramInterface{T}
-    MultiHologramSurface(surface::S, interface::MultiHologramInterface{T}) where {T<:Real,S<:Surface{T}} = new{T,S}(surface, interface)
-end
-export MultiHologramSurface
-
 function processintersection(opticalinterface::HologramInterface{T}, point::SVector{N,T}, normal::SVector{N,T}, incidentray::OpticalRay{T,N}, temperature::T, pressure::T, test::Bool, firstray::Bool=false) where {T<:Real,N}
     hitback = dot(direction(incidentray), normal) > zero(T)
     # we want the surface to work if hit from either side, so we just reverse the normal and interfaces if it is hit on the back side
@@ -334,27 +318,3 @@ function processintersection(opticalinterface::HologramInterface{T}, point::SVec
     return outpur_dir, output_pow, input_opl
 end
 
-function processintersection(opticalinterface::MultiHologramInterface{T}, point::SVector{N,T}, normal::SVector{N,T}, incidentray::OpticalRay{T,N}, temperature::T, pressure::T, test::Bool, firstray::Bool=false) where {T<:Real,N}
-    # minη = typemax(T)
-    # r = rand(T)
-    # Ση = zero(T)
-    # for i in 1:(opticalinterface.numinterfaces)
-    #     int = interface(opticalinterface, i)::HologramInterface{T}
-    #     tmp = processintersection(int, point, normal, incidentray, temperature, pressure, scatter, firstray)
-    #     if tmp !== nothing
-    #         dir, pow, opl = tmp
-    #         η = pow / power(incidentray)
-    #         Ση += η / opticalinterface.numinterfaces
-    #         # @assert Ση <= 1.0
-    #         if r < Ση
-    #             # don't modulate the power because we sample the efficiencies proportionally
-    #             return dir, power(incidentray), opl
-    #         end
-    #     end
-    # end
-    # return nothing
-    # when test = true behavior is totally invalid so that the test is deteministic...
-    i = test ? 1 : rand(1:(opticalinterface.numinterfaces)) # TODO definitely not the best way to sample this...
-    int = interface(opticalinterface, i)::HologramInterface
-    return processintersection(int, point, normal, incidentray, temperature, pressure, test, firstray)
-end

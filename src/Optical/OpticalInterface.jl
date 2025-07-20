@@ -253,41 +253,11 @@ function Base.show(io::IO, a::HologramInterface{R}) where {R<:Real}
     print(io, "HologramInterface($(glassname(a.beforematerial)), $(glassname(a.substratematerial)), $(glassname(a.aftermaterial)), $(a.signalpointordir), $(a.signalbeamstate), $(a.referencepointordir), $(a.referencebeamstate), $(a.recordingλ), $(a.thickness), $(a.RImodulation))")
 end
 
-"""
-    MultiHologramInterface{T} <: OpticalInterface{T}
-
-Interface to represent multiple overlapped [`HologramInterface`](@ref)s on a single surface. Each ray randomly selects an interface to use.
-
-```julia
-MultiHologramInterface(interfaces::Vararg{HologramInterface{T}})
-MultiHologramInterface(interfaces::Vector{HologramInterface{T}})
-```
-"""
-struct MultiHologramInterface{T} <: OpticalInterface{T}
-    interfaces::Ptr{HologramInterface{T}} # pointer to the array of hologram interfaces TODO!! fix this to not be hacky...
-    numinterfaces::Int
-
-    MultiHologramInterface(interfaces::Vararg{HologramInterface,N}) where {N} = MultiHologramInterface(collect(interfaces))
-
-    function MultiHologramInterface(interfaces::Vector{T}, float_type=Float64) where {T<:HologramInterface}
-        N = length(interfaces)
-        @assert N > 1 "Don't need to use MultiHologramInterface if only 1 hologram"
-        p = pointer(interfaces)
-        push!(MultiHologramInterfaceRefCache, interfaces)
-        new{float_type}(p, N)
-    end
-end
-export MultiHologramInterface
-interface(m::MultiHologramInterface{T}, i::Int) where {T<:Real} = (@assert i <= m.numinterfaces; return unsafe_load(m.interfaces, i))
-
-# need this to keep julia references to the arrays used in MultiHologramInterface so they don't get garbage collected
-const MultiHologramInterfaceRefCache = []
-
 ######################################################################
 
 # a few things need a concrete type to prevent allocations resulting from the ambiguities introduce by an abstract type (i.e. OpticalInterface{T})
 # if adding new subtypes of OpticalInterface they must be added to this definition as well (and only paramaterised by T so they are fully specified)
-AllOpticalInterfaces{T} = Union{NullInterface{T},ParaxialInterface{T},FresnelInterface{T},HologramInterface{T},MultiHologramInterface{T},ThinGratingInterface{T}}
+AllOpticalInterfaces{T} = Union{NullInterface{T},ParaxialInterface{T},FresnelInterface{T},HologramInterface{T},ThinGratingInterface{T}}
 NullOrFresnel{T} = Union{NullInterface{T},FresnelInterface{T}}
 
 # can't have more than 4 types here or we get allocations because inference on the union stops: https://github.com/JuliaLang/julia/blob/1e6e65691254a7fe81f5da8706bb30aa6cb3f8d2/base/compiler/types.jl#L113
