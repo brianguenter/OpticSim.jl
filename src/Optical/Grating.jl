@@ -355,6 +355,6 @@ function processintersection(opticalinterface::MultiHologramInterface{T}, point:
     # return nothing
     # when test = true behavior is totally invalid so that the test is deteministic...
     i = test ? 1 : rand(1:(opticalinterface.numinterfaces)) # TODO definitely not the best way to sample this...
-    int = interface(opticalinterface, i)::HologramInterface{T}
+    int = interface(opticalinterface, i)::HologramInterface
     return processintersection(int, point, normal, incidentray, temperature, pressure, test, firstray)
 end
