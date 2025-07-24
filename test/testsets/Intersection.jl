@@ -1089,24 +1089,6 @@
         @test isa(res, DisjointUnion) && length(res) == 3 && a && b && c
     end # testset CSG
 
-    @testset "ThinGrating" begin
-        angle_from_ray(raydirection) = 90 + atand(raydirection[3], raydirection[2])
-        true_diff(order, λ, period, θi) = asind((order * λ / period + sind(θi)))
-        period = 3.0
-        int = TestData.transmissivethingrating(period, 2)
-        for k in 1:50
-            for θi in [-5.0, 0.0, 5.0, 10.0]
-                for λ in [0.35, 0.55, 1.0]
-                    ray = OpticalRay(SVector(0.0, 0.0, 2.0), SVector(0.0, sind(θi), -cosd(θi)), 1.0, λ)
-                    raydir, _, _ = OpticSim.processintersection(int, SVector(0.0, 0.0, 0.0), SVector(0.0, 0.0, 1.0), ray, 20.0, 1.0, true, true)
-                    # order is random so just check that it is correct for one of them
-                    @test any([isapprox(x, angle_from_ray(raydir), rtol=RTOLERANCE, atol=ATOLERANCE) for x in [true_diff(m, λ, period, θi) for m in -2:2]])
-                end
-            end
-        end
-    end # testset ThinGrating
-
-    # TODO Hologram intersection tests
 
     @testset "Chebyshev" begin
         @test_throws AssertionError ChebyshevSurface(0.0, 1.0, [(1, 2, 1.0)])

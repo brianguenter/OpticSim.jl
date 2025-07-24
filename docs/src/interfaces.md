@@ -9,7 +9,6 @@ FresnelInterface
 ParaxialInterface
 ThinGratingInterface
 HologramInterface
-MultiHologramInterface
 ```
 
 The critical behavior of each interface is defined in the `processintersection` function:

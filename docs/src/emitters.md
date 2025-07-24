@@ -156,12 +156,6 @@ rays = AbstractArray{OpticalRay{Float64, 3}}(collect(my_display))   # collect th
 ```
 
 
-```@example 
-dummy = "switching Back to the GLMakie to allow the rest of the pages to work with static figures"  # hide
-using OpticSim, OpticSim.Geometry, OpticSim.Emitters                                                # hide
-```
-
-
 ## [Spectrum](@id spectrum)
 
 ```@docs; canonical = false

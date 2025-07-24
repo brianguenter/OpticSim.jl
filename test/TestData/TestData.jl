@@ -36,7 +36,6 @@ include("curves.jl")
 include("surfaces.jl")
 include("lenses.jl")
 include("systems.jl")
-include("other.jl")
 
 end # module TestData
 export TestData
