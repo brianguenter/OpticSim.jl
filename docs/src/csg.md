@@ -2,6 +2,25 @@
 
 ## CSG Operations
 
+OpticSim represents objects as boolean combinations of halfspaces, a method of constructing solid objects known as Constructive Solid Geometry (CSG). A halfspace is a surface which divides 3D space into 3 regions: inside the halfspace,outside the halfspace, on the surface dividing inside from outside. 
+
+A simple example of a halfspace is an infinite oriented plane, where oriented means we have defined a direction for the normal to the plane surface. Another simple example is a sphere, or a cylinder.
+
+If the halfspaces have mathematically well difined inside and outside functions then except for edge cases, which are unlikely to occur in an optics setting, then any boolean combination of halfspaces will also have a well defined inside and outside.
+
+You can define optical elements by combining the basic halfspace types defined for you in OpticSim:
+* sphere
+* infinite cylinder
+* plane
+* prism
+* spherical cap
+
+Many of the surfaces already defined for you in OpticSim, such as sphere, prism,plane, cylinder, describe well defined solid objects, i.e., there is a mathematically defined inside and outside. 
+
+Unfortunately, many of the surfaces common in optics do not by themselves define solid objects. None of the parametric surfaces, which includes all the optical asphere types, define solid objects. 
+
+Parametric surfaces do have a positive and negative side though determined by the direction of the surface normal. You can create a well defined solid object by taking the intersection of a cylinder with an asphere.
+
 There are three binary csg operations which can construct extremely complex objects from very simple primitives: union (``\cup``), intersection (``\cap``) and subtraction (i.e. difference).
 
 This diagram shows the basic idea:
