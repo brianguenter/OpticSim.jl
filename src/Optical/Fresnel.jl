@@ -71,6 +71,7 @@ function refractedray(incidenceindex::T, transmittedindex::T, surfacenormal::S, 
     end
 end
 
+
 """
     fresnel(nᵢ::T, nₜ::T, sinθᵢ::T, sinθₜ::T) -> Tuple{T,T}
 
