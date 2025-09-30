@@ -217,7 +217,7 @@ For reference, see:
 HologramInterface(signalpointordir::SVector{3,T}, signalbeamstate::BeamState, referencepointordir::SVector{3,T}, referencebeamstate::BeamState, recordingλ::T, thickness::T, beforematerial, substratematerial, aftermaterial, signalrecordingmaterial, referencerecordingmaterial, RImodulation::T, include0order  = false)
 ```
 """
-struct HologramInterface{T,X<:AGFFileReader.AbstractGlass,Y<:AGFFileReader.AbstractGlass,Z<:AGFFileReader.AbstractGlass} <: OpticalInterface{T}
+struct HologramInterface{T,X<:AGFFileReader.AbstractGlass,Y<:AGFFileReader.AbstractGlass,Z<:AGFFileReader.AbstractGlass,P<:AbstractGlass,Q<:AbstractGlass} <: OpticalInterface{T}
     beforematerial::X
     substratematerial::Y
     aftermaterial::Z
@@ -226,8 +226,8 @@ struct HologramInterface{T,X<:AGFFileReader.AbstractGlass,Y<:AGFFileReader.Abstr
     referencepointordir::SVector{3,T}
     referencebeamstate::BeamState
     recordingλ::T
-    signalrecordingmaterial::Glass
-    referencerecordingmaterial::Glass
+    signalrecordingmaterial::P
+    referencerecordingmaterial::Q
     thickness::T
     RImodulation::T
     include0order::Bool
@@ -240,7 +240,7 @@ struct HologramInterface{T,X<:AGFFileReader.AbstractGlass,Y<:AGFFileReader.Abstr
         if referencebeamstate === CollimatedBeam
             referencepointordir = normalize(referencepointordir)
         end
-        new{T,X,Y,Z}(beforematerial, substratematerial, aftermaterial, signalpointordir, signalbeamstate, referencepointordir, referencebeamstate, recordingλ, signalrecordingmaterial, referencerecordingmaterial, thickness, RImodulation, include0order)
+        new{T,X,Y,Z,P,Q}(beforematerial, substratematerial, aftermaterial, signalpointordir, signalbeamstate, referencepointordir, referencebeamstate, recordingλ, signalrecordingmaterial, referencerecordingmaterial, thickness, RImodulation, include0order)
     end
 end
 export HologramInterface
@@ -253,41 +253,11 @@ function Base.show(io::IO, a::HologramInterface{R}) where {R<:Real}
     print(io, "HologramInterface($(glassname(a.beforematerial)), $(glassname(a.substratematerial)), $(glassname(a.aftermaterial)), $(a.signalpointordir), $(a.signalbeamstate), $(a.referencepointordir), $(a.referencebeamstate), $(a.recordingλ), $(a.thickness), $(a.RImodulation))")
 end
 
-"""
-    MultiHologramInterface{T} <: OpticalInterface{T}
-
-Interface to represent multiple overlapped [`HologramInterface`](@ref)s on a single surface. Each ray randomly selects an interface to use.
-
-```julia
-MultiHologramInterface(interfaces::Vararg{HologramInterface{T}})
-MultiHologramInterface(interfaces::Vector{HologramInterface{T}})
-```
-"""
-struct MultiHologramInterface{T} <: OpticalInterface{T}
-    interfaces::Ptr{HologramInterface{T}} # pointer to the array of hologram interfaces TODO!! fix this to not be hacky...
-    numinterfaces::Int
-
-    MultiHologramInterface(interfaces::Vararg{HologramInterface{T},N}) where {T<:Real,N} = MultiHologramInterface(collect(interfaces))
-
-    function MultiHologramInterface(interfaces::Vector{HologramInterface{T}}) where {T<:Real}
-        N = length(interfaces)
-        @assert N > 1 "Don't need to use MultiHologramInterface if only 1 hologram"
-        p = pointer(interfaces)
-        push!(MultiHologramInterfaceRefCache, interfaces)
-        new{T}(p, N)
-    end
-end
-export MultiHologramInterface
-interface(m::MultiHologramInterface{T}, i::Int) where {T<:Real} = (@assert i <= m.numinterfaces; return unsafe_load(m.interfaces, i))
-
-# need this to keep julia references to the arrays used in MultiHologramInterface so they don't get garbage collected
-const MultiHologramInterfaceRefCache = []
-
 ######################################################################
 
 # a few things need a concrete type to prevent allocations resulting from the ambiguities introduce by an abstract type (i.e. OpticalInterface{T})
 # if adding new subtypes of OpticalInterface they must be added to this definition as well (and only paramaterised by T so they are fully specified)
-AllOpticalInterfaces{T} = Union{NullInterface{T},ParaxialInterface{T},FresnelInterface{T},HologramInterface{T},MultiHologramInterface{T},ThinGratingInterface{T}}
+AllOpticalInterfaces{T} = Union{NullInterface{T},ParaxialInterface{T},FresnelInterface{T},HologramInterface{T},ThinGratingInterface{T}}
 NullOrFresnel{T} = Union{NullInterface{T},FresnelInterface{T}}
 
 # can't have more than 4 types here or we get allocations because inference on the union stops: https://github.com/JuliaLang/julia/blob/1e6e65691254a7fe81f5da8706bb30aa6cb3f8d2/base/compiler/types.jl#L113

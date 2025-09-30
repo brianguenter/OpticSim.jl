@@ -1,4 +1,4 @@
-# Basic Types
+# Transforms and Vectors
 
 The following are basic geometric types and utilities, such as vectors and transforms, that are used all acoross the package. Using these types requires, in addition to the `using OpticSim` statement to also use the OpticSim.Geoemtry module like:
 

@@ -28,7 +28,6 @@ It is relatively simple to extend the existing code to add these kinds of specia
 WrapperSurface
 ThinGratingSurface
 HologramSurface
-MultiHologramSurface
 ```
 
 ## Eye Models

@@ -18,8 +18,8 @@ makedocs(
     pages=[
         "Home" => "index.md",
         "Geometry" => [
-            "Basic Types" => "basic_types.md",
             "Primitives" => "primitives.md",
+            "Transforms and Vectors" => "transforms_and_vectors.md",
             "CSG" => "csg.md",
         ],
         "Optical" => [
