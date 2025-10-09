@@ -1,34 +1,41 @@
 # MIT license
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # See LICENSE in the project root for full license information.
+"""
+    ElectricField(eₓ::Complex{T}, e_y::Complex{T}, e_z::Complex{T}) where {T<:Real}
+end
+"""
+struct ElectricField{T<:Real}
+    eₓ::Complex{T}
+    e_y::Complex{T}
+    e_z::Complex{T}
+end
+
 
 """
-    PolarizationRay{T,N} <: AbstractRay{T,N}
-
-Ray incorporating polarization information.
-
-**NOTE**: we use monte carlo integration to get accurate results on the detector, this means that all rays essentially hit the detector with power = 1 and some rays are thrown away at any interface to correctly match the reflection/transmission at that interface. For inspection purposes we also track the 'instantaneous' power of the ray in the `power` field of the `PolarizationRay`.
+Ray incorporating polarization information. Polarization rays are strictly 3D.
 
 ```julia
-PolarizationRay(ray::Ray{T,N}, power::T, wavelength::T, opl=zero(T))
+PolarizationRay(ray::Ray{T}, power::T, wavelength::T, opl=zero(T))
 PolarizationRay(origin::SVector{N,T}, direction::SVector{N,T}, power::T, wavelength::T, opl=zero(T))
 ```
 
 Has the following accessor methods:
 ```julia
-ray(r::PolarizationRay{T,N}) -> Ray{T,N}
-direction(r::PolarizationRay{T,N}) -> SVector{N,T}
-origin(r::PolarizationRay{T,N}) -> SVector{N,T}
-power(r::PolarizationRay{T,N}) -> T
-wavelength(r::PolarizationRay{T,N}) -> T
-pathlength(r::PolarizationRay{T,N}) -> T
-sourcepower(r::PolarizationRay{T,N}) -> T
-nhits(r::PolarizationRay{T,N}) -> Int
-sourcenum(r::PolarizationRay{T,N}) -> Int
+ray(r::PolarizationRay{T}) -> Ray{T}
+direction(r::PolarizationRay{T}) -> SVector{3,T}
+origin(r::PolarizationRay{T}) -> SVector{3,T}
+power(r::PolarizationRay{T}) -> T
+wavelength(r::PolarizationRay{T}) -> T
+pathlength(r::PolarizationRay{T}) -> T
+sourcepower(r::PolarizationRay{T}) -> T
+nhits(r::PolarizationRay{T}) -> Int
+sourcenum(r::PolarizationRay{T}) -> Int
 ```
 """
-struct PolarizationRay{T,N} <: AbstractRay{T,N}
-    ray::Ray{T,N}
+struct PolarizationRay{T} <: AbstractRay{T}
+    ray::Ray{T,3}
+    e_field::ElectricField{T}
     power::T
     wavelength::T
     opl::T
@@ -36,18 +43,18 @@ struct PolarizationRay{T,N} <: AbstractRay{T,N}
     sourcepower::T
     sourcenum::Int
 
-    function PolarizationRay(ray::Ray{T,N}, power::T, wavelength::T; opl::T=zero(T), nhits::Int=0, sourcenum::Int=0, sourcepower::T=power) where {T<:Real,N}
-        return new{T,N}(ray, power, wavelength, opl, nhits, sourcepower, sourcenum)
+    function PolarizationRay(ray::Ray{T,3}, power::T, wavelength::T; opl::T=zero(T), nhits::Int=0, sourcenum::Int=0, sourcepower::T=power) where {T<:Real}
+        return new{T}(ray, power, wavelength, opl, nhits, sourcepower, sourcenum)
     end
 
-    function PolarizationRay(origin::SVector{N,T}, direction::SVector{N,T}, power::T, wavelength::T; opl::T=zero(T), nhits::Int=0, sourcenum::Int=0, sourcepower::T=power) where {T<:Real,N}
-        return new{T,N}(Ray(origin, normalize(direction)), power, wavelength, opl, nhits, sourcepower, sourcenum)
+    function PolarizationRay(origin::SVector{3,T}, direction::SVector{3,T}, power::T, wavelength::T; opl::T=zero(T), nhits::Int=0, sourcenum::Int=0, sourcepower::T=power) where {T<:Real}
+        return new{T}(Ray(origin, normalize(direction)), power, wavelength, opl, nhits, sourcepower, sourcenum)
     end
 
     function PolarizationRay(origin::AbstractArray{T,1}, direction::AbstractArray{T,1}, power::T, wavelength::T; opl::T=zero(T), nhits::Int=0, sourcenum::Int=0, sourcepower::T=power) where {T<:Real}
         @assert length(origin) == length(direction) "origin (dimension $(length(origin))) and direction (dimension $(length(direction))) vectors do not have the same dimension"
         N = length(origin)
-        return new{T,N}(Ray(SVector{N,T}(origin), normalize(SVector{N,T}(direction))), power, wavelength, opl, nhits, sourcepower, sourcenum)
+        return new{T}(Ray(SVector{N,T}(origin), normalize(SVector{N,T}(direction))), power, wavelength, opl, nhits, sourcepower, sourcenum)
     end
 
     # Convenience constructor. Not as much typing
@@ -56,17 +63,17 @@ end
 export PolarizationRay
 
 ray(r::PolarizationRay) = r.propagation_vector
-direction(r::PolarizationRay{T,N}) where {T<:Real,N} = direction(ray(r))
-origin(r::PolarizationRay{T,N}) where {T<:Real,N} = origin(ray(r))
-power(r::PolarizationRay{T,N}) where {T<:Real,N} = r.power
-wavelength(r::PolarizationRay{T,N}) where {T<:Real,N} = r.wavelength
-pathlength(r::PolarizationRay{T,N}) where {T<:Real,N} = r.opl
-nhits(r::PolarizationRay{T,N}) where {T<:Real,N} = r.nhits
-sourcepower(r::PolarizationRay{T,N}) where {T<:Real,N} = r.sourcepower
-sourcenum(r::PolarizationRay{T,N}) where {T<:Real,N} = r.sourcenum
+direction(r::PolarizationRay) = direction(ray(r))
+origin(r::PolarizationRay) = origin(ray(r))
+power(r::PolarizationRay) = r.power
+wavelength(r::PolarizationRay) = r.wavelength
+pathlength(r::PolarizationRay) = r.opl
+nhits(r::PolarizationRay) = r.nhits
+sourcepower(r::PolarizationRay) = r.sourcepower
+sourcenum(r::PolarizationRay) = r.sourcenum
 export ray, power, wavelength, pathlength, nhits, sourcepower, sourcenum
 
-function Base.print(io::IO, a::PolarizationRay{T,N}) where {T,N}
+function Base.print(io::IO, a::PolarizationRay)
     println(io, "$(rpad("Origin:", 25)) $(origin(a))")
     println(io, "$(rpad("Direction:", 25)) $(direction(a))")
     println(io, "$(rpad("Power:", 25)) $(power(a))")
@@ -79,6 +86,6 @@ function Base.print(io::IO, a::PolarizationRay{T,N}) where {T,N}
     end
 end
 
-function Base.:*(a::Transform{T}, r::PolarizationRay{T,N}) where {T,N}
+function Base.:*(a::Transform{T}, r::PolarizationRay)
     return PolarizationRay(a * ray(r), power(r), wavelength(r), opl=pathlength(r), nhits=nhits(r), sourcenum=sourcenum(r), sourcepower=sourcepower(r))
 end
