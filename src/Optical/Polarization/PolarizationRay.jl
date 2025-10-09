@@ -6,7 +6,7 @@
 end
 """
 struct ElectricField{T<:Real}
-    eₓ::Complex{T}
+    e_x::Complex{T}
     e_y::Complex{T}
     e_z::Complex{T}
 end
@@ -33,9 +33,9 @@ nhits(r::PolarizationRay{T}) -> Int
 sourcenum(r::PolarizationRay{T}) -> Int
 ```
 """
-struct PolarizationRay{T} <: AbstractRay{T}
+struct PolarizationRay{T} <: AbstractRay{T,3}
     ray::Ray{T,3}
-    e_field::ElectricField{T}
+    electric_field::ElectricField{T}
     power::T
     wavelength::T
     opl::T
@@ -62,7 +62,8 @@ struct PolarizationRay{T} <: AbstractRay{T}
 end
 export PolarizationRay
 
-ray(r::PolarizationRay) = r.propagation_vector
+electric_field(r::PolarizationRay{T}) where {T<:Real} = r.electric_field
+ray(r::PolarizationRay) = r.ray
 direction(r::PolarizationRay) = direction(ray(r))
 origin(r::PolarizationRay) = origin(ray(r))
 power(r::PolarizationRay) = r.power

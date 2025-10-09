@@ -1,8 +1,8 @@
 name = "OpticSim"
 uuid = "24114763-4efb-45e7-af0e-cde916beb153"
+version = "0.7.1"
 authors = ["Brian Guenter", "Charlie Hewitt", "Ran Gal", "Alfred Wong"]
 repository = "https://github.com/microsoft/OpticSim.jl"
-version = "0.7.1"
 
 [deps]
 AGFFileReader = "36dd7d7d-c279-4b5c-a024-2ba417cea492"
@@ -34,7 +34,7 @@ DataFrames = "1.7"
 Distributions = "0.25"
 GeometryBasics = "0.5"
 InteractiveUtils = "1.11"
-JET = "0.9"
+JET = "0.10"
 LazySets = "3.1"
 LinearAlgebra = "1.11"
 MeshIO = "0.5"
