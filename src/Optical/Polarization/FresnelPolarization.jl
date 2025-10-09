@@ -31,6 +31,7 @@ function fresnel_amplitude(nᵢ::T, nₜ::T, sinθᵢ::T) where {T<:Real}
 
     return rₛ, tₛ, rₚ, tₚ
 end
+export fresnel_amplitude
 
 """
     fresnel_intensity(nᵢ::T, nₜ::T, cosθᵢ::T, cosθₜ::T) -> Tuple{T,T,T,T}
@@ -47,3 +48,5 @@ function fresnel_intensity(nᵢ::T, nₜ::T, cosθᵢ::T, cosθₜ::T) where {T<
 
     return rₛ², tₛ², rₚ², tₚ²
 end
+
+export fresnel_intensity

@@ -1,7 +1,7 @@
 #Functions for creating polarization fields which can be applied to emitters or optical elements
 #The field is defined over a rectangular domain in u,v space. This space is mapped onto the surface of the emitter or optical element. The polarization at a point is defined relative to the local coordinate frame of the surface. For example, a linear polarization field defined as SVector(1,0,0) will be horizontal polarization on a horizontal plane and radial polarization on a spherical surface.
 
-struct PolarizationField{T} where {T<:Complex}
+struct PolarizationField{T<:Complex}
     field::Function  # function of (u,v) returning SVector{3,T} polarization vector
     umin::T
     umax::T
@@ -13,8 +13,7 @@ polarization(field::PolarizationField, u::T, v::T) where {T<:Real} = field.field
 
 #define some typical polarization fields
 
-struct PolarizationSurface{F,S} where {F<:PolarizationField,S<:Surface}
-    field::F
+struct PolarizationSurface{F<:PolarizationField,S<:Surface}
     surface::S
 end
 
