@@ -1,15 +1,6 @@
 # MIT license
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # See LICENSE in the project root for full license information.
-"""
-    ElectricField(eₓ::Complex{T}, e_y::Complex{T}, e_z::Complex{T}) where {T<:Real}
-end
-"""
-struct ElectricField{T<:Real}
-    e_x::Complex{T}
-    e_y::Complex{T}
-    e_z::Complex{T}
-end
 
 
 """
