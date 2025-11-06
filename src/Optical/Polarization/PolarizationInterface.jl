@@ -1,21 +1,5 @@
 #code to compute s,p from surfacenormal and raydirection
 
-struct PolarizationMatrix{T} <: AbstractMatrix{T}
-    P::SMatrix{3,3,Complex{T},9}
-end
-export PolarizationMatrix
-
-"""
-    ElectricField(eₓ::Complex{T}, e_y::Complex{T}, e_z::Complex{T}) where {T<:Real}
-end
-"""
-struct ElectricField{T<:Real}
-    E::SVector{3,Complex{T}}
-end
-export ElectricField
-
-Base .* (a::PolarizationMatrix, b::ElectricField) = ElectricField(a.P * b.E)
-Base .* (a::PolarizationMatrix, b::PolarizationMatrix) = PolarizationMatrix(a.P * b.P)
 
 """
 Computes the transformation that takes local s,p coordinates into global coordinates.
@@ -28,7 +12,7 @@ PolarizationTransform(normal::SVector{3,T}, propagation_vector::SVector{3,T}) wh
     s = normalize(cross(normal, propagation_vector))
     p = normalize(cross(propagation_vector, s))
 
-    P = SMatrix{3,3,Complex{T},9}(vcat(propagation_vector, s, p))
+    P = SMatrix{3,3,T,9}(vcat(transpose(propagation_vector), transpose(s'), transpose(p'))) #put vectors into rows of 3x3 matrix. In general the polarization matrix can have complex entries but this one is always real.
 
     return PolarizationMatrix{T}(P)
 end

@@ -25,8 +25,8 @@ sourcenum(r::PolarizationRay{T}) -> Int
 ```
 """
 struct PolarizationRay{T} <: AbstractRay{T,3}
-    ray::Ray{T,3}
-    electric_field::ElectricField{T}
+    ray::Ray{T,3} 
+    electric_field::SVector{3,Complex{T}}
     power::T
     wavelength::T
     opl::T
@@ -34,22 +34,22 @@ struct PolarizationRay{T} <: AbstractRay{T,3}
     sourcepower::T
     sourcenum::Int
 
-    function PolarizationRay(ray::Ray{T,3}, power::T, wavelength::T; opl::T=zero(T), nhits::Int=0, sourcenum::Int=0, sourcepower::T=power) where {T<:Real}
-        return new{T}(ray, power, wavelength, opl, nhits, sourcepower, sourcenum)
+    function PolarizationRay(ray::Ray{T,3}, electric_field::SVector{3,Complex{T}}, power::T, wavelength::T; opl::T=zero(T), nhits::Int=0, sourcenum::Int=0, sourcepower::T=power) where {T<:Real}
+        return new{T}(ray, electric_field, power, wavelength, opl, nhits, sourcepower, sourcenum)
     end
 
-    function PolarizationRay(origin::SVector{3,T}, direction::SVector{3,T}, power::T, wavelength::T; opl::T=zero(T), nhits::Int=0, sourcenum::Int=0, sourcepower::T=power) where {T<:Real}
-        return new{T}(Ray(origin, normalize(direction)), power, wavelength, opl, nhits, sourcepower, sourcenum)
+    function PolarizationRay(origin::SVector{3,T}, electric_field::SVector{3,Complex{T}}, direction::SVector{3,T}, power::T, wavelength::T; opl::T=zero(T), nhits::Int=0, sourcenum::Int=0, sourcepower::T=power) where {T<:Real}
+        return new{T}(Ray(origin, normalize(direction)), electric_field, power, wavelength, opl, nhits, sourcepower, sourcenum)
     end
 
-    function PolarizationRay(origin::AbstractArray{T,1}, direction::AbstractArray{T,1}, power::T, wavelength::T; opl::T=zero(T), nhits::Int=0, sourcenum::Int=0, sourcepower::T=power) where {T<:Real}
+    function PolarizationRay(origin::AbstractArray{T,1}, direction::AbstractArray{T,1}, electric_field::SVector{3,Complex{T}}, power::T, wavelength::T; opl::T=zero(T), nhits::Int=0, sourcenum::Int=0, sourcepower::T=power) where {T<:Real}
         @assert length(origin) == length(direction) "origin (dimension $(length(origin))) and direction (dimension $(length(direction))) vectors do not have the same dimension"
         N = length(origin)
-        return new{T}(Ray(SVector{N,T}(origin), normalize(SVector{N,T}(direction))), power, wavelength, opl, nhits, sourcepower, sourcenum)
+        return new{T}(Ray(SVector{N,T}(origin), normalize(SVector{N,T}(direction))), electric_field, power, wavelength, opl, nhits, sourcepower, sourcenum)
     end
 
     # Convenience constructor. Not as much typing
-    PolarizationRay(ox::T, oy::T, oz::T, dx::T, dy::T, dz::T; wavelength=0.55) where {T<:Real} = PolarizationRay(SVector{3,T}(ox, oy, oz), SVector{3,T}(dx, dy, dz), one(T), T(wavelength)) #doesn't have to be inside struct definition but if it is then VSCode displays hover information. If it's outside the struct definition it doesn't.
+    PolarizationRay(ox::T, oy::T, oz::T, dx::T, dy::T, dz::T, electric_field::SVector{3,Complex{T}}; wavelength=0.55) where {T<:Real} = PolarizationRay(SVector{3,T}(ox, oy, oz), SVector{3,T}(dx, dy, dz), electric_field, one(T), T(wavelength)) #doesn't have to be inside struct definition but if it is then VSCode displays hover information. If it's outside the struct definition it doesn't.
 end
 export PolarizationRay
 
@@ -78,6 +78,7 @@ function Base.print(io::IO, a::PolarizationRay)
     end
 end
 
+#not sure if this is ever used.
 function Base.:*(a::Transform{T}, r::PolarizationRay)
-    return PolarizationRay(a * ray(r), power(r), wavelength(r), opl=pathlength(r), nhits=nhits(r), sourcenum=sourcenum(r), sourcepower=sourcepower(r))
+    return PolarizationRay(a * ray(r), Geometry.rotate(a, r.electric_field), power(r), wavelength(r), opl=pathlength(r), nhits=nhits(r), sourcenum=sourcenum(r), sourcepower=sourcepower(r))
 end
