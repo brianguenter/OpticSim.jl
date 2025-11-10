@@ -39,6 +39,7 @@ export fresnel_amplitude
     returns s and p polarization intensities with geometric correction for transmitted intensity.
 """
 function fresnel_intensity(nᵢ::T, nₜ::T, cosθᵢ::T, cosθₜ::T) where {T<:Real}
+    sinθᵢ = sqrt(one(T) - cosθᵢ^2)
     (rₛ, tₛ, rₚ, tₚ) = fresnel_amplitude(nᵢ, nₜ, sinθᵢ)
     rₛ² = rₛ^2
     rₚ² = rₚ^2
