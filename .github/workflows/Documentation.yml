@@ -10,14 +10,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - uses: julia-actions/setup-julia@latest
         with:
-          version: '1.11'
+          version: '1.12'
       - name: Install dependencies
         run: |
           xvfb-run julia --project=docs/ -e '
             using Pkg
-            Pkg.develop(PackageSpec(path=pwd()))
+            # GITHUB_REF is like "refs/tags/vX.Y.Z" for tag builds
+            ref = get(ENV, "GITHUB_REF", "")
+            if startswith(ref, "refs/tags/")
+              tag = replace(ref, "refs/tags/" => "")
+              # Install the released/tagged version from the repo at this tag
+              Pkg.add(PackageSpec(url="https://github.com/brianguenter/OpticSim.jl.git", rev=tag))
+            else
+              # Use the local checkout as dev for branch/PR builds
+              Pkg.develop(PackageSpec(path=pwd()))
+            end
             Pkg.instantiate()
             Pkg.build()
           '
