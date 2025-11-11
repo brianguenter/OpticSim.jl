@@ -11,8 +11,8 @@ tₚ is amplitude of transmitted p polarized light
 
 Fresnel equations from Chipman et al, "Polarized Light and Optical Systems", 2018, eqn 8.12-8.15 pg. 300
 """
-function fresnel_amplitude(nᵢ::T, nₜ::T, sinθᵢ::T) where {T<:Real}
-    if (sinθᵢ >= nₜ / nᵢ) # 100% reflectance, zero transmission
+function fresnel_amplitude(nᵢ::T, nₜ::T, sinθᵢ::T) where {T<:Union{Real,Complex}}
+    if (norm(sinθᵢ) >= norm(nₜ / nᵢ)) # 100% reflectance, zero transmission. check this to make sure it is correct way to test for total internal reflection in the case of complex n or sinθᵢ
         return (one(T), zero(T))
     end
 
