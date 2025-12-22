@@ -16,7 +16,6 @@ using LinearAlgebra
 
 # include("docs_examples.jl")
 include("other_examples.jl")
-include("eyemodels.jl")
 
 end #module Examples
 export Examples
