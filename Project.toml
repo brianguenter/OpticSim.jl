@@ -1,6 +1,5 @@
 name = "OpticSim"
 uuid = "24114763-4efb-45e7-af0e-cde916beb153"
-version = "0.7.1"
 authors = ["Brian Guenter", "Charlie Hewitt", "Ran Gal", "Alfred Wong"]
 repository = "https://github.com/microsoft/OpticSim.jl"
 version = "0.7.1"
