@@ -11,7 +11,7 @@ tₚ is amplitude of transmitted p polarized light
 
 Fresnel equations from Chipman et al, "Polarized Light and Optical Systems", 2018, eqn 8.12-8.15 pg. 300
 """
-function fresnel_amplitude(nᵢ::T, nₜ::T, sinθᵢ::T) where {T<:Union{Real,Complex}}
+function fresnel_amplitude(nᵢ::T, nₜ::S, sinθᵢ::U) where {T<:Union{Real,Complex},S<:Union{Real,Complex},U<:Union{Real,Complex}}
     if (norm(sinθᵢ) >= norm(nₜ / nᵢ)) # 100% reflectance, zero transmission. check this to make sure it is correct way to test for total internal reflection in the case of complex n or sinθᵢ
         return (one(T), zero(T))
     end
@@ -38,7 +38,7 @@ export fresnel_amplitude
 
     returns s and p polarization intensities with geometric correction for transmitted intensity.
 """
-function fresnel_intensity(nᵢ::T, nₜ::T, cosθᵢ::T, cosθₜ::T) where {T<:Real}
+function fresnel_intensity(nᵢ::T, nₜ::S, cosθᵢ::U, cosθₜ::V) where {T<:Union{Real,Complex},S<:Union{Real,Complex},U<:Union{Real,Complex},V<:Union{Real,Complex}}
     sinθᵢ = sqrt(one(T) - cosθᵢ^2)
     (rₛ, tₛ, rₚ, tₚ) = fresnel_amplitude(nᵢ, nₜ, sinθᵢ)
     rₛ² = rₛ^2

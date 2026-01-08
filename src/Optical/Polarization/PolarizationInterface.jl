@@ -2,7 +2,7 @@
 
 
 """
-Computes the transformation that takes local s,p coordinates into global coordinates.
+Computes the transformation that takes local s,p coordinates into global coordinates. This is a purely geometric transformation so the polarization matrix is always real.
 
 Assumes that normal and incident_vector are unit vectors."""
 PolarizationTransform(normal::SVector{3,T}, propagation_vector::SVector{3,T}) where {T<:Real} = begin
@@ -19,5 +19,3 @@ end
 
 Base.adjoint(a::PolarizationMatrix{T}) where {T<:Real} = PolarizationMatrix(adjoint(a.P))
 
-"""
-    PolarizationRay
