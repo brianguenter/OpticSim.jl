@@ -1,16 +1,17 @@
 name = "OpticSim"
 uuid = "24114763-4efb-45e7-af0e-cde916beb153"
+version = "0.7.1"
 authors = ["Brian Guenter", "Charlie Hewitt", "Ran Gal", "Alfred Wong"]
 repository = "https://github.com/microsoft/OpticSim.jl"
-version = "0.7.1"
 
 [workspace]
-projects = ["OpticSim","test"]
+projects = ["OpticSim", "test"]
 
 [deps]
 AGFFileReader = "36dd7d7d-c279-4b5c-a024-2ba417cea492"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+FlexUnits = "76e01b6b-c995-4ce6-8559-91e72a3d4e95"
 GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
 InteractiveUtils = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
 LazySets = "b4f0291d-fe17-52bc-9479-3d1a343d9043"
@@ -27,6 +28,7 @@ Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 AGFFileReader = "1.1"
 DataFrames = "1.7"
 Distributions = "0.25"
+FlexUnits = "0.3.1"
 GeometryBasics = "0.5"
 InteractiveUtils = "1.11"
 LazySets = "3.1"
@@ -39,5 +41,3 @@ Statistics = "1.11"
 StringEncodings = "0.3"
 Unitful = "1.22"
 julia = "1.12"
-
-
