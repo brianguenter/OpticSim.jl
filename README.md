@@ -1,3 +1,35 @@
+
+<div align="right">
+  <details>
+    <summary >🌐 Language</summary>
+    <div>
+      <div align="center">
+        <a href="https://openaitx.github.io/view.html?user=brianguenter&project=OpticSim.jl&lang=en">English</a>
+        | <a href="https://openaitx.github.io/view.html?user=brianguenter&project=OpticSim.jl&lang=zh-CN">简体中文</a>
+        | <a href="https://openaitx.github.io/view.html?user=brianguenter&project=OpticSim.jl&lang=zh-TW">繁體中文</a>
+        | <a href="https://openaitx.github.io/view.html?user=brianguenter&project=OpticSim.jl&lang=ja">日本語</a>
+        | <a href="https://openaitx.github.io/view.html?user=brianguenter&project=OpticSim.jl&lang=ko">한국어</a>
+        | <a href="https://openaitx.github.io/view.html?user=brianguenter&project=OpticSim.jl&lang=hi">हिन्दी</a>
+        | <a href="https://openaitx.github.io/view.html?user=brianguenter&project=OpticSim.jl&lang=th">ไทย</a>
+        | <a href="https://openaitx.github.io/view.html?user=brianguenter&project=OpticSim.jl&lang=fr">Français</a>
+        | <a href="https://openaitx.github.io/view.html?user=brianguenter&project=OpticSim.jl&lang=de">Deutsch</a>
+        | <a href="https://openaitx.github.io/view.html?user=brianguenter&project=OpticSim.jl&lang=es">Español</a>
+        | <a href="https://openaitx.github.io/view.html?user=brianguenter&project=OpticSim.jl&lang=it">Italiano</a>
+        | <a href="https://openaitx.github.io/view.html?user=brianguenter&project=OpticSim.jl&lang=ru">Русский</a>
+        | <a href="https://openaitx.github.io/view.html?user=brianguenter&project=OpticSim.jl&lang=pt">Português</a>
+        | <a href="https://openaitx.github.io/view.html?user=brianguenter&project=OpticSim.jl&lang=nl">Nederlands</a>
+        | <a href="https://openaitx.github.io/view.html?user=brianguenter&project=OpticSim.jl&lang=pl">Polski</a>
+        | <a href="https://openaitx.github.io/view.html?user=brianguenter&project=OpticSim.jl&lang=ar">العربية</a>
+        | <a href="https://openaitx.github.io/view.html?user=brianguenter&project=OpticSim.jl&lang=fa">فارسی</a>
+        | <a href="https://openaitx.github.io/view.html?user=brianguenter&project=OpticSim.jl&lang=tr">Türkçe</a>
+        | <a href="https://openaitx.github.io/view.html?user=brianguenter&project=OpticSim.jl&lang=vi">Tiếng Việt</a>
+        | <a href="https://openaitx.github.io/view.html?user=brianguenter&project=OpticSim.jl&lang=id">Bahasa Indonesia</a>
+        | <a href="https://openaitx.github.io/view.html?user=brianguenter&project=OpticSim.jl&lang=as">অসমীয়া</
+      </div>
+    </div>
+  </details>
+</div>
+
 <p align="center">
   <a href="https://microsoft.github.io/OpticSim.jl/dev/">
     <img src=docs/src/assets/logo.svg height=128px style="text-align:center">
