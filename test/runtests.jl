@@ -11,9 +11,8 @@ using Aqua
 using JET
 
 @info "Running Aqua tests"
-try
+@testset "Aqua" begin
     Aqua.test_all(OpticSim)
-catch
 end
 
 @info "Running JET tests"

@@ -182,7 +182,9 @@ for N in 1:PREGENERATED_LENS_ASSEMBLY_SIZE
     end
 end
 
-function LensAssembly(elements::Vararg{Union{Surface{T},CSGTree{T},LensAssembly{T}}}; axis::SVector{3,T}=SVector{3,T}(0.0, 0.0, 1.0)) where {T<:Real}
+# first element is a separate argument so T is always bound (at least one element is required)
+function LensAssembly(first::Union{Surface{T},CSGTree{T},LensAssembly{T}}, rest::Vararg{Union{Surface{T},CSGTree{T},LensAssembly{T}}}; axis::SVector{3,T}=SVector{3,T}(0.0, 0.0, 1.0)) where {T<:Real}
+    elements = (first, rest...)
     # make the actual object
     actual_elements = []
     rectangles = Vector{Rectangle{T}}(undef, 0)
