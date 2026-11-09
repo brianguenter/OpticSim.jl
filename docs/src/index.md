@@ -38,7 +38,18 @@ The first call to `AGFFileReader.initialize_AGFFileReader()` will search for pub
 
 In previous versions of `OpticSim` the glass catalog download, visualization, and repeating structures code was included in the `OpticSim` package. This caused excessive load times. 
 
-These have been broken out into separate packages: `AGFFileReader`, `OpticSimVisualization`, and `OpticSimRepeatingStructures`. The last two packages are not yet working.
+The glass catalog code and repeating structures code have been broken out into separate packages: `AGFFileReader` and `OpticSimRepeatingStructures`. The repeating structures package is not yet working.
+
+Visualization is back in `OpticSim` as a package extension, so it costs nothing at load time unless you use it. Load a Makie backend to enable the `Vis` drawing functions:
+
+```julia
+using OpticSim
+using GLMakie    # interactive window; or `using CairoMakie` for static images without a GPU
+
+Vis.drawtracerays(system, trackallrays = true, test = true)
+```
+
+Both Makie and OpticSim export some of the same names (e.g. `Sphere`, `translation`). If you need OpticSim's versions unqualified, use `import GLMakie` instead of `using GLMakie`.
 
 
 
