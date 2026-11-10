@@ -55,3 +55,52 @@
     @test all(isfinite, g)
     @test isapprox(g, fd, rtol=1e-5)
 end
+
+# Aspheric surfaces are intersected with a triangle mesh followed by Newton iteration. Their gradients used to be NaN
+# near the axis (sqrt(0) in the mesh sampling) and zero for aspheric terms equal to zero (zero terms were dropped).
+@testitem "ForwardDiff through aspheric lens" begin
+    using ForwardDiff, StaticArrays, AGFFileReader
+    using DataFrames: DataFrame
+
+    # plano-convex lens with an even aspheric front surface; free: conic, 4th and 6th order terms (sag at the 9mm edge)
+    function lens(x::AbstractVector{T}) where {T}
+        conic, a4, a6 = x
+        AxisymmetricOpticalSystem{T}(
+            DataFrame(
+                SurfaceType=["Object", "Aspheric", "Standard", "Image"],
+                Radius=[T(Inf), T(40.0), T(Inf), T(Inf)],
+                Conic=[missing, conic, zero(T), missing],
+                Parameters=[missing, ["4" => a4 / 9^4, "6" => a6 / 9^6], Pair{String,T}[], missing],
+                Thickness=[T(Inf), T(6.0), T(75.0), missing],
+                Material=[AGFFileReader.Air, AGFFileReader.Examples_N_BK7, AGFFileReader.Air, missing],
+                SemiDiameter=[T(Inf), T(9.0), T(9.0), T(15.0)],
+            ),
+            1, 1,
+        )
+    end
+
+    # rays from the axis out to 6mm, including the on-axis ray
+    heights = [0.0, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+    function spotsize2(x::AbstractVector{T}) where {T}
+        sys = lens(x)
+        ys = T[]
+        for h in heights
+            res = trace(sys, OpticalRay(SVector{3,T}(0, h, 10), SVector{3,T}(0, 0, -1), one(T), T(0.55)), test=true)
+            res isa LensTrace && push!(ys, point(res)[2])
+        end
+        return sum(abs2, ys) / length(ys)
+    end
+
+    for x0 in ([0.0, 0.0, 0.0], [-0.6, 0.01, 0.002])
+        g = ForwardDiff.gradient(spotsize2, x0)
+        fd = map(eachindex(x0)) do i
+            h = 1e-6
+            e = zeros(length(x0))
+            e[i] = h
+            (spotsize2(x0 .+ e) - spotsize2(x0 .- e)) / 2h
+        end
+        @test all(isfinite, g)
+        @test all(!iszero, g) # zero-valued aspheric terms still have a derivative
+        @test isapprox(g, fd, rtol=1e-4)
+    end
+end
