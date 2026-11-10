@@ -289,6 +289,9 @@ function closestintersection(a::Interval{T}, ignorenull::Bool=true)::Union{Nothi
         end
     elseif !(ignorenull && interface(la) isa NullInterface{T})
         return la
+    elseif !(ua isa Infinity{T}) && !(interface(ua) isa NullInterface{T})
+        # the ray enters through a null surface, so the first surface it interacts with is where it leaves
+        return ua
     else
         return nothing
     end

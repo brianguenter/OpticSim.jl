@@ -5,9 +5,13 @@ module Data
 
 import Unitful
 using Unitful.DefaultSymbols: mm, °
+import AGFFileReader
+using StaticArrays: SVector
+using DataFrames: DataFrame
 
 using ..OpticSim
 using ..OpticSim.Geometry
+using ..OpticSim.Geometry: rotate
 
 # MIT license
 # Copyright (c) Microsoft Corporation. All rights reserved.
@@ -93,7 +97,7 @@ function ModelEye(assembly::LensAssembly{T}; nsamples::Int=17, pupil_radius::T=3
 
     anterior_chamber_front = AcceleratedParametricSurface(ZernikeSurface(6.0, radius=-6.7, conic=-0.3), nsamples, interface=FresnelInterface{T}(AGFFileReader.EYE.AQUEOUS, AGFFileReader.EYE.CORNEA))
     anterior_chamber_rear = Plane(SVector{3,T}(0, 0, -1), SVector(0.0, 0.0, -3.2), vishalfsizeu=6.0, vishalfsizev=6.0, interface=FresnelInterface{T}(AGFFileReader.EYE.AQUEOUS, AGFFileReader.EYE.VITREOUS))
-    anterior_chamber = leaf(anterior_chamber_front ∩ anterior_chamber_rear, translation(0.0, 0.0, -0.52))(transform)
+    anterior_chamber = OpticSim.transform(anterior_chamber_front ∩ anterior_chamber_rear, translation(0.0, 0.0, -0.52))(transform)
 
     pupil = Annulus(pupil_radius, 5.9, rotate(transform, SVector{3,T}(0, 0, 1)), transform * SVector{3,T}(0.0, 0.0, -3.62))
 
@@ -101,14 +105,14 @@ function ModelEye(assembly::LensAssembly{T}; nsamples::Int=17, pupil_radius::T=3
     lens_rear = AcceleratedParametricSurface(ZernikeSurface(5.1, radius=6.0, conic=-3.25), nsamples, interface=FresnelInterface{T}(AGFFileReader.EYE.LENS, AGFFileReader.EYE.VITREOUS))
     lens_barrel = Cylinder(5.0, 5.0, interface=FresnelInterface{T}(AGFFileReader.EYE.LENS, AGFFileReader.EYE.VITREOUS))
     lens_csg = (lens_front - leaf(lens_rear, translation(0.0, 0.0, -3.7))) ∩ leaf(lens_barrel, translation(0.0, 0.0, -2.0))
-    lens = leaf(lens_csg, translation(0.0, 0.0, -3.72))(transform)
+    lens = OpticSim.transform(lens_csg, translation(0.0, 0.0, -3.72))(transform)
 
     vitreous_chamber_csg = (
         leaf(
-            Sphere(11.0, interface=FresnelInterface{T}(EYE.VITREOUS, Air, reflectance=0.0, transmission=0.0)),
+            Sphere(11.0, interface=FresnelInterface{T}(AGFFileReader.EYE.VITREOUS, AGFFileReader.Air, reflectance=0.0, transmission=0.0)),
             translation(0.0, 0.0, -13.138998863513297)
         ) ∩
-        Plane(0.0, 0.0, 1.0, 0.0, 0.0, -3.72, interface=FresnelInterface{T}(EYE.VITREOUS, EYE.AQUEOUS)) ∩
+        Plane(0.0, 0.0, 1.0, 0.0, 0.0, -3.72, interface=FresnelInterface{T}(AGFFileReader.EYE.VITREOUS, AGFFileReader.EYE.AQUEOUS)) ∩
         Plane(0.0, 0.0, -1.0, 0.0, 0.0, -24 + (11 - sqrt(11^2 - 10^2)), interface=NullInterface(T))
     )
     vitreous_chamber = vitreous_chamber_csg(transform)
@@ -119,7 +123,7 @@ function ModelEye(assembly::LensAssembly{T}; nsamples::Int=17, pupil_radius::T=3
         asin(10 / 11),
         rotate(transform, SVector{3,T}(0, 0, 1)),
         transform * SVector{3,T}(0.0, 0.0, -24.0),
-        interface=FresnelInterface{T}(EYE.VITREOUS, EYE.VITREOUS, reflectance=zero(T), transmission=zero(T))
+        interface=FresnelInterface{T}(AGFFileReader.EYE.VITREOUS, AGFFileReader.EYE.VITREOUS, reflectance=zero(T), transmission=zero(T))
     )
 
     return CSGOpticalSystem(new_assembly, retina, detpixels, detpixels, D)
@@ -137,8 +141,8 @@ Returns a `DataFrame` specifying the prescription of the eye model.
 function ArizonaEye(::Type{T} = Float64; accommodation::T = 0.0) where {T<:Real}
     # from https://photonengr.com/wp-content/uploads/kbasefiles/ArizonaEyeModel.pdf also in our documentation/papers directory
     return DataFrame(
-        Name = ["Air", "Cornea", "Aqueous", "Lens", "Vitreous", "Retina"],
-        Surface = ["Object", "Standard", "Standard", "Standard", "Standard", "Image"],
+        # surfaces: air, cornea, aqueous, lens, vitreous, retina
+        SurfaceType = ["Object", "Standard", "Standard", "Standard", "Standard", "Image"],
         Radius = [Inf64, 7.8, 6.5, 12.0 - 0.4*accommodation, -5.22 + 0.2*accommodation, -13.4],
         Conic = [missing, -.25, -.25, -7.52 + 1.29*accommodation, -1.35 - 0.43*accommodation, missing],
         Material = [AGFFileReader.Air, AGFFileReader.modelglass(1.377, 57.1, 0.0), AGFFileReader.modelglass(1.337, 61.3, 0.0), AGFFileReader.modelglass(1.42 + 0.0026 * accommodation - 0.00022 * accommodation^2, 51.9, 0.0), AGFFileReader.modelglass(1.336, 61.1, 0.0), missing],

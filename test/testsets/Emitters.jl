@@ -21,16 +21,18 @@ end
 
 @testitem "AngularPower.Lambertian" setup = [Dependencies] begin
     @test typeof(AngularPower.Lambertian()) === AngularPower.Lambertian{Float64}
-    @test_throws MethodError AngularPower.Lambertian(String)
+    @test typeof(AngularPower.Lambertian(Float32)) === AngularPower.Lambertian{Float32}
 
     @test apply(AngularPower.Lambertian(), Transform(), 1, Ray(zeros(3), ones(3))) === 1
 end
 
 @testitem "AngularPower.Cosine" setup = [Dependencies] begin
     @test AngularPower.Cosine().cosine_exp === one(Float64)
-    @test_throws MethodError AngularPower.Cosine(String)
 
+    # the ray is at angle θ to the emitter's forward (z) axis with cos θ = 1/√3; power scales by cos(θ)^cosine_exp
     @test apply(AngularPower.Cosine(), Transform(), 1, Ray(zeros(3), ones(3))) === 0.5773502691896258
+    @test apply(AngularPower.Cosine(2.0), Transform(), 1, Ray(zeros(3), ones(3))) ≈ 1 / 3
+    @test apply(AngularPower.Cosine(3.0), Transform(), 2, Ray(zeros(3), ones(3))) ≈ 2 / sqrt(27)
 end
 
 @testitem "AngularPower.Gaussian" setup = [Dependencies] begin

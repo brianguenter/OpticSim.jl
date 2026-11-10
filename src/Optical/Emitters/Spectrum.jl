@@ -86,14 +86,15 @@ struct Measured{T} <: AbstractSpectrum{T}
         wavelengths = samples[!, :Wavelength]
         @assert eltype(wavelengths) <: Int64
 
-        power::Vector{T} where {T<:Real} = samples[!, :Power] # no missing values allowed and must be real numbers
+        power = samples[!, :Power]
+        @assert eltype(power) <: Real # no missing values allowed and must be real numbers
+        T = float(eltype(power))
         maxpower = maximum(power)
         p = sortperm(wavelengths)
         wavelengths = wavelengths[p]
-        norm_power = power[p] ./ maxpower #make sure power values have the same sorted permutation as wavelengths normalized with maximum power equal to 1
-        #added ::Int64 type checks so JET could do better analysis. Didn't seem to work.
-        λmin::Int64 = wavelengths[p[1]]
-        λmax::Int64 = wavelengths[p[end]]
+        norm_power = T.(power[p] ./ maxpower) #make sure power values have the same sorted permutation as wavelengths normalized with maximum power equal to 1
+        λmin::Int64 = wavelengths[1] # wavelengths is already sorted
+        λmax::Int64 = wavelengths[end]
         step::Int64 = wavelengths[2] - wavelengths[1] #assume step is constant for all wavelengths. Otherwise, trouble.
 
         for i in 3:length(wavelengths)
@@ -120,13 +121,15 @@ function spectrumpower(spectrum::Measured{T}, λ::T) where {T<:Real}
         return nothing
     end
 
-    lowindex = floor(Int64, (λ - spectrum.low_wave_length)) ÷ spectrum.wave_length_step + 1
+    # position of λ in units of the sample spacing, measured from the first sample
+    position = (λ - spectrum.low_wave_length) / spectrum.wave_length_step
+    lowindex = floor(Int64, position) + 1
 
-    if lowindex == length(spectrum.power_samples)
+    if lowindex >= length(spectrum.power_samples)
         return convert(T, spectrum.power_samples[end])
     else
         highindex = lowindex + 1
-        α = mod(λ, spectrum.wave_length_step) / spectrum.wave_length_step
+        α = position - (lowindex - 1)
 
         return convert(T, (1 - α) * spectrum.power_samples[lowindex] + α * spectrum.power_samples[highindex])
     end

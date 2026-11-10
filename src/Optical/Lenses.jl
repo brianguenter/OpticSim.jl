@@ -30,6 +30,15 @@ function ConicLens(insidematerial::T, frontvertex::S, frontradius::S, frontconic
 end
 export ConicLens
 
+# Magnitude of the sag of a conic surface with vertex radius `radius` at height `r` from the axis. Throws an
+# ArgumentError if the surface doesn't extend out to `r`.
+function conicsag(radius::S, conic::S, r::S) where {S<:Real}
+    c = 1 / abs(radius)
+    q = 1 - (1 + conic) * c^2 * r^2
+    q < zero(S) && throw(ArgumentError("a conic surface with radius $radius and conic $conic does not extend out to the semidiameter $r"))
+    return c * r^2 / (1 + sqrt(q))
+end
+
 """
     AsphericLens(insidematerial, frontvertex, frontradius, frontconic, frontaspherics, backradius, backconic, backaspherics, thickness, semidiameter;  lastmaterial = AGFFileReader.Air, nextmaterial = AGFFileReader.Air, frontsurfacereflectance = 0.0, backsurfacereflectance = 0.0, frontdecenter = (0, 0), backdecenter = (0, 0), interfacemode = ReflectOrTransmit)
 
@@ -39,8 +48,8 @@ function AsphericLens(insidematerial::T, frontvertex::S, frontradius::S, frontco
     @assert semidiameter > zero(S)
     @assert !isnan(frontradius)
 
-    frontdecenter_l = abs(frontdecenter[1]) > eps(S) && abs(frontdecenter[2]) > eps(S) ? sqrt(frontdecenter[1]^2 + frontdecenter[2]^2) : zero(S)
-    backdecenter_l = abs(backdecenter[1]) > eps(S) && abs(backdecenter[2]) > eps(S) ? sqrt(backdecenter[1]^2 + backdecenter[2]^2) : zero(S)
+    frontdecenter_l = abs(frontdecenter[1]) > eps(S) || abs(frontdecenter[2]) > eps(S) ? sqrt(frontdecenter[1]^2 + frontdecenter[2]^2) : zero(S)
+    backdecenter_l = abs(backdecenter[1]) > eps(S) || abs(backdecenter[2]) > eps(S) ? sqrt(backdecenter[1]^2 + backdecenter[2]^2) : zero(S)
 
     if isinf(frontradius) && (frontaspherics === nothing)
         #planar
@@ -91,7 +100,7 @@ function AsphericLens(insidematerial::T, frontvertex::S, frontradius::S, frontco
             lens_rear = leaf(SphericalCap(abs(backradius), ϕmax, SVector{3,S}(0, 0, -1), SVector{3,S}(backdecenter[1], backdecenter[2], frontvertex - thickness), interface=opticinterface(S, insidematerial, nextmaterial, backsurfacereflectance, interfacemode)))
         end
         if abs(backradius) - backdecenter_l <= semidiameter
-            plane = leaf(Plane(SVector{3,S}(0, 0, -1), SVector{3,S}(0, 0, frontvertex - thickness - backradius), vishalfsizeu=semidiameter, vishalfsizev=semidiameter, interface=interface = opticinterface(S, insidematerial, lastmaterial, backsurfacereflectance, interfacemode)))
+            plane = leaf(Plane(SVector{3,S}(0, 0, -1), SVector{3,S}(0, 0, frontvertex - thickness - backradius), vishalfsizeu=semidiameter, vishalfsizev=semidiameter, interface=interface = opticinterface(S, insidematerial, nextmaterial, backsurfacereflectance, interfacemode)))
             if backradius < zero(S)
                 lens_rear = lens_rear ∪ plane
             else
@@ -106,8 +115,9 @@ function AsphericLens(insidematerial::T, frontvertex::S, frontradius::S, frontco
         surf = AcceleratedParametricSurface(AsphericSurface(semidiameter + backdecenter_l + S(0.01), radius=backradius, conic=backconic, aspherics=backaspherics), nsamples, interface=opticinterface(S, insidematerial, nextmaterial, backsurfacereflectance, interfacemode))
         lens_rear = leaf(surf, Transform(zero(S), S(π), zero(S), backdecenter[1], backdecenter[2], frontvertex - thickness))
     end
-    extra_front = frontradius >= zero(S) || isinf(frontradius) ? zero(S) : abs(frontradius) - sqrt(frontradius^2 - semidiameter^2)
-    extra_back = backradius >= zero(S) || isinf(backradius) ? zero(S) : abs(backradius) - sqrt(backradius^2 - semidiameter^2)
+    # how far a concave surface rises above its vertex at the lens edge, so the barrel is long enough to enclose it
+    extra_front = frontradius >= zero(S) || isinf(frontradius) ? zero(S) : conicsag(frontradius, frontconic, semidiameter)
+    extra_back = backradius >= zero(S) || isinf(backradius) ? zero(S) : conicsag(backradius, backconic, semidiameter)
     barrel_center = ((frontvertex + extra_front) + (frontvertex - thickness - extra_back)) / 2
     lens_barrel = leaf(Cylinder(semidiameter, (thickness + extra_back + extra_front) * 2, interface=FresnelInterface{S}(insidematerial, AGFFileReader.Air, reflectance=zero(S), transmission=zero(S))), translation(S, zero(S), zero(S), barrel_center))
     lens_csg = lens_front ∩ lens_rear ∩ lens_barrel
@@ -124,16 +134,14 @@ The side wall absorbs. By default the lens is flipped so the flat back faces +z;
 """
 function FresnelLens(insidematerial::G, frontvertex::T, radius::T, thickness::T, semidiameter::T, groovedepth::T; conic::T=0.0, aspherics::Union{Nothing,Vector{Pair{Int,T}}}=nothing, outsidematerial::H=AGFFileReader.Air, reverse::Bool=false) where {T<:Real,G<:AGFFileReader.AbstractGlass,H<:AGFFileReader.AbstractGlass}
     @assert abs(radius) > semidiameter
+    # TODO - CSG gets more complicated as the surface can be both convex and concave and we need to find the groove positions iteratively
+    aspherics === nothing || throw(ArgumentError("FresnelLens: aspherics are not supported"))
     interface = FresnelInterface{T}(insidematerial, outsidematerial)
-
-    if aspherics !== nothing
-        aspherics = [(i, -k) for (i, k) in aspherics]
-    end
 
     # make the fresnel
     if conic == zero(T)
         if radius == zero(T) || isinf(radius)
-            @error "Invalid radius"
+            throw(ArgumentError("FresnelLens: radius must be finite and nonzero, got $radius"))
         end
         # spherical lens which makes things much easier, we can just calculate groove positions directly
         n = 1
@@ -162,9 +170,9 @@ function FresnelLens(insidematerial::G, frontvertex::T, radius::T, thickness::T,
             end
             n += 1
         end
-    elseif (aspherics === nothing)
+    else # conic
         if radius == zero(T) || isinf(radius)
-            @error "Invalid radius"
+            throw(ArgumentError("FresnelLens: radius must be finite and nonzero, got $radius"))
         end
         n = 1
         surface = AcceleratedParametricSurface(ZernikeSurface(semidiameter + T(0.01), radius=-radius, conic=conic), interface=interface)
@@ -189,9 +197,6 @@ function FresnelLens(insidematerial::G, frontvertex::T, radius::T, thickness::T,
             end
             n += 1
         end
-    else
-        # TODO - CSG gets more complicated as the surface can be both convex and concave and we need to find the groove positions iteratively
-        @error "Ashperics not supported for Fresnel lenses"
     end
 
     # the side wall absorbs, like the other lens types

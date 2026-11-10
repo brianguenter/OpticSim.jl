@@ -142,12 +142,23 @@
         int = surfaceintersection(sph, r)
         @test isapprox(point(OpticSim.OpticSim.lower(int)), [1.0, 1.0, 1.0], rtol=RTOLERANCE, atol=ATOLERANCE) && OpticSim.upper(int) isa Infinity
 
+        # The solid is the half space below the rim plane minus the ball. This ray starts in the solid, passes through the
+        # ball (outside the solid) and leaves it back into the solid.
         r = Ray([0.8, 1.4, 1.2], [1.0, -1.0, 0.0])
         int = surfaceintersection(sph, r)
-        @test isapprox(point(OpticSim.OpticSim.lower(int)), [0.898231126982741, 1.301768873017259, 1.2], rtol=RTOLERANCE, atol=ATOLERANCE) && isapprox(point(OpticSim.upper(int)), [1.301768873017259, 0.8982311269827411, 1.2], rtol=RTOLERANCE, atol=ATOLERANCE)
+        @test int isa DisjointUnion && length(int) == 2
+        @test OpticSim.lower(int[1]) isa RayOrigin && OpticSim.upper(int[2]) isa Infinity
+        @test isapprox(point(OpticSim.upper(int[1])), [0.898231126982741, 1.301768873017259, 1.2], rtol=RTOLERANCE, atol=ATOLERANCE)
+        @test isapprox(point(OpticSim.lower(int[2])), [1.301768873017259, 0.8982311269827411, 1.2], rtol=RTOLERANCE, atol=ATOLERANCE)
+        @test closestintersection(int, false) === OpticSim.upper(int[1])
 
+        # This ray crosses the rim plane outside the cap, entering the solid without touching the cap. The plane
+        # crossing has a null interface, so optically the ray hits nothing.
         r = Ray([2.0, 2.0, 1.5], [-1.0, -1.0, 0.0])
-        @test surfaceintersection(sph, r) isa EmptyInterval
+        int = surfaceintersection(sph, r)
+        @test int isa Interval && OpticSim.upper(int) isa Infinity && interface(OpticSim.lower(int)) isa NullInterface
+        @test closestintersection(int) === nothing
+        @test OpticSim.inside(sph, point(r, 2.0))
     end # testset spherical cap
 
     @testset "Triangle" begin

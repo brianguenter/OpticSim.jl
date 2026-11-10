@@ -264,7 +264,9 @@ end
 #########################################################################################################
 
 # Assumes the ray has been transformed into the canonical coordinate frame which has the vertical axis passing through (0,0,0) and aligned with the z axis.
-function surfaceintersection(surf::AcceleratedParametricSurface{T,3,AsphericSurface{T,3}}, r::AbstractRay{T,3}) where {T<:Real}
+# `<:` matters: AsphericSurface{T,3} leaves the type parameters Q and M free, and without `<:` this method would never
+# match a concrete asphere, which would then miss the bounding cylinder
+function surfaceintersection(surf::AcceleratedParametricSurface{T,3,<:AsphericSurface{T,3}}, r::AbstractRay{T,3}) where {T<:Real}
     cylint = surfaceintersection(surf.surface.boundingcylinder, r)
     if isemptyinterval(cylint)
         return EmptyInterval(T)

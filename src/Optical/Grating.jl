@@ -73,6 +73,10 @@ function processintersection(opticalinterface::ThinGratingInterface{T}, point::S
         normal = -normal
     end
 
+    λ = wavelength(incidentray)
+    # optical distance from ray origin to point of intersection in mm. Compensate for the fact that the ray has been slightly shortened.
+    geometricpathlength = norm(point - origin(incidentray)) + (firstray ? zero(T) : T(RAY_OFFSET))
+
     mᵢ, mₜ = mᵢandmₜ(outsidematerial(opticalinterface), insidematerial(opticalinterface), normal, incidentray)
     nᵢ = one(T)
     nₜ = one(T)
@@ -92,19 +96,17 @@ function processintersection(opticalinterface::ThinGratingInterface{T}, point::S
         internal_trans = exp(-α * geometricpathlength)
     end
 
-    # optical distance from ray origin to point of intersection in mm. Compensate for the fact that the ray has been slightly shortened.
-    geometricpathlength = norm(point - origin(incidentray)) + (firstray ? zero(T) : T(RAY_OFFSET))
     thisraypathlength = nᵢ * geometricpathlength
     raypathlength = pathlength(incidentray) + thisraypathlength
 
-    λ = wavelength(incidentray)
     r = !test * rand()
     if opticalinterface.period < λ / nₜ
         # TODO!! what to do in this case?
-        raypower = transmission(opticalinterface, 0) * internal_trans
-        if r >= raypower
+        trans = transmission(opticalinterface, 0) * internal_trans
+        if r >= trans
             return nothing
         end
+        raypower = trans * incident_pow
         raydirection = direction(incidentray)
     else
         # do the diffraction
@@ -113,22 +115,26 @@ function processintersection(opticalinterface::ThinGratingInterface{T}, point::S
         trans = transmission(opticalinterface, order) * internal_trans
         if r < refl
             raypower = refl * incident_pow
-            normal = -normal
-        elseif r < trans
+            reflected = true
+        elseif r < refl + trans
             raypower = trans * incident_pow
+            reflected = false
         else
             return nothing
         end
         incident_mag = 2π * nᵢ / λ
         grating_dir = order * opticalinterface.vector * (2π / opticalinterface.period)
         u = cross(normal, ((direction(incidentray) * incident_mag) + grating_dir))
-        output_mag = 2π * nₜ / λ
+        # a reflected order stays in the incident medium
+        output_mag = 2π * (reflected ? nᵢ : nₜ) / λ
         q = output_mag^2 - sum(u .^ 2)
         if q < zero(T)
             @warn "Order $order not valid for this configuration, skipping this ray" maxlog = 1
             return nothing
         else
-            raydirection = normalize(normal * sqrt(q) - cross(normal, u))
+            # -cross(normal, u) is the wave vector's component along the surface. The normal points back toward the
+            # incident side, so a transmitted ray leaves along -normal and a reflected one along +normal.
+            raydirection = normalize((reflected ? sqrt(q) : -sqrt(q)) * normal - cross(normal, u))
         end
     end
     return raydirection, raypower, raypathlength
@@ -189,7 +195,7 @@ function processintersection(opticalinterface::HologramInterface{T}, point::SVec
         nsig = one(T)
     end
     # get the signal magnitude in the substrate
-    mag_Ksig = 2π * nₛ / opticalinterface.recordingλ
+    mag_Ksig = 2π * nₛrec / opticalinterface.recordingλ # recording beams have the recording wavelength
     # and direction
     if opticalinterface.signalbeamstate === CollimatedBeam
         Ksig_raw = opticalinterface.signalpointordir
@@ -215,7 +221,7 @@ function processintersection(opticalinterface::HologramInterface{T}, point::SVec
         nref = one(T)
     end
     # get the reference magnitude in the substrate
-    mag_Kref = 2π * nₛ / opticalinterface.recordingλ
+    mag_Kref = 2π * nₛrec / opticalinterface.recordingλ
     if opticalinterface.referencebeamstate === CollimatedBeam
         Kref_raw = opticalinterface.referencepointordir
     elseif opticalinterface.referencebeamstate === ConvergingBeam
