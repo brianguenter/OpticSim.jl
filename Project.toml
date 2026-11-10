@@ -5,7 +5,7 @@ authors = ["Brian Guenter", "Charlie Hewitt", "Ran Gal", "Alfred Wong"]
 repository = "https://github.com/microsoft/OpticSim.jl"
 
 [workspace]
-projects = ["OpticSim", "test"]
+projects = ["OpticSim", "test", "docs", "Examples"]
 
 [deps]
 AGFFileReader = "36dd7d7d-c279-4b5c-a024-2ba417cea492"
