@@ -86,3 +86,28 @@
         @test isapprox(ref, normalize(fp - OpticSim.point(intsct)), rtol=RTOLERANCE, atol=ATOLERANCE)
     end # testset Paraxial
 end # testset lenses
+
+@testitem "FresnelLens" begin
+    using StaticArrays, AGFFileReader
+
+    # z where a ray parallel to the axis at height h crosses the axis after passing through the lens
+    function axiscrossing(lens, h)
+        r = OpticalRay(SVector(h, 0.0, 10.0), SVector(0.0, 0.0, -1.0), 1.0, 0.55)
+        res = trace(LensAssembly(lens()), r, test=true)
+        o = OpticSim.origin(OpticSim.ray(res))
+        d = OpticSim.direction(OpticSim.ray(res))
+        return o[3] - o[1] / d[1] * d[3]
+    end
+
+    glass = AGFFileReader.Examples_N_BK7
+    # paraxial focal length R / (n - 1) for R = 15 and N-BK7 at 0.55μm
+    f = 28.89
+    for conic in (0.0, 0.1)
+        convex = FresnelLens(glass, 0.0, 15.0, 1.0, 8.0, 0.8, conic=conic)
+        concave = FresnelLens(glass, 0.0, -15.0, 1.0, 8.0, 0.8, conic=conic)
+        @test isapprox(axiscrossing(convex, 0.5), -f, atol=0.05)
+        @test isapprox(axiscrossing(concave, 0.5), f, atol=0.05) # virtual focus in front of the lens
+        # a ray through a groove (the first groove is at radius ≈ 4.8) still focuses, with some spherical aberration
+        @test -f < axiscrossing(convex, 5.0) < -0.85f
+    end
+end

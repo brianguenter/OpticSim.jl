@@ -230,7 +230,7 @@ function prism_refraction()
     Vis.drawtracerays(sys, raygenerator=raygen, test=true, trackallrays=true)
 end
 
-"""FresnelLens constructor doesn't work. Don't use"""
+"""Fresnel lens with a conic profile"""
 function fresnel(convex=true; kwargs...)
     lens = FresnelLens(Examples_N_BK7, 0.0, convex ? 15.0 : -15.0, 1.0, 8.0, 0.8, conic=0.1)
     sys = CSGOpticalSystem(LensAssembly(lens()), Rectangle(15.0, 15.0, SVector(0.0, 0.0, 1.0), SVector(0.0, 0.0, -25.0), interface=opaqueinterface()))
