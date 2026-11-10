@@ -18,10 +18,13 @@ A lens optimization problem.
 
 - `name`, `source`: what the problem is and where its specification comes from
 - `variables`: a description of each free variable, with units
-- `x0`, `lower`, `upper`: starting values and bounds of the free variables
+- `x0`: starting values of the free variables
+- `bounds`: `(lower, upper)` for each free variable
 - `build(x)`: the optical system for variable values `x`
 - `merit(x)`: the value to minimize, the mean over the fields of the squared RMS spot radius (mm²)
 - `fields`: field angles in degrees, used by [`rmsspotradii`](@ref)
+
+Optimization.jl takes the bounds as separate vectors: `lb = first.(ex.bounds)`, `ub = last.(ex.bounds)`.
 
 The rays for each field and wavelength fill the entrance pupil in a hexapolar grid. The example functions take a
 `rings` keyword: `rings` rings give 1 + 3 rings (rings + 1) rays, 127 for the default of 6.
@@ -31,19 +34,26 @@ struct OptimizationExample{B,M}
     source::String
     variables::Vector{String}
     x0::Vector{Float64}
-    lower::Vector{Float64}
-    upper::Vector{Float64}
+    bounds::Vector{Tuple{Float64,Float64}}
     build::B
     merit::M
     fields::Vector{Float64}
     rays::Vector{Vector{Tuple{OpticalRay{Float64,3},Float64}}} # per field: (ray, weight)
+
+    function OptimizationExample(name, source, variables, x0, bounds, build::B, merit::M, fields, rays) where {B,M}
+        @assert length(variables) == length(x0) == length(bounds) "one name, starting value and bounds per variable"
+        for (v, x, (l, u)) in zip(variables, x0, bounds)
+            @assert l <= x <= u "$v: starting value $x is outside its bounds ($l, $u)"
+        end
+        new{B,M}(name, source, variables, x0, bounds, build, merit, fields, rays)
+    end
 end
 
 function Base.show(io::IO, ex::OptimizationExample)
     println(io, ex.name)
     println(io, "  ", ex.source)
-    for (v, x, l, u) in zip(ex.variables, ex.x0, ex.lower, ex.upper)
-        println(io, "  ", rpad(v, 44), " start ", rpad(round(x, sigdigits=6), 12), " bounds [", l, ", ", u, "]")
+    for (v, x, (l, u)) in zip(ex.variables, ex.x0, ex.bounds)
+        println(io, "  ", rpad(v, 44), " start ", rpad(round(x, sigdigits=6), 12), " bounds (", l, ", ", u, ")")
     end
 end
 
@@ -219,7 +229,7 @@ function singlet_optimization(; rings=6)
     OptimizationExample(
         "Singlet lens (Zemax tutorial)", SINGLET_SOURCE,
         ["front curvature (1/mm)", "center thickness (mm)", "back surface to image (mm)"],
-        [0.001, 4.0, 100.0], [0.001, 2.0, 50.0], [0.05, 12.0, 150.0],
+        [0.001, 4.0, 100.0], [(0.001, 0.05), (2.0, 12.0), (50.0, 150.0)],
         build, merit, SINGLET_FIELDS, rays)
 end
 
@@ -242,7 +252,7 @@ function aspheric_singlet_optimization(; rings=6)
         "Aspheric singlet lens (derived from the Zemax tutorial)", SINGLET_SOURCE * "; front surface made an even asphere",
         ["front curvature (1/mm)", "center thickness (mm)", "back surface to image (mm)", "front conic",
             "front 4th order term (sag at edge, mm)", "front 6th order term (sag at edge, mm)"],
-        [0.001, 4.0, 100.0, 0.0, 0.0, 0.0], [0.001, 2.0, 50.0, -5.0, -1.0, -1.0], [0.05, 12.0, 150.0, 1.0, 1.0, 1.0],
+        [0.001, 4.0, 100.0, 0.0, 0.0, 0.0], [(0.001, 0.05), (2.0, 12.0), (50.0, 150.0), (-5.0, 1.0), (-1.0, 1.0), (-1.0, 1.0)],
         build, merit, SINGLET_FIELDS, rays)
 end
 
@@ -300,7 +310,7 @@ function cooke40_optimization(; rings=6)
     OptimizationExample(
         "Cooke triplet, 40 degree field (Zemax sample)", COOKE40_SOURCE,
         vcat(["curvature surface $i (1/mm)" for i in 1:5], ["air gap lens 1 to 2 (mm)", "air gap lens 2 to 3 (mm)", "last surface to image (mm)"]),
-        x0, [-cmax; 1.0; 1.0; 30.0], [cmax; 15.0; 15.0; 60.0],
+        x0, [[(-c, c) for c in cmax]; [(1.0, 15.0), (1.0, 15.0), (30.0, 60.0)]],
         build, merit, COOKE40_FIELDS, rays)
 end
 
@@ -321,12 +331,10 @@ chosen here.
 function cooke_triplet_optimization(; rings=6)
     radii = [26.777, 66.604, -35.571, 35.571, -26.777]
     x0 = [1 ./ radii; 2.0; 2.0; 44.748]
-    lower = [[min(1 / (0.75r), 1 / (1.25r)) for r in radii]; 0.5; 0.5; 35.0]
-    upper = [[max(1 / (0.75r), 1 / (1.25r)) for r in radii]; 5.0; 5.0; 55.0]
+    bounds = [[extrema((1 / (0.75r), 1 / (1.25r))) for r in radii]; [(0.5, 5.0), (0.5, 5.0), (35.0, 55.0)]]
     # also keep each radius at least 1% larger than its semi-diameter (the 25% limits already do for these radii)
     cmax = maxcurvature.([8.580, 7.513, 7.054, 7.003, 7.506])
-    lower[1:5] = max.(lower[1:5], -cmax)
-    upper[1:5] = min.(upper[1:5], cmax)
+    bounds[1:5] = [(max(l, -c), min(u, c)) for ((l, u), c) in zip(bounds[1:5], cmax)]
     function prescription(x::AbstractVector{T}) where {T}
         c1, c2, c3, c4, c5, gap1, gap2, back = x
         DataFrame(
@@ -346,7 +354,7 @@ function cooke_triplet_optimization(; rings=6)
     OptimizationExample(
         "Cooke triplet (OpticSim cooketriplet)", "OpticSim's cooketriplet(); field, aperture and bounds chosen for this example",
         vcat(["curvature surface $i (1/mm)" for i in (1, 2, 3, 5, 6)], ["air gap lens 1 to 2 (mm)", "air gap lens 2 to 3 (mm)", "last surface to image (mm)"]),
-        x0, lower, upper, build, merit, [0.0, 5.0], rays)
+        x0, bounds, build, merit, [0.0, 5.0], rays)
 end
 
 #############################################################################

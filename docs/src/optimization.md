@@ -19,11 +19,12 @@ The merit function works with automatic differentiation, so solvers get exact gr
 ```julia
 using OpticSim
 using Optimization, OptimizationOptimJL # any Optimization.jl solver package that supports bounds
+import ForwardDiff                     # needed for Optimization.AutoForwardDiff()
 include("Examples/Examples.jl")          # the Examples module is in the repository, not the package
 
 ex = Examples.singlet_optimization()
 f = OptimizationFunction((x, _) -> ex.merit(x), Optimization.AutoForwardDiff())
-prob = OptimizationProblem(f, ex.x0; lb=ex.lower, ub=ex.upper)
+prob = OptimizationProblem(f, ex.x0; lb=first.(ex.bounds), ub=last.(ex.bounds))
 sol = solve(prob, Optim.Fminbox(Optim.LBFGS()))
 
 Examples.rmsspotradii(ex, sol.u)        # RMS spot radius per field, μm
