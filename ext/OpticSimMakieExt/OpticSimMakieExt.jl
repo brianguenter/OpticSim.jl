@@ -10,7 +10,7 @@ using OpticSim
 using OpticSim: Vis, euclideancontrolpoints, vertex, makiemesh, detector, centroid, lower, upper, intervals, α, point, Spline
 using OpticSim.Geometry
 using OpticSim.Emitters
-using OpticSim.Emitters: Sources, Origins, Directions, visual_size
+using OpticSim.Emitters: Sources, Origins, Directions, Spectrum, visual_size
 using StaticArrays
 using LinearAlgebra
 import Makie

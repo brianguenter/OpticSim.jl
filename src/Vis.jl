@@ -19,7 +19,7 @@ Vis.draw(Examples.cooketriplet())
 """
 module Vis
 
-export draw, draw!, drawtracerays, drawtracerays!, drawtraceimage, spotdiag, spotdiag!, spotdiaggrid, plotOPD, plotOPD!, surfacesag, drawcurves
+export draw, draw!, drawtracerays, drawtracerays!, drawtraceimage, spotdiag, spotdiag!, spotdiaggrid, plotOPD, plotOPD!, surfacesag, drawcurves, drawcomparison, sideview!
 
 # Settings shared between OpticSim and the extension.
 # modes:  nothing/:default -> open a window and add camera buttons
@@ -33,7 +33,7 @@ const _visfunctions = (
     :scene, :draw, :draw!, :display, :save, :showimage, :update_camera_orientation!,
     :drawtracerays, :drawtracerays!, :drawtraceimage,
     :spotdiag, :spotdiag!, :spotdiaggrid, :plotOPD, :plotOPD!, :surfacesag,
-    :eyebox_eval_eye, :eyebox_eval_planar, :drawcurves, :λtoRGB,
+    :eyebox_eval_eye, :eyebox_eval_planar, :drawcurves, :λtoRGB, :sideview!, :drawcomparison,
 )
 
 for f in _visfunctions
@@ -138,16 +138,47 @@ Save the current figure to an image file.
 save
 
 """
-    drawtracerays(system; raygenerator, test = false, trackallrays = false, colorbysourcenum = false, colorbynhits = false, rayfilter = onlydetectorrays, verbose = false, resolution = (1000, 1000), kwargs...)
+    drawtracerays(system; raygenerator, view = :perspective, test = false, trackallrays = false, colorbysourcenum = false, colorbynhits = false, rayfilter = onlydetectorrays, verbose = false, resolution, kwargs...)
 
 Draw an optical system along with the rays traced through it.
 If `trackallrays` is true the whole ray path is drawn, otherwise only the final segment hitting the detector.
 Rays are colored by wavelength unless `colorbysourcenum` or `colorbynhits` is set.
 Only ray paths that reach the detector are drawn; set `rayfilter = nothing` to draw all of them.
 
+`lensalpha` sets the opacity of the lens elements (default 1). The default `raygenerator` is a 9 × 9 grid of collimated
+rays at 0.55μm coming down the optical axis from z = 10: few enough that the lenses stay visible.
+
+`view = :side` shows the system from the side, like a lens layout drawing: the optical axis horizontal, light travelling
+left to right, orthographic projection, fitted to the system (see [`sideview!`](@ref OpticSim.Vis.sideview!)).
+`resolution` defaults to `(1000, 1000)`, or `(1400, 500)` for the side view.
+
 `drawtracerays!([lscene], system; ...)` adds to an existing scene, with `drawsys` and `drawgen` controlling whether the system and ray generator are drawn.
 """
 drawtracerays
+
+"""
+    sideview!(lscene)
+
+Show the contents of `lscene` from the side, like a lens layout drawing: looking along the x axis at the y-z plane, so
+the optical axis (z) is horizontal and light travelling toward -z goes left to right, with orthographic projection,
+zoomed to fit. Returns `lscene`.
+"""
+sideview!
+
+"""
+    drawcomparison(systems; raygenerator, titles = nothing, view = :side, resolution = (1400, 380 * length(systems)), kwargs...)
+
+Draw several optical systems one above the other, tracing the same rays from `raygenerator` through each: for example
+a design before and after optimization. `titles` labels each drawing, `view` is `:side` or `:perspective` (see
+[`drawtracerays`](@ref OpticSim.Vis.drawtracerays)), and other keyword arguments such as `trackallrays`, `test` and
+`colorbysourcenum` are passed on to `drawtracerays!`.
+
+```julia
+Vis.drawcomparison([before, after]; raygenerator=rays, titles=["Before", "After"], trackallrays=true, test=true)
+Vis.save("comparison.png")
+```
+"""
+drawcomparison
 
 """
     drawtraceimage(system; raygenerator, test = false, verbose = false)

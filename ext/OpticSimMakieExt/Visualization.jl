@@ -121,7 +121,8 @@ function Vis.λtoRGB(λ::T, gamma::T=T(0.8)) where {T<:Real}
 end
 
 const hsvcolormap = Makie.to_colormap(:hsv)
-indexedcolor(i::Int) = Makie.interpolated_getindex(hsvcolormap, rem(i / (2.1 * π), 1.0))
+# hues spaced by the golden ratio, so consecutive indices (sources, fields, hit counts) get clearly different colors
+indexedcolor(i::Int) = Makie.interpolated_getindex(hsvcolormap, mod(i * 0.381966, 1.0))
 function indexedcolor2(i::Int)
     c = Makie.interpolated_getindex(hsvcolormap, 1.0 - rem(i / (2.1 * π), 1.0))
     return RGBf(0.5 * c.r, 0.5 * c.g, 0.5 * c.b)
@@ -272,14 +273,16 @@ end
 #############################################################################
 ## optics
 
-function Vis.draw!(ax::Makie.AbstractAxis, ass::LensAssembly{T}; kwargs...) where {T<:Real}
+# `alpha` < 1 draws the elements semi-transparent, so rays inside them stay visible
+function Vis.draw!(ax::Makie.AbstractAxis, ass::LensAssembly{T}; alpha=1.0, kwargs...) where {T<:Real}
     for (i, e) in enumerate(elements(ass))
-        Vis.draw!(ax, e; kwargs..., color=indexedcolor2(i))
+        c = indexedcolor2(i)
+        Vis.draw!(ax, e; kwargs..., color=RGBA(c.r, c.g, c.b, alpha), transparency=alpha < 1)
     end
 end
 
-function Vis.draw!(ax::Makie.AbstractAxis, sys::CSGOpticalSystem{T}; kwargs...) where {T<:Real}
-    Vis.draw!(ax, sys.assembly; kwargs...)
+function Vis.draw!(ax::Makie.AbstractAxis, sys::CSGOpticalSystem{T}; alpha=1.0, kwargs...) where {T<:Real}
+    Vis.draw!(ax, sys.assembly; alpha=alpha, kwargs...)
     Vis.draw!(ax, sys.detector; kwargs...)
 end
 
@@ -293,20 +296,67 @@ defaultraygenerator() = Sources.Source(
     directions=Directions.Constant(0.0, 0.0, -1.0),
 )
 
+# fewer rays, one wavelength: enough to see the ray paths without hiding the lenses
+defaultdrawingrays() = Sources.Source(
+    transform=translation(0.0, 0.0, 10.0),
+    origins=Origins.RectGrid(10.0, 10.0, 9, 9),
+    directions=Directions.Constant(0.0, 0.0, -1.0),
+    spectrum=Spectrum.DeltaFunction(0.55),
+)
+
 ## ray generators
 
 # Ray generators without a specific drawing method are not drawn.
 Vis.draw!(::Makie.AbstractAxis, ::AbstractRayGenerator; kwargs...) = nothing
 
 function Vis.drawtracerays(system::AbstractOpticalSystem{T};
-    raygenerator::AbstractRayGenerator{T}=defaultraygenerator(),
-    resolution::Tuple{Int,Int}=(1000, 1000),
+    raygenerator::AbstractRayGenerator{T}=defaultdrawingrays(),
+    view::Symbol=:perspective,
+    resolution::Tuple{Int,Int}=view === :side ? (1400, 500) : (1000, 1000),
     verbose::Bool=false,
     kwargs...
 ) where {T<:Real}
     verbose && println("Drawing System...")
     fig, lscene = Vis.scene(resolution)
     Vis.drawtracerays!(lscene, system; raygenerator=raygenerator, verbose=verbose, drawsys=true, drawgen=true, kwargs...)
+    view === :side && Vis.sideview!(lscene)
+    Vis.display(fig)
+    return isnoninteractive() ? fig : nothing
+end
+
+function Vis.sideview!(ls::Makie.LScene)
+    cam = Makie.cameracontrols(ls.scene)
+    cam.settings.projectiontype[] = Makie.Orthographic
+    cam.settings.center[] = false # keep this view instead of re-centering when the figure is rendered
+    bb = Makie.data_limits(ls.scene)
+    center = Makie.Vec3d(bb.origin .+ bb.widths ./ 2)
+    # orthographic: the visible half-height is the camera distance, the half-width that times the panel aspect ratio.
+    # Fit the system length (z) and height (y) with a small margin.
+    viewport = Makie.widths(ls.scene.viewport[])
+    aspect = viewport[2] > 0 ? viewport[1] / viewport[2] : 1.0
+    distance = max(0.55 * bb.widths[3] / aspect, 0.6 * bb.widths[2])
+    # look along +x at the y-z plane, y up: the optical axis is horizontal and light travelling toward -z goes left to right
+    Makie.update_cam!(ls.scene, cam, center .+ Makie.Vec3d(distance, 0, 0), center, Makie.Vec3d(0, 1, 0))
+    return ls
+end
+
+function Vis.drawcomparison(systems::AbstractVector{<:AbstractOpticalSystem};
+    raygenerator::AbstractRayGenerator,
+    titles=nothing,
+    view::Symbol=:side,
+    resolution::Tuple{Int,Int}=(1400, 380 * length(systems)),
+    kwargs...
+)
+    fig = Makie.Figure(size=resolution)
+    lscene = nothing
+    for (i, system) in enumerate(systems)
+        titles === nothing || Makie.Label(fig[2i-1, 1], titles[i], fontsize=18, tellwidth=false)
+        lscene = Makie.LScene(fig[2i, 1]; show_axis=false, scenekw=(; camera=Makie.cam3d_cad!))
+        Vis.drawtracerays!(lscene, system; raygenerator=raygenerator, drawsys=true, kwargs...)
+        view === :side && Vis.sideview!(lscene)
+    end
+    current_main_scene[] = fig
+    current_3d_scene[] = lscene
     Vis.display(fig)
     return isnoninteractive() ? fig : nothing
 end
@@ -319,7 +369,7 @@ function Vis.drawtracerays!(system::AbstractOpticalSystem; kwargs...)
 end
 
 function Vis.drawtracerays!(ax::Makie.AbstractAxis, system::AbstractOpticalSystem{T};
-    raygenerator::AbstractRayGenerator{T}=defaultraygenerator(),
+    raygenerator::AbstractRayGenerator{T}=defaultdrawingrays(),
     test::Bool=false,
     trackallrays::Bool=false,
     colorbysourcenum::Bool=false,
@@ -329,12 +379,15 @@ function Vis.drawtracerays!(ax::Makie.AbstractAxis, system::AbstractOpticalSyste
     drawsys::Bool=false,
     drawgen::Bool=false,
     numdivisions::Int=30, # mesh resolution of the system's surfaces
+    lensalpha=1.0, # opacity of the lens elements
     kwargs...
 ) where {T<:Real}
     raylines = Vector{LensTrace{T,3}}(undef, 0)
 
+    # system first, rays on top: CairoMakie paints plots in order without depth testing, so the rays are drawn across
+    # the lenses, as in a lens layout drawing. GLMakie depth-tests, so there rays inside a lens are hidden by it.
     drawgen && Vis.draw!(ax, raygenerator; kwargs...)
-    drawsys && Vis.draw!(ax, system; numdivisions=numdivisions, kwargs...)
+    drawsys && Vis.draw!(ax, system; numdivisions=numdivisions, alpha=lensalpha, kwargs...)
 
     verbose && println("Tracing...")
     for (i, r) in enumerate(raygenerator)

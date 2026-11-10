@@ -49,14 +49,13 @@ nothing # hide
 Vis.drawtracerays(cooketriplet(), trackallrays=true, test=true, numdivisions=100)
 ```
 
-The same scene viewed from the side. [`Vis.scene`](@ref OpticSim.Vis.scene) makes an empty figure to draw into:
+`view=:side` draws it like a lens layout: from the side, optical axis horizontal, light travelling left to right:
 
 ```@example vis
-fig, lscene = Vis.scene((1000, 700))
-Vis.drawtracerays!(lscene, cooketriplet(), trackallrays=true, test=true, numdivisions=100, drawsys=true)
-Vis.update_camera_orientation!(lscene, π / 2, 0.0)
-fig
+Vis.drawtracerays(cooketriplet(), trackallrays=true, test=true, numdivisions=100, view=:side)
 ```
+
+[`Vis.drawcomparison`](@ref OpticSim.Vis.drawcomparison) draws several systems one above the other with the same rays, for example two designs, and [`Vis.scene`](@ref OpticSim.Vis.scene) makes an empty figure to build your own drawing in.
 
 The image formed on the detector:
 
@@ -124,6 +123,8 @@ OpticSim.Vis.spotdiaggrid
 OpticSim.Vis.plotOPD
 OpticSim.Vis.surfacesag
 OpticSim.Vis.drawcurves
+OpticSim.Vis.drawcomparison
+OpticSim.Vis.sideview!
 OpticSim.Vis.eyebox_eval_eye
 OpticSim.Vis.eyebox_eval_planar
 ```
