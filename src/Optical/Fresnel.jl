@@ -95,9 +95,15 @@ function fresnel(nᵢ::T, nₜ::T, sinθᵢ::T, sinθₜ::T) where {T<:Real}
     rparallel = ((nᵢ * cosθₜ - nₜ * cosθᵢ) / (nᵢ * cosθₜ + nₜ * cosθᵢ))^2
     rperp = ((nᵢ * cosθᵢ - nₜ * cosθₜ) / (nᵢ * cosθᵢ + nₜ * cosθₜ))^2
 
-    # Transmitted power: the squared amplitude coefficients times nₜcosθₜ/(nᵢcosθᵢ), which compensates for the change in
-    # intensity per area caused by the differing angles and indices. Written without that division so it stays finite
-    # (zero) at grazing incidence, where cosθᵢ = 0.
+    # Transmitted power for each polarization is the squared amplitude coefficient times Tₐ = nₜcosθₜ/(nᵢcosθᵢ), which
+    # accounts for the change in beam cross section and speed in the new medium, so reflected and transmitted power sum
+    # to 1. For the parallel polarization, with D = nᵢcosθₜ + nₜcosθᵢ:
+    #
+    #   (2nᵢcosθᵢ / D)² × nₜcosθₜ / (nᵢcosθᵢ)  =  4·nᵢcosθᵢ·nₜcosθₜ / D²
+    #
+    # and the perpendicular case is the same with D = nᵢcosθᵢ + nₜcosθₜ. The right side is used because it cancels one
+    # factor of nᵢcosθᵢ instead of dividing by it. At grazing incidence cosθᵢ = 0: the left side would be 0 × ∞ = NaN,
+    # which silently dropped the ray, while the right side gives 0, which is correct (no light is transmitted).
     numerator = 4 * nᵢ * cosθᵢ * nₜ * cosθₜ
     tparallel = numerator / (nᵢ * cosθₜ + nₜ * cosθᵢ)^2
     tperp = numerator / (nᵢ * cosθᵢ + nₜ * cosθₜ)^2
