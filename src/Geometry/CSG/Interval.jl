@@ -106,30 +106,39 @@ end
 const threadedintervalpool = Vector{Dict{DataType,IntervalPool}}()
 #const threadedintervalpool = [Dict{DataType,IntervalPool}([Float64 => IntervalPool{Float64}()]) for _ in 1:Threads.nthreads()]
 
-function newinintervalpool!(::Type{T}=Float64, tid::Int=Threads.threadid())::Vector{Interval{T}} where {T<:Real}
-    if T ∉ keys(threadedintervalpool[tid])
-        # if the type of the interval pool has changed then we need to refill it with the correct type
-        threadedintervalpool[tid][T] = IntervalPool{T}()
+# The pools are stored by element type in a Dict{DataType,IntervalPool}, so the compiler can't infer a pool's type.
+# The type assertion lets everything after the lookup compile to direct calls.
+function intervalpool(::Type{T}, tid::Int)::IntervalPool{T} where {T<:Real}
+    pools = threadedintervalpool[tid]
+    pool = get(pools, T, nothing)
+    if pool === nothing
+        # first use of this element type on this thread
+        pool = IntervalPool{T}()
+        pools[T] = pool
     end
-    return allocate!(threadedintervalpool[tid][T])
+    return pool::IntervalPool{T}
 end
 
+newinintervalpool!(::Type{T}=Float64, tid::Int=Threads.threadid()) where {T<:Real} = allocate!(intervalpool(T, tid))
+
 function indexednewinintervalpool!(::Type{T}=Float64, tid::Int=Threads.threadid())::Tuple{Int,Vector{Interval{T}}} where {T<:Real}
-    a = newinintervalpool!(T, tid)
-    index = length(threadedintervalpool[tid][T].allocated)
-    return index, a
+    pool = intervalpool(T, tid)
+    a = allocate!(pool)
+    return length(pool.allocated), a
 end
 
 function emptyintervalpool!(::Type{T}=Float64, tid::Int=Threads.threadid()) where {T}
-    if T ∈ keys(threadedintervalpool[tid])
-        OpticSim.empty!(threadedintervalpool[tid][T])
+    pool = get(threadedintervalpool[tid], T, nothing)
+    if pool !== nothing
+        OpticSim.empty!(pool::IntervalPool{T})
     end
+    return nothing
 end
 
 getfromintervalpool(id::Int, tid::Int=Threads.threadid())::Vector{Interval{Float64}} = getfromintervalpool(Float64, id, tid)
 
 function getfromintervalpool(::Type{T}, id::Int, tid::Int=Threads.threadid())::Vector{Interval{T}} where {T<:Real}
-    return threadedintervalpool[tid][T].allocated[id]
+    return intervalpool(T, tid).allocated[id]
 end
 
 ########################################################################################################################

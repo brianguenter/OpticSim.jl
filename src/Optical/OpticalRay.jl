@@ -41,13 +41,13 @@ struct OpticalRay{T,N} <: AbstractRay{T,N}
     end
 
     function OpticalRay(origin::SVector{N,T}, direction::SVector{N,T}, power::T, wavelength::T; opl::T=zero(T), nhits::Int=0, sourcenum::Int=0, sourcepower::T=power) where {T<:Real,N}
-        return new{T,N}(Ray(origin, normalize(direction)), power, wavelength, opl, nhits, sourcepower, sourcenum)
+        return new{T,N}(Ray(origin, direction), power, wavelength, opl, nhits, sourcepower, sourcenum) # Ray normalizes the direction
     end
 
     function OpticalRay(origin::AbstractArray{T,1}, direction::AbstractArray{T,1}, power::T, wavelength::T; opl::T=zero(T), nhits::Int=0, sourcenum::Int=0, sourcepower::T=power) where {T<:Real}
         @assert length(origin) == length(direction) "origin (dimension $(length(origin))) and direction (dimension $(length(direction))) vectors do not have the same dimension"
         N = length(origin)
-        return new{T,N}(Ray(SVector{N,T}(origin), normalize(SVector{N,T}(direction))), power, wavelength, opl, nhits, sourcepower, sourcenum)
+        return new{T,N}(Ray(SVector{N,T}(origin), SVector{N,T}(direction)), power, wavelength, opl, nhits, sourcepower, sourcenum)
     end
 
     # Convenience constructor. Not as much typing

@@ -35,14 +35,22 @@ struct Intersection{T,N} <: FinitePoint{T}
     normal::SVector{N,T}
     u::T
     v::T
-    interface::AllOpticalInterfaces{T} # returns a union of all OpticalInterface subtypes - can't have an abstract type here as it results in allocations
+    interface::OpticalInterface{T} # interfaces are heap objects, so storing one here is a pointer copy
     flippednormal::Bool
 
-    function Intersection(α::T, point::SVector{N,T}, normal::SVector{N,T}, u::T, v::T, interface::AllOpticalInterfaces{T}; flippednormal=false) where {T<:Real,N}
+    # @nospecialize: callers usually only know the interface's abstract type, and specializing on the concrete type would
+    # force a runtime dispatch on every call. The field holds any interface type anyway.
+    # flippednormal is positional here: calling a keyword method with an abstractly typed interface is a runtime dispatch
+    # that boxes every argument, so code on the hot path calls this method
+    function Intersection(α::T, point::SVector{N,T}, normal::SVector{N,T}, u::T, v::T, @nospecialize(interface), flippednormal::Bool) where {T<:Real,N}
         new{T,N}(α, point, normalize(normal), u, v, interface, flippednormal)
     end
 
-    function Intersection(α::T, point::AbstractVector{T}, normal::AbstractVector{T}, u::T, v::T, interface::AllOpticalInterfaces{T}; flippednormal=false) where {T<:Real}
+    function Intersection(α::T, point::SVector{N,T}, normal::SVector{N,T}, u::T, v::T, @nospecialize(interface); flippednormal::Bool=false) where {T<:Real,N}
+        new{T,N}(α, point, normalize(normal), u, v, interface, flippednormal)
+    end
+
+    function Intersection(α::T, point::AbstractVector{T}, normal::AbstractVector{T}, u::T, v::T, @nospecialize(interface); flippednormal=false) where {T<:Real}
         @assert length(point) == length(normal)
         N = length(point)
         new{T,N}(α, SVector{N,T}(point), SVector{N,T}(normal), u, v, interface, flippednormal)
@@ -76,7 +84,7 @@ end
 Used by the CSG complement operator (i.e. [`-`](@ref)) to reverse the inside outside sense of the object.
 """
 function reversenormal(a::Intersection{T,N}) where {T<:Real,N}
-    return Intersection(α(a), point(a), -normal(a), u(a), v(a), interface(a), flippednormal=!flippednormal(a))
+    return Intersection(α(a), point(a), -normal(a), u(a), v(a), interface(a), !flippednormal(a))
 end
 
 """
@@ -171,8 +179,8 @@ Base.eltype(::RayOrigin{T}) where {T<:Real} = T
 Apply a Transform to an Intersection object
 """
 function Base.:*(a::Transform{T}, intsct::Intersection{T,3})::Intersection{T,3} where {T<:Real}
-    u, v = uv(intsct)
-    i = interface(intsct)
-
-    return Intersection(α(intsct), a * point(intsct), Geometry.rotate(a, normal(intsct)), u, v, interface(intsct), flippednormal=flippednormal(intsct))
+    # rotate the normal with the upper left 3x3 block of the transform directly, rather than building a rotation Transform
+    m = Geometry.matrix(a)
+    rotated = SMatrix{3,3,T,9}(m[1, 1], m[2, 1], m[3, 1], m[1, 2], m[2, 2], m[3, 2], m[1, 3], m[2, 3], m[3, 3]) * normal(intsct)
+    return Intersection(α(intsct), a * point(intsct), rotated, u(intsct), v(intsct), interface(intsct), flippednormal(intsct))
 end
