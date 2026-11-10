@@ -47,7 +47,6 @@ end
 ################################################
 
 # This can be used to track NaN, particularly in ForwardDiff gradients, causing problems
-# e.g. Diagnostics.testoptimization(lens = Examples.doubleconvex(NaNCheck{Float64}), samples = 1)
 
 # struct NaNCheck{T<:Real} <: Real
 #     val::T
