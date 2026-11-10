@@ -11,6 +11,7 @@ include("Fresnel.jl")
 include("Paraxial.jl")
 include("Grating.jl")
 include("LensAssembly.jl")
+include("MacroLensAssembly.jl") # old macro-based version, kept for benchmarking
 include("HierarchicalImage.jl")
 include("OpticalSystem.jl")
 include("Lenses.jl")

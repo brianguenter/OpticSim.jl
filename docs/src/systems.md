@@ -6,6 +6,8 @@ All systems are made up of a `LensAssembly` which contains all the optical compo
 
 ```@docs; canonical = false
 LensAssembly
+TupleLensAssembly
+elements
 ```
 
 ## Images
