@@ -278,11 +278,6 @@ end # testset Reflection
     a = TestData.qtypesystem()
     res = trace(a, r1, test=true)
     @test isapprox(point(res), [-4.3551074306, -0.318112811010, -67.8], rtol=1e-12)
-    # TODO these are the values that I get for comparison - I'm pretty certain that they are just wrong...
-    # res = trace(a, r2, test = true)
-    # @test isapprox(point(res), [-0.091773202667, 3.9362695851, -67.8], rtol = 1e-12)
-    # res = trace(a, r3, test = true)
-    # @test isapprox(point(res), [-7.0993098547, -2.6848726242, -67.8], rtol = 1e-12)
 
     # No NSC chebyshev so have less precise SC values and no angled rays
     a = TestData.chebyshevsystem()
@@ -311,17 +306,18 @@ end # testset Reflection
     @test isapprox(pathlength(res), 74.6955888563913, rtol=COMP_TOLERANCE)
 end #testset complex lenses
 
-# @testitem "Power" begin
-#     λ = 0.550
-#     r1 = OpticalRay([0.0, 0.0, 1.0], [0.0, 0.0, -1.0], 1.0, λ)
-#     r2 = OpticalRay([2.0, 2.0, 1.0], [0.0, 0.0, -1.0], 1.0, λ)
-#     r3 = OpticalRay([5.0, 5.0, 1.0], [0.0, 0.0, -1.0], 1.0, λ)
-#     a = TestData.doubleconvex()
-#     res = trace(a, r1, test = true)
-#     @test isapprox(power(res), 0.915508396)
-#     res = trace(a, r2, test = true)
-#     @test isapprox(power(res), 0.915526077)
-#     res = trace(a, r3, test = true)
-#     @test isapprox(power(res), 0.915577586)
-# end
+@testitem "Power" setup = [TEST_DATA] begin
+    # reference values agree with OpticSim to within 3e-6 relative
+    λ = 0.550
+    r1 = OpticalRay([0.0, 0.0, 1.0], [0.0, 0.0, -1.0], 1.0, λ)
+    r2 = OpticalRay([2.0, 2.0, 1.0], [0.0, 0.0, -1.0], 1.0, λ)
+    r3 = OpticalRay([5.0, 5.0, 1.0], [0.0, 0.0, -1.0], 1.0, λ)
+    a = TestData.doubleconvex()
+    res = trace(a, r1, test=true)
+    @test isapprox(power(res), 0.915508396, rtol=1e-5)
+    res = trace(a, r2, test=true)
+    @test isapprox(power(res), 0.915526077, rtol=1e-5)
+    res = trace(a, r3, test=true)
+    @test isapprox(power(res), 0.915577586, rtol=1e-5)
+end
 

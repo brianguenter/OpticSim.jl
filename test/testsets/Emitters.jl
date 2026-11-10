@@ -3,7 +3,7 @@
 # See LICENSE in the project root for full license information.
 
 
-@testitem "RayListSource" setup = [Dependencies] begin
+@testitem "Sources.RayListSource" setup = [Dependencies] begin
     rays = Vector{OpticalRay{Float64,3}}(undef, 0)
     for i in 0:7
         λ = ((i / 7) * 200 + 450) / 1000
@@ -19,21 +19,21 @@ end
 
 #Angular power tests
 
-@testitem "Lambertian" setup = [Dependencies] begin
+@testitem "AngularPower.Lambertian" setup = [Dependencies] begin
     @test typeof(AngularPower.Lambertian()) === AngularPower.Lambertian{Float64}
     @test_throws MethodError AngularPower.Lambertian(String)
 
     @test apply(AngularPower.Lambertian(), Transform(), 1, Ray(zeros(3), ones(3))) === 1
 end
 
-@testitem "Cosine" setup = [Dependencies] begin
+@testitem "AngularPower.Cosine" setup = [Dependencies] begin
     @test AngularPower.Cosine().cosine_exp === one(Float64)
     @test_throws MethodError AngularPower.Cosine(String)
 
     @test apply(AngularPower.Cosine(), Transform(), 1, Ray(zeros(3), ones(3))) === 0.5773502691896258
 end
 
-@testitem "Gaussian" setup = [Dependencies] begin
+@testitem "AngularPower.Gaussian" setup = [Dependencies] begin
     @test AngularPower.Gaussian(0, 1).gaussianu === 0
     @test AngularPower.Gaussian(0, 1).gaussianv === 1
 
@@ -43,7 +43,7 @@ end
 
 #Directions tests
 
-@testitem "Constant" setup = [Dependencies] begin
+@testitem "Directions.Constant" setup = [Dependencies] begin
     @test Directions.Constant(0, 0, 0).direction === Geometry.Vec3(Int)
     @test Directions.Constant(Geometry.Vec3()).direction === Geometry.Vec3()
     @test Directions.Constant().direction === unitZ3()
@@ -60,7 +60,7 @@ end
     @test Base.copy(Directions.Constant()) === Directions.Constant()
 end
 
-@testitem "RectGrid" setup = [Dependencies] begin
+@testitem "Directions.RectGrid" setup = [Dependencies] begin
     @test Directions.RectGrid(unitX3(), 0.0, 0.0, 0, 0).uvec === unitY3()
     @test Directions.RectGrid(unitX3(), 0.0, 0.0, 0, 0).vvec === unitZ3()
     @test Directions.RectGrid(0.0, 0.0, 0, 0).uvec === unitX3()
@@ -77,7 +77,7 @@ end
     ]
 end
 
-@testitem "UniformCone" setup = [Dependencies] begin
+@testitem "Directions.UniformCone" setup = [Dependencies] begin
     @test Directions.UniformCone(unitX3(), 0.0, 0).uvec === unitY3()
     @test Directions.UniformCone(unitX3(), 0.0, 0).vvec === unitZ3()
     @test Directions.UniformCone(0.0, 0).uvec === unitX3()
@@ -86,7 +86,7 @@ end
     @test Base.length(Directions.UniformCone(0.0, 1)) === 1
 end
 
-@testitem "HexapolarCone" setup = [Dependencies] begin
+@testitem "Directions.HexapolarCone" setup = [Dependencies] begin
     @test Directions.HexapolarCone(unitX3(), 0.0, 0).uvec === unitY3()
     @test Directions.HexapolarCone(unitX3(), 0.0, 0).vvec === unitZ3()
     @test Directions.HexapolarCone(0.0, 0).uvec === unitX3()
@@ -107,7 +107,7 @@ end
 
 
 #Origins tests
-@testitem "Point" setup = [Dependencies] begin
+@testitem "Origins.Point" setup = [Dependencies] begin
     @test Origins.Point(Geometry.Vec3()).origin === Geometry.Vec3()
     @test Origins.Point(0, 0, 0).origin === Geometry.Vec3(Int)
     @test Origins.Point().origin === Geometry.Vec3()
@@ -126,7 +126,7 @@ end
     @test Base.copy(Origins.Point()) === Origins.Point()
 end
 
-@testitem "RectUniform" setup = [Dependencies] begin
+@testitem "Origins.RectUniform" setup = [Dependencies] begin
     @test Origins.RectUniform(1, 2, 3).width === 1
     @test Origins.RectUniform(1, 2, 3).height === 2
     @test Origins.RectUniform(1, 2, 3).samples_count === 3
@@ -135,7 +135,7 @@ end
     @test Emitters.visual_size(Origins.RectUniform(1, 2, 3)) === 2
 end
 
-@testitem "RectGrid" setup = [Dependencies] begin
+@testitem "Origins.RectGrid" setup = [Dependencies] begin
     @test Origins.RectGrid(1.0, 2.0, 3, 4).ustep === 0.5
     @test Origins.RectGrid(1.0, 2.0, 3, 4).vstep === 2 / 3
 
@@ -158,7 +158,7 @@ end
     ]
 end
 
-@testitem "RectJitterGrid" setup = [Dependencies] begin
+@testitem "Origins.RectJitterGrid" setup = [Dependencies] begin
     @test Origins.RectJitterGrid(1.0, 2.0, 3, 4, 1).width === 1.0
     @test Origins.RectJitterGrid(1.0, 2.0, 3, 4, 1).height === 2.0
     @test Origins.RectJitterGrid(1.0, 2.0, 2, 2, 3).ustep === 0.5
@@ -168,7 +168,7 @@ end
     @test Emitters.visual_size(Origins.RectJitterGrid(1.0, 2.0, 5, 6, 7)) === 2.0
 end
 
-@testitem "Hexapolar" setup = [Dependencies] begin
+@testitem "Origins.Hexapolar" setup = [Dependencies] begin
     @test Origins.Hexapolar(1, 0, 0).nrings === 1
     @test_throws MethodError Origins.Hexapolar(1.0, 0, 0)
 
@@ -205,7 +205,7 @@ end
 end
 
 #Sources tests
-@testitem "Source" setup = [Dependencies] begin
+@testitem "Sources.Source" setup = [Dependencies] begin
     @test Sources.Source().transform === Transform()
     @test Sources.Source().spectrum === Spectrum.Uniform()
     @test Sources.Source().origins === Origins.Point()
@@ -233,7 +233,7 @@ end
     @test Base.copy(Sources.Source()) === Sources.Source()
 end
 
-@testitem "CompositeSource" setup = [Dependencies] begin
+@testitem "Sources.CompositeSource" setup = [Dependencies] begin
     s() = Sources.Source(spectrum=Spectrum.Uniform(rng=Random.MersenneTwister(0)))
     tr = Transform()
     cs1 = Sources.CompositeSource(tr, [s()])
