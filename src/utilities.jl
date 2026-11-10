@@ -113,3 +113,12 @@ end
 # some place holders for package level function names.
 # these names need to exist before any internal module can override them.
 function origin end    
+
+"""
+    primalvalue(x::Real)
+
+`x` without any automatic differentiation information: for a ForwardDiff dual number its value, otherwise `x` itself.
+Used where a derivative is not wanted, such as accumulating ray power into a detector image. The ForwardDiff method is
+defined in the OpticSimForwardDiffExt package extension.
+"""
+primalvalue(x::Real) = x

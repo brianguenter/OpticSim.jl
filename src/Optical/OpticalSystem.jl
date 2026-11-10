@@ -211,7 +211,7 @@ function trace(
 
             # increment the detector image
             pixu, pixv = uvtopix(detector(system), uv(detintsct), size(system.detectorimage))
-            system.detectorimage[pixv, pixu] += convert(D, sourcepower(r)) # TODO will need to handle different detector
+            system.detectorimage[pixv, pixu] += convert(D, primalvalue(sourcepower(r))) # TODO will need to handle different detector
             #      image types a bit better than this
 
             # should be okay to assume intersection will not be a DisjointUnion for all the types of detectors we will
