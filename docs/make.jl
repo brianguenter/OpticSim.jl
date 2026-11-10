@@ -34,6 +34,7 @@ makedocs(
             "Lenses" => "lenses.md"
         ],
         "Visualization" => "vis.md",
+        "Optimization" => "optimization.md",
         "Reference" => "ref.md"
     ],
     expandfirst=["systems.md"],
