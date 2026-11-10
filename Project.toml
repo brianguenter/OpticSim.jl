@@ -28,7 +28,7 @@ OpticSimForwardDiffExt = "ForwardDiff"
 OpticSimMakieExt = "Makie"
 
 [compat]
-AGFFileReader = "1.1"
+AGFFileReader = "1.2"
 DataFrames = "1.7"
 Distributions = "0.25"
 ForwardDiff = "0.10, 1"
