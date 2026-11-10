@@ -40,7 +40,10 @@ OpticSim.jl is a [Julia](https://julialang.org/) package for geometric optics. O
 A large variety of surface types are supported, and these can be composed into complex 3D objects through the use of constructive solid geometry (CSG). A substantial catalog of optical materials is provided through the AGFFileReader package.
 
 ### Package status
-This package is currently undergoing a significant rewrite. The latest versions of the package do not have full functionality yet. The core ray tracing works (in the package `OpticSim`) but the glass catalog download, visualization, and repeating structures code has been moved into separate packages: `AGFFileReader`,`OpticSimVisualization`,`OpticSimRepeatingStructures`. The last two packages are not yet full functional.
+This package is currently undergoing a significant rewrite. The core ray tracing works. The glass catalog download code has moved to the separate `AGFFileReader` package and the repeating structures code to `OpticSimRepeatingStructures`, which is not yet fully functional.
+
+Visualization is part of `OpticSim` again as a package extension: load a Makie backend (`using GLMakie` for interactive windows, or `using CairoMakie` for static images) and the `Vis` drawing functions become available.
+
 ## Contributing
 
 [![ColPrac: Contributor's Guide on Collaborative Practices for Community Packages](https://img.shields.io/badge/ColPrac-Contributor's%20Guide-blueviolet)](https://github.com/SciML/ColPrac)

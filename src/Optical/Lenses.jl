@@ -116,15 +116,13 @@ end
 export AsphericLens
 
 """
-# Code does not work.
+    FresnelLens(insidematerial, frontvertex, radius, thickness, semidiameter, groovedepth; conic = 0.0, aspherics = nothing, outsidematerial = AGFFileReader.Air, reverse = false)
 
-    FresnelLens(insidematerial, frontvertex, radius, thickness, semidiameter, groovedepth; conic = 0.0, aspherics = nothing, outsidematerial = AGFFileReader.Air)
-
-Create a Fresnel lens as a CSG object, can be concave or convex. Groove positions are found iteratively based on `groovedepth`. For negative radii the vertex on the central surface is at `frontvertex`, so the total thickness of the lens is `thickness` + `groovedepth`.
+Create a Fresnel lens as a CSG generator, can be concave or convex. Groove positions are found iteratively based on `groovedepth`. For negative radii the vertex on the central surface is at `frontvertex`, so the total thickness of the lens is `thickness` + `groovedepth`.
+The side wall absorbs. By default the lens is flipped so the flat back faces +z; `reverse = true` keeps the grooved side facing +z.
 **Aspherics currently not supported**.
 """
 function FresnelLens(insidematerial::G, frontvertex::T, radius::T, thickness::T, semidiameter::T, groovedepth::T; conic::T=0.0, aspherics::Union{Nothing,Vector{Pair{Int,T}}}=nothing, outsidematerial::H=AGFFileReader.Air, reverse::Bool=false) where {T<:Real,G<:AGFFileReader.AbstractGlass,H<:AGFFileReader.AbstractGlass}
-    throw(ErrorException("incorrect code calls leaf(fresnel,...) but no function is defined for this arg type."))
     @assert abs(radius) > semidiameter
     interface = FresnelInterface{T}(insidematerial, outsidematerial)
 
@@ -196,13 +194,14 @@ function FresnelLens(insidematerial::G, frontvertex::T, radius::T, thickness::T,
         @error "Ashperics not supported for Fresnel lenses"
     end
 
-    outer_barrel = leaf(Cylinder(semidiameter, thickness * 2, interface=interface), translation(T, zero(T), zero(T), frontvertex - thickness / 2))
+    # the side wall absorbs, like the other lens types
+    barrelinterface = FresnelInterface{T}(insidematerial, outsidematerial, reflectance=zero(T), transmission=zero(T))
+    outer_barrel = leaf(Cylinder(semidiameter, thickness * 2, interface=barrelinterface), translation(T, zero(T), zero(T), frontvertex - thickness / 2))
     fresnel = outer_barrel ∩ fresnel
-    backplane = leaf(Plane(zero(T), zero(T), -one(T), zero(T), zero(T), frontvertex - thickness, vishalfsizeu=semidiameter, vishalfsizev=semidiameter))
+    backplane = leaf(Plane(zero(T), zero(T), -one(T), zero(T), zero(T), frontvertex - thickness, vishalfsizeu=semidiameter, vishalfsizev=semidiameter, interface=interface))
     fresnel = backplane ∩ fresnel
     if !reverse
-        #there is no function leaf defined for the fresnel argument
-        fresnel = leaf(fresnel, rotationd(T, zero(T), T(180.0), zero(T)))
+        fresnel = transform(fresnel, rotationd(T, zero(T), T(180.0), zero(T)))
     end
     return fresnel
 end

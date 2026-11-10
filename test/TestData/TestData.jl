@@ -16,7 +16,6 @@ using AGFFileReader
 using StaticArrays
 using DataFrames: DataFrame
 using Unitful
-using Images
 using Base: @.
 using LinearAlgebra
 

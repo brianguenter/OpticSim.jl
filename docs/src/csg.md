@@ -38,6 +38,7 @@ sph = Sphere(1.3)
 rounded_cube = cube ∩ sph
 
 result = rounded_cube - cyl_cross
+Vis.draw(result, numdivisions=100)
 ```
 
 

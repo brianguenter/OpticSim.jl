@@ -193,19 +193,23 @@ function triangulate(surf::ParametricSurface{T,N}, subdivisons::Int, extensionu:
         for vj in 0:(subdivisons - 1)
             # this can be inefficient as we evaluate each point twice
             # in practice we usually use extension in which case no point is the same anyway
-            u1 = T(ui / subdivisons)
-            u2 = T((ui + 1) / subdivisons)
-            v1 = T(vj / subdivisons)
-            v2 = T((vj + 1) / subdivisons)
+            # sample positions are constants: compute them as plain numbers and convert afterwards. Taking sqrt of 0 as
+            # type T would give automatic differentiation types (e.g. ForwardDiff duals) an infinite derivative, which
+            # times the zero derivative of the constant is NaN, and that NaN spreads into every intersection.
+            su1 = ui / subdivisons
+            su2 = (ui + 1) / subdivisons
+            sv1 = vj / subdivisons
+            sv2 = (vj + 1) / subdivisons
 
             if radialu
-                u1 = sqrt(max(u1, zero(T)))
-                u2 = sqrt(max(u2, zero(T)))
+                su1 = sqrt(su1)
+                su2 = sqrt(su2)
             end
             if radialv
-                v1 = sqrt(max(v1, zero(T)))
-                v2 = sqrt(max(v2, zero(T)))
+                sv1 = sqrt(sv1)
+                sv2 = sqrt(sv2)
             end
+            u1, u2, v1, v2 = T(su1), T(su2), T(sv1), T(sv2)
 
             u1 = (umax - umin) * u1 + umin - expansion
             u2 = (umax - umin) * u2 + umin + expansion

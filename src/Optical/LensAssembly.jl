@@ -7,249 +7,113 @@
 
 Structure which contains the elements of the optical system, these can be [`CSGTree`](@ref) or [`Surface`](@ref) objects.
 
-In order to prevent type ambiguities bespoke structs are created for each possible number of elements e.g. `LensAssembly3`.
-These are parameterized by the types of the elements to prevent ambiguities.
-Basic surface types such as [`Rectangle`](@ref) (which can occur in large numbers) are stored independently in `Vector`s, so type parameters are only needed for CSG objects.
-
-Each struct looks like this:
+Create one with:
 ```julia
-struct LensAssemblyN{T,T1,T2,...,TN} <: LensAssembly{T}
-    axis::SVector{3,T}
-    rectangles::Vector{Rectangle{T}}
-    ellipses::Vector{Ellipse{T}}
-    hexagons::Vector{Hexagon{T}}
-    paraxials::Vector{ParaxialLens{T}}
-    E1::T1
-    E2::T2
-    ...
-    EN::TN
-end
+LensAssembly(elements::Union{Surface{T},CSGTree{T},LensAssembly{T}}...; axis = SVector(0.0, 0.0, 1.0)) where {T<:Real}
 ```
+At least one element is required. Elements which are themselves `LensAssembly`s are unpacked into the new assembly.
 
-Where `Ti <: Union{Surface{T},CSGTree{T}}`.
-
-To create a LensAssembly object the following functions can be used:
-```julia
-LensAssembly(elements::Vararg{Union{Surface{T},CSGTree{T},LensAssembly{T}}}; axis = SVector(0.0, 0.0, 1.0)) where {T<:Real}
-```
+The result is a [`TupleLensAssembly`](@ref).
 """
 abstract type LensAssembly{T<:Real} end
 export LensAssembly
 
 Base.show(io::IO, ::Type{<:LensAssembly}) = print(io, "LensAssembly")
-Base.show(io::IO, a::LensAssembly{T}) where {T<:Real} = print(io, "LensAssembly{$T}($(length(a.rectangles) + length(a.ellipses) + length(a.hexagons) + length(typed_elements(a))) elements)")
+Base.show(io::IO, a::LensAssembly{T}) where {T<:Real} = print(io, "LensAssembly{$T}($(length(elements(a))) elements)")
 
-# in order to prevent type ambiguities lens assembly must be paramaterised by its elements, but we want lens assembly to have an arbitrary number of elements
-# as such we have to use macros to create lens assembly structs of a given size, and methods to handle them in a type unambiguous way
-# we may often end up with lots of simple surfaces (Rectangle, Ellipse) in the assembly, and we can store these more efficiently in Vectors
-macro lensassembly_constructor(N)
-    # generate the type definition for a lens assembly of size N
-    typesig = [:($(Symbol("T$(i)")) <: Union{Surface{T},CSGTree{T}}) for i in 1:N]
-    fields = [:($(Symbol("E$(i)"))::$(Symbol("T$(i)"))) for i in 1:N]
-    name = Symbol("LensAssembly$N")
-    return esc(quote
-        struct $(name){T,$(typesig...)} <: LensAssembly{T}
-            axis::SVector{3,T}
-            rectangles::Vector{Rectangle{T}}
-            ellipses::Vector{Ellipse{T}}
-            hexagons::Vector{Hexagon{T}}
-            paraxials::Vector{ParaxialLens{T}}
-            $(fields...)
-        end
-    end)
+"""
+    TupleLensAssembly{T<:Real,G<:Tuple} <: LensAssembly{T}
+
+The [`LensAssembly`](@ref) created by `LensAssembly(elements...)`.
+
+```julia
+struct TupleLensAssembly{T,G<:Tuple} <: LensAssembly{T}
+    axis::SVector{3,T}
+    groups::G # Tuple{Vector{E1}, Vector{E2}, ...}: one Vector per distinct element type
 end
+```
 
-# This is the basic idea of what each closestintersection implementation does:
-# function closestintersection(ass::LensAssembly{T}, r::AbstractRay{T,N})::Union{Nothing,Intersection{T,N}} where {T<:Real,N}
-#     αmin = typemax(T)
-#     closest = nothing
-#     for element in elements(ass)
-#         allintscts = surfaceintersection(element, r)
-#         if !(allintscts isa EmptyInterval)
-#             intsct = closestintersection(allintscts)
-#             if intsct !== nothing
-#                 αcurr = α(intsct)
-#                 if αcurr < αmin
-#                     αmin = αcurr
-#                     closest = intsct
-#                 end
-#             end
-#         end
-#     end
-#     return closest
-# end
-
-macro lensassembly_intersection(N)
-    # generates the _closestintersection() function for a lens assembly of size N, this should never be called directly, instead call closestintersection() in all cases
-    type = :($(Symbol("LensAssembly$(N)")))
-    fieldnames = [Symbol("E$(i)") for i in 1:N]
-    checks = [
-        quote
-            intvl = surfaceintersection(obj.$(fieldnames[i]), r)
-            if !(intvl isa EmptyInterval)
-                intsct = closestintersection(intvl::Union{Interval{T},DisjointUnion{T}})
-                if intsct !== nothing
-                    αcurr = α(intsct)
-                    if αcurr < αmin
-                        αmin = αcurr
-                        closest = intsct
-                    end
-                end
-            end
-        end for i in 1:N
-    ]
-    return esc(quote
-        function _closestintersection(obj::$(type){T}, r::AbstractRay{T,N})::Union{Nothing,Intersection{T,N}} where {T<:Real,N}
-            αmin = typemax(T)
-            closest = nothing
-            for rect in obj.rectangles
-                intvl = surfaceintersection(rect, r)
-                if !(intvl isa EmptyInterval)
-                    intsct = closestintersection(intvl::Union{Interval{T},DisjointUnion{T}})
-                    if intsct !== nothing
-                        αcurr = α(intsct)
-                        if αcurr < αmin
-                            αmin = αcurr
-                            closest = intsct
-                        end
-                    end
-                end
-            end
-            for ell in obj.ellipses
-                intvl = surfaceintersection(ell, r)
-                if !(intvl isa EmptyInterval)
-                    intsct = closestintersection(intvl::Union{Interval{T},DisjointUnion{T}})
-                    if intsct !== nothing
-                        αcurr = α(intsct)
-                        if αcurr < αmin
-                            αmin = αcurr
-                            closest = intsct
-                        end
-                    end
-                end
-            end
-            for hex in obj.hexagons
-                intvl = surfaceintersection(hex, r)
-                if !(intvl isa EmptyInterval)
-                    intsct = closestintersection(intvl::Union{Interval{T},DisjointUnion{T}})
-                    if intsct !== nothing
-                        αcurr = α(intsct)
-                        if αcurr < αmin
-                            αmin = αcurr
-                            closest = intsct
-                        end
-                    end
-                end
-            end
-            for par in obj.paraxials
-                intvl = surfaceintersection(par, r)
-                if !(intvl isa EmptyInterval)
-                    intsct = closestintersection(intvl::Union{Interval{T},DisjointUnion{T}})
-                    if intsct !== nothing
-                        αcurr = α(intsct)
-                        if αcurr < αmin
-                            αmin = αcurr
-                            closest = intsct
-                        end
-                    end
-                end
-            end
-            $(checks...)
-            return closest
-        end
-    end)
+Elements are grouped by type, with one `Vector` per distinct element type. Intersection code loops over each `Vector`
+knowing the concrete element type, so there is no dynamic dispatch. The size of the type depends only on the number of
+distinct element types, not the number of elements, so it stays small (and fast to compile) for assemblies with many
+elements.
+"""
+struct TupleLensAssembly{T<:Real,G<:Tuple} <: LensAssembly{T}
+    axis::SVector{3,T}
+    groups::G
 end
+export TupleLensAssembly
 
-macro lensassembly_elements(N)
-    # generates the _elements() function for a lens assembly of size N, this should never be called directly, instead call elements() in all cases
-    type = :($(Symbol("LensAssembly$(N)")))
-    fieldnames = [Symbol("E$(i)") for i in 1:N]
-    tuple = [:(obj.$(fieldnames[i])) for i in 1:N]
-    return esc(quote
-        function _typed_elements(obj::$(type){T}) where {T<:Real}
-            return tuple($(tuple...))
-        end
-    end)
-end
-
-# pregenerate a small number at compile time
-for N in 1:PREGENERATED_LENS_ASSEMBLY_SIZE
-    type = :($(Symbol("LensAssembly$(N)")))
-    if !isdefined(OpticSim, type)
-        @eval @lensassembly_constructor($N)
-        @eval @lensassembly_intersection($N)
-        @eval @lensassembly_elements($N)
-    end
-end
-
-function LensAssembly(elements::Vararg{Union{Surface{T},CSGTree{T},LensAssembly{T}}}; axis::SVector{3,T}=SVector{3,T}(0.0, 0.0, 1.0)) where {T<:Real}
-    # make the actual object
-    actual_elements = []
-    rectangles = Vector{Rectangle{T}}(undef, 0)
-    ellipses = Vector{Ellipse{T}}(undef, 0)
-    hexagons = Vector{Hexagon{T}}(undef, 0)
-    paraxials = Vector{ParaxialLens{T}}(undef, 0)
-    for e in elements
-        if e isa Rectangle{T}
-            push!(rectangles, e)
-        elseif e isa Ellipse{T}
-            push!(ellipses, e)
-        elseif e isa Hexagon{T}
-            push!(hexagons, e)
-        elseif e isa ParaxialLens{T}
-            push!(paraxials, e)
-        elseif e isa Surface{T} || e isa CSGTree{T}
-            push!(actual_elements, e)
+# first element is a separate argument so T is always bound (at least one element is required)
+function LensAssembly(first::Union{Surface{T},CSGTree{T},LensAssembly{T}}, rest::Vararg{Union{Surface{T},CSGTree{T},LensAssembly{T}}}; axis::SVector{3,T}=SVector{3,T}(0.0, 0.0, 1.0)) where {T<:Real}
+    # unpack any nested lens assemblies
+    flat = Any[]
+    for e in (first, rest...)
+        if e isa LensAssembly
+            append!(flat, elements(e))
         else
-            # unpack the lens assembly
-            rectangles = vcat(rectangles, e.rectangles)
-            ellipses = vcat(ellipses, e.ellipses)
-            hexagons = vcat(hexagons, e.hexagons)
-            for lae in OpticSim.typed_elements(e)
-                push!(actual_elements, lae)
-            end
+            push!(flat, e)
         end
     end
-    N = length(actual_elements)
-    # make the methods for this N
-    type = :($(Symbol("LensAssembly$(N)")))
-    if !isdefined(OpticSim, type)
-        @eval @lensassembly_constructor($N)
-        @eval @lensassembly_intersection($N)
-        @eval @lensassembly_elements($N)
+
+    # group by type, in order of first appearance
+    types = DataType[]
+    groups = Vector[]
+    for e in flat
+        i = findfirst(==(typeof(e)), types)
+        if i === nothing
+            push!(types, typeof(e))
+            push!(groups, typeof(e)[]) # Vector with the concrete element type
+            i = length(groups)
+        end
+        push!(groups[i], e)
     end
-    eltypes = typeof.(actual_elements)
-    naxis = normalize(axis)
-    return eval(:($(type){$T,$(eltypes...)}($naxis, $rectangles, $ellipses, $hexagons, $paraxials, $(actual_elements...))))
+
+    # Tuple(groups) has type Tuple{Vector{E1}, Vector{E2}, ...}, which becomes part of the assembly's type
+    return TupleLensAssembly(normalize(axis), Tuple(groups))
 end
 
-function typed_elements(ass::LensAssembly{T}) where {T<:Real}
-    # under certain circumstances we run into the world age problem (see https://discourse.julialang.org/t/how-to-bypass-the-world-age-problem/7012)
-    # to avoid this we need to use invokelatest(), but this is type ambiguous and ruins performance, and in most cases isn't necessary
-    # so we can use try/catch to only call it when we need (and warn appropriately), retaining performance in almost all cases
-    # NEVER call _typed_elements directly, always use this method
-    try
-        _typed_elements(ass)
-    catch MethodError
-        @warn "First time call to LensAssembly of previously unused size, performance will be worse than normal." maxlog = 1
-        Base.invokelatest(_typed_elements, ass)
-    end
-end
+"""
+    elements(ass::LensAssembly)
 
-elements(ass::LensAssembly{T}) where {T<:Real} = (ass.rectangles..., ass.ellipses..., ass.hexagons..., ass.paraxials..., typed_elements(ass)...)
+All elements of `ass`, as a `Tuple`.
+"""
+elements(ass::TupleLensAssembly) = Tuple(Iterators.flatten(ass.groups))
 export elements
 
-function closestintersection(ass::LensAssembly{T}, r::AbstractRay{T,N})::Union{Nothing,Intersection{T,N}} where {T<:Real,N}
-    # under certain circumstances we run into the world age problem (see https://discourse.julialang.org/t/how-to-bypass-the-world-age-problem/7012)
-    # to avoid this we need to use invokelatest(), but this is type ambiguous and ruins performance, and in most cases isn't necessary
-    # so we can use try/catch to only call it when we need (and warn appropriately), retaining performance in almost all cases
-    # NEVER call _closestintersection directly, always use this method
-    try
-        _closestintersection(ass, r)
-    catch MethodError
-        @warn "First time call to LensAssembly of previously unused size, performance will be worse than normal." maxlog = 1
-        Base.invokelatest(_closestintersection, ass, r)
+# closest intersection of r with a single element, or nothing if it misses
+function elementintersection(element, r::AbstractRay{T,N})::Union{Nothing,Intersection{T,N}} where {T<:Real,N}
+    intvl = surfaceintersection(element, r)
+    if intvl isa EmptyInterval
+        return nothing
     end
+    return closestintersection(intvl::Union{Interval{T},DisjointUnion{T}})
+end
+
+# whichever of two intersections is closer along the ray; the first one wins ties
+function closer(a::Union{Nothing,Intersection}, b::Union{Nothing,Intersection})
+    if a === nothing
+        return b
+    elseif b === nothing || α(a) <= α(b)
+        return a
+    else
+        return b
+    end
+end
+
+function closestintersection(ass::TupleLensAssembly{T}, r::AbstractRay{T,N})::Union{Nothing,Intersection{T,N}} where {T<:Real,N}
+    closest::Union{Nothing,Intersection{T,N}} = nothing
+    return closestingroups(closest, ass.groups, r)
+end
+
+# Closest intersection with the elements of each group, one group at a time by recursion on the tail of the Tuple.
+# Each call loops over a Vector whose element type is concrete, so surfaceintersection needs no dynamic dispatch.
+closestingroups(closest, ::Tuple{}, r::AbstractRay) = closest
+function closestingroups(closest, groups::Tuple, r::AbstractRay)
+    for element in first(groups)
+        closest = closer(closest, elementintersection(element, r))
+    end
+    return closestingroups(closest, Base.tail(groups), r)
 end
 
 function BoundingBox(la::LensAssembly{T}) where {T<:Real}

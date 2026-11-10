@@ -21,4 +21,4 @@
     x, y, z, w = Geometry.Vec3.([B[1:3, i] for i in 1:4])
     @test B == Geometry.matrix(Geometry.Transform(x, y, z, w))
 
-end # testset Allocations
+end # testitem Transform

@@ -36,7 +36,9 @@ The sag is defined by the equation
 z(r,\\phi) = \\frac{cr^2}{1 + \\sqrt{1 - (1+k)c^2r^2}} + \\sum_{i}^{Q}\\alpha_ir^{i}
 ```
 
-where ``\\rho = \\frac{r}{\\texttt{normradius}}``, ``c = \\frac{1}{\\texttt{radius}}``, and ``k = \\texttt{conic}`` .
+where ``r`` is the radial distance in lens units (not normalized), ``c = \\frac{1}{\\texttt{radius}}``, and ``k = \\texttt{conic}``.
+The aspheric coefficients ``\\alpha_i`` therefore have units of length``^{1-i}``, the same convention as Zemax's even and odd
+asphere surfaces. `normradius` is stored but not used to compute the sag.
 
 The function checks if the aspheric terms are missing, even, odd or both and uses an efficient polynomial evaluation strategy.
 
@@ -71,8 +73,10 @@ struct AsphericSurface{T,N,Q,M} <: ParametricSurface{T,N}
             for (i, k) in aspherics
                 acs[i] = k
             end
-            odd = any([isodd(i) && a != zero(T) for (i, a) in enumerate(acs)])
-            even = any([iseven(i) && a != zero(T) for (i, a) in enumerate(acs)])
+            # classify by which orders are listed, not by their values: a listed term that is zero must stay a term,
+            # so that an optimizer can change it and automatic differentiation can see its derivative
+            odd = any(isodd(i) for (i,) in aspherics)
+            even = any(iseven(i) for (i,) in aspherics)
             if odd && even
                 M = ODDEVEN
             elseif even
