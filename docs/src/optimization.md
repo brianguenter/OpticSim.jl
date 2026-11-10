@@ -16,6 +16,14 @@ The merit function works with automatic differentiation, so solvers get exact gr
 
 ## Solving an example
 
+`Examples/run_optimization_examples.jl` has a complete example for each lens: `optimize_singlet()`, `optimize_aspheric_singlet()`, `optimize_cooke40()` and `optimize_cooke_triplet()`. Each one creates the optimization problem, solves it and prints the variables before and after, the RMS spot radius per field and the clearance between neighboring lens surfaces. `Examples/Project.toml` has everything they need. Run all four from the repository root with:
+
+```
+julia --project=Examples Examples/run_optimization_examples.jl
+```
+
+The core of each example is:
+
 ```julia
 using OpticSim
 using Optimization, OptimizationOptimJL # any Optimization.jl solver package that supports bounds

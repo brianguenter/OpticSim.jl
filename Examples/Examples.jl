@@ -16,6 +16,7 @@ using LinearAlgebra
 
 # include("docs_examples.jl")
 include("other_examples.jl")
+include("optimization_helpers.jl")
 include("optimization_examples.jl")
 
 end #module Examples
