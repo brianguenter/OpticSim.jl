@@ -13,6 +13,14 @@ Run this example to check that everything installed properly:
 using OpticSim, AGFFileReader
 SphericalLens(AGFFileReader.Examples_N_BK7, 0.0, 10.0, 10.0, 5.0, 5.0)
 ```
+
+To check that visualization works, load a Makie backend and draw the lens:
+
+```@example
+using OpticSim, AGFFileReader
+import CairoMakie # or GLMakie for an interactive window
+Vis.draw(SphericalLens(AGFFileReader.Examples_N_BK7, 0.0, 10.0, 10.0, 5.0, 5.0))
+```
 `AGFFileReader` includes these 4 glass types to get you started
 ```julia
 Examples_N_BK7
@@ -49,7 +57,7 @@ using GLMakie    # interactive window; or `using CairoMakie` for static images w
 Vis.drawtracerays(system, trackallrays = true, test = true)
 ```
 
-Both Makie and OpticSim export some of the same names (e.g. `Sphere`, `translation`). If you need OpticSim's versions unqualified, use `import GLMakie` instead of `using GLMakie`.
+Both Makie and OpticSim export some of the same names (e.g. `Sphere`, `translation`). If you need OpticSim's versions unqualified, use `import GLMakie` instead of `using GLMakie`. See [Visualization](@ref) for more.
 
 
 

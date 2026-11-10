@@ -68,8 +68,67 @@ draw
     draw!([lscene], ob; kwargs...)
 
 Draw an object in an existing scene (the current one if `lscene` is omitted). `kwargs` depend on the object type.
+Unrecognized `kwargs` are passed on to the underlying Makie plotting function.
+
+Objects that can be drawn, and their main keyword arguments:
+
+| Object | Keyword arguments |
+|:-------|:------------------|
+| `Surface` | `numdivisions = 30`, `normals = false`, `normalcolor = :blue`, plus those of `TriangleMesh` |
+| `TriangleMesh` | `color = :orange`, `shaded = true`, `wireframe = false`, `linewidth = 3`, `transparency = false`, `normals = false` |
+| `CSGTree`, `CSGGenerator` | `numdivisions = 30`, plus those of `TriangleMesh` |
+| several `Surface`s or `TriangleMesh`es | `colors = false`: color each one differently |
+| `LensAssembly`, `CSGOpticalSystem`, `AxisymmetricOpticalSystem` | each element is colored differently |
+| `BoundingBox` | drawn as a wireframe |
+| `Ray`, `OpticalRay` | `color = :yellow`, `rayscale = 1.0`; optical rays can use `colorbysourcenum`, `colorbynhits` |
+| `LensTrace` or a vector of them | `colorbysourcenum = false`, `colorbynhits = false`, otherwise colored by wavelength |
+| `Interval`, `DisjointUnion`, `Intersection` | `normal = false` for intersections |
+| a point, a vector of points | `markersize = 20`, `color = :black` |
+| `(point1, point2)` line, or a vector of them | `color = :yellow` |
+| emitter `Source`, `CompositeSource` | `debug = false`: also draw the local axes, sample positions and rays |
+| a mesh file name (`.obj`, `.stl`, `.ply`, `.off`, `.2dm`) | `color = :gray`, `transform`, `scale = 1.0`, `shaded`, `wireframe`. Requires `MeshIO` to be loaded. |
 """
 draw!
+
+"""
+    showimage(image::AbstractArray)
+
+Show a 2D image, such as a detector image, in grayscale with row 1 at the top. Images with more than 2 dimensions get a slider for each extra dimension.
+"""
+showimage
+
+"""
+    update_camera_orientation!(lscene, ϕ, θ)
+
+Point the camera at the scene from angles `0 ≤ ϕ ≤ 2π` and `-π/2 ≤ θ ≤ π/2`. For example `(0, 0)` looks along the x axis and `(π/2, 0)` along the y axis.
+"""
+update_camera_orientation!
+
+"""
+    eyebox_eval_eye(assembly::LensAssembly, raygen::OpticalRayGenerator, eye_rotation_x, eye_rotation_y, sample_points_x::Int, sample_points_y::Int; pupil_radius = 2.0, resolution::Int = 512, eye_transform = identitytransform())
+
+Show the images formed when tracing `assembly` with a human eye, for an evenly sampled `sample_points_x × sample_points_y` grid of eye rotations in the ranges `-eye_rotation_x:eye_rotation_x` and `-eye_rotation_y:eye_rotation_y`.
+`resolution` is the size of the (square) detector image.
+
+`eye_transform` should place the eye correctly relative to the system when at 0 rotation. By default the eye looks along the positive z axis with the vertex of the cornea at the origin.
+
+The result is a 4D image, shown in 2D with sliders to vary the eye rotation in x and y. The whole image should be visible for all rotations in the range.
+"""
+eyebox_eval_eye
+
+"""
+    eyebox_eval_planar(assembly::LensAssembly, raygen::OpticalRayGenerator, eyebox::Rectangle, sample_points_x::Int, sample_points_y::Int, vsize; pupil_radius = 2.0, resolution::Int = 512)
+
+Show the images formed when tracing `assembly` for multiple pupil positions within a planar `eyebox`.
+The rays hitting a circle of radius `pupil_radius` around each point of an even `sample_points_x × sample_points_y` grid on the `eyebox` are added to the sub-image for that grid point.
+
+A paraxial lens with focal length 1mm is placed at the eyebox and a `vsize × vsize` mm detector 1mm behind it.
+The normal of `eyebox` should point toward the system. Rays which miss the detector are ignored.
+The pupil is always fully inside the eyebox, so the extreme sample position in u is `eyebox.halfsizeu - pupil_radius`, for example.
+
+The result is a 4D image, shown in 2D with sliders to vary the pupil position in x and y.
+"""
+eyebox_eval_planar
 
 """
     save(path::String)
@@ -122,7 +181,10 @@ plotOPD
 """
     surfacesag(object::Union{CSGTree,Surface}, resolution::Tuple{Int,Int}, halfsizes::Tuple{T,T}; offset = 10, position = SVector(0.0, 0.0, 10.0), direction = SVector(0.0, 0.0, -1.0), rotationvec = SVector(0.0, 1.0, 0.0))
 
-Calculate and plot the surface sag of a [`Surface`](@ref) or [`CSGTree`](@ref) as a heatmap.
+Calculate and plot the surface sag of a `Surface` or `CSGTree` as a heatmap.
+
+Rays are shot in a grid of size `resolution` across a rectangle with half sizes `halfsizes`, centered at `position` with normal along `direction` and rotation defined by `rotationvec`.
+`offset` is subtracted from the sag measurements so values are relative to the appropriate zero level.
 """
 surfacesag
 

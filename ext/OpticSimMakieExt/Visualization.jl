@@ -328,12 +328,13 @@ function Vis.drawtracerays!(ax::Makie.AbstractAxis, system::AbstractOpticalSyste
     verbose::Bool=false,
     drawsys::Bool=false,
     drawgen::Bool=false,
+    numdivisions::Int=30, # mesh resolution of the system's surfaces
     kwargs...
 ) where {T<:Real}
     raylines = Vector{LensTrace{T,3}}(undef, 0)
 
     drawgen && Vis.draw!(ax, raygenerator; kwargs...)
-    drawsys && Vis.draw!(ax, system; kwargs...)
+    drawsys && Vis.draw!(ax, system; numdivisions=numdivisions, kwargs...)
 
     verbose && println("Tracing...")
     for (i, r) in enumerate(raygenerator)
