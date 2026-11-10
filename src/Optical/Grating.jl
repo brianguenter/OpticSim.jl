@@ -182,15 +182,15 @@ function processintersection(opticalinterface::HologramInterface{T}, point::SVec
     end
 
     λ = wavelength(incidentray)
-    mat = opticalinterface.substratematerial
+    mat = substratematerial(opticalinterface)
     # get the index of the playback ray in the substrate
     nₛ = index(mat, λ, temperature=temperature, pressure=pressure)::T
     # get the index of the recording ray in the substrate
     nₛrec = index(mat, opticalinterface.recordingλ, temperature=temperature, pressure=pressure)::T
 
     # get the index of the recording ray in the material of the signal beam
-    if !isair(opticalinterface.signalrecordingmaterial)
-        nsig = index(opticalinterface.signalrecordingmaterial, opticalinterface.recordingλ, temperature=temperature, pressure=pressure)::T
+    if !isair(signalrecordingmaterial(opticalinterface))
+        nsig = index(signalrecordingmaterial(opticalinterface), opticalinterface.recordingλ, temperature=temperature, pressure=pressure)::T
     else
         nsig = one(T)
     end
@@ -215,8 +215,8 @@ function processintersection(opticalinterface::HologramInterface{T}, point::SVec
     Ksig_refracted = mag_Ksig * refr
 
     # get the index of the recording ray in the material of the reference beam
-    if !isair(opticalinterface.referencerecordingmaterial)
-        nref = index(opticalinterface.referencerecordingmaterial, opticalinterface.recordingλ, temperature=temperature, pressure=pressure)::T
+    if !isair(referencerecordingmaterial(opticalinterface))
+        nref = index(referencerecordingmaterial(opticalinterface), opticalinterface.recordingλ, temperature=temperature, pressure=pressure)::T
     else
         nref = one(T)
     end

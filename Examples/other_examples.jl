@@ -2,7 +2,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # See LICENSE in the project root for full license information.
 
-export cooketriplet, doubleconvexlensonly
+export cooketriplet, doublegauss, doubleconvexlensonly
 
 
 """
@@ -43,6 +43,32 @@ function cooketriplet(::Type{T}=Float64, detpix::Int=1000) where {T<:Real}
             # OptimizeThickness = [false, true, true, true, true, true, true, false],
             Material=[Air, Examples_N_SK16, Air, Examples_N_SF2, Air, Examples_N_SK16, Air, missing],
             SemiDiameter=[Inf, 8.580, 7.513, 7.054, 6.033, 7.003, 7.506, 15.0]
+        ),
+        detpix,
+        detpix
+    )
+end
+
+"""
+    doublegauss(T = Float64, detpix = 1000)
+
+A six element double Gauss lens, f/1.7 with a 100.2mm focal length and a 19° field of view: two cemented doublets with
+the stop between them, and a singlet on each side. From US patent 2,784,643 (Lautenbacher & Brendel, Agfa, 1957), as
+tabulated in COMSOL's double Gauss lens model. The glasses are OHARA S-LAM3 and S-BAH11 and Schott N-SF5, modeled
+from their catalog nd and Vd.
+"""
+function doublegauss(::Type{T}=Float64, detpix::Int=1000) where {T<:Real}
+    S_LAM3 = AGFFileReader.modelglass(1.71700, 47.92, 0.0)
+    S_BAH11 = AGFFileReader.modelglass(1.66672, 48.32, 0.0)
+    N_SF5 = AGFFileReader.modelglass(1.67270, 32.25, 0.0)
+    AxisymmetricOpticalSystem{T}(
+        DataFrame(
+            SurfaceType=["Object", "Standard", "Standard", "Standard", "Standard", "Standard", "Stop",
+                "Standard", "Standard", "Standard", "Standard", "Standard", "Image"],
+            Radius=[Inf, 75.050, 270.700, 39.270, Inf, 25.650, Inf, -31.870, Inf, -43.510, 221.140, -88.790, Inf],
+            Thickness=[Inf, 9.000, 0.100, 16.510, 2.000, 10.990, 13.000, 7.030, 8.980, 0.100, 7.980, 61.418, missing],
+            Material=[Air, S_LAM3, Air, S_BAH11, N_SF5, Air, Air, N_SF5, S_LAM3, Air, S_BAH11, Air, missing],
+            SemiDiameter=[Inf, 33.0, 33.0, 27.5, 24.5, 19.5, 18.6, 18.5, 21.0, 21.0, 23.0, 23.0, 42.5]
         ),
         detpix,
         detpix

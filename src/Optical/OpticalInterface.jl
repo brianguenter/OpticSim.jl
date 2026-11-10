@@ -21,6 +21,40 @@ abstract type OpticalInterface{T<:Real} end
 export OpticalInterface
 
 """
+    GlassID
+
+A small handle for a glass, used by interfaces in place of the glass itself. A glass holds kilobytes of data that can't
+be stored inline, so an interface that held one couldn't be plain data, and every intersection that stored its interface
+had to be allocated on the heap. With glasses referred to by ID, interfaces and intersections are plain data.
+
+`glassid(glass)` registers a glass, once, and returns its ID; `glass(id)` returns the glass. Air is always ID 0.
+"""
+struct GlassID
+    id::Int32
+end
+
+# The registry of glasses. A lookup reads GLASSES[] without locking: registering a glass replaces the vector rather than
+# resizing it, so a lookup on another thread always sees a complete vector.
+const GLASSES = Ref(AGFFileReader.Glass[])
+const GLASSIDS = Dict{AGFFileReader.Glass,Int32}()
+const GLASSLOCK = ReentrantLock()
+
+glassid(::AGFFileReader.AirType) = GlassID(0)
+function glassid(g::AGFFileReader.Glass)
+    lock(GLASSLOCK) do
+        GlassID(get!(GLASSIDS, g) do
+            glasses = copy(GLASSES[])
+            push!(glasses, g)
+            GLASSES[] = glasses
+            Int32(length(glasses))
+        end)
+    end
+end
+
+"""Returns the glass with ID `id`: the air singleton or a Glass, a small union that compiles to a branch."""
+glass(id::GlassID)::Union{AGFFileReader.AirType,AGFFileReader.Glass} = id.id == 0 ? AGFFileReader.Air : @inbounds GLASSES[][id.id]
+
+"""
 Valid modes for deterministic raytracing
 """
 @enum InterfaceMode Reflect Transmit ReflectOrTransmit
@@ -64,22 +98,22 @@ Interface describing an idealized planar lens, i.e. one that is thin and with no
 ParaxialInterface(focallength::T, centroid::SVector{3,T}, outsidematerial::Y)
 ```
 """
-mutable struct ParaxialInterface{T,S<:AGFFileReader.AbstractGlass} <: OpticalInterface{T}
-    const focallength::T
-    const outsidematerial::S
-    const centroid::SVector{3,T}
-    function ParaxialInterface(focallength::T, centroid::SVector{3,T}, outsidematerial::Y) where {Y<:AGFFileReader.AbstractGlass,T<:Real}
-        return new{T,Y}(focallength, outsidematerial, centroid)
+struct ParaxialInterface{T} <: OpticalInterface{T}
+    focallength::T
+    outsidematerial::GlassID
+    centroid::SVector{3,T}
+    function ParaxialInterface(focallength::T, centroid::SVector{3,T}, outsidematerial::AGFFileReader.AbstractGlass) where {T<:Real}
+        return new{T}(focallength, glassid(outsidematerial), centroid)
     end
 end
 export ParaxialInterface
 
 function Base.show(io::IO, a::ParaxialInterface{R}) where {R<:Real}
-    print(io, "ParaxialInterface($(a.focallength), $(glassname(a.outsidematerial)))")
+    print(io, "ParaxialInterface($(a.focallength), $(glassname(outsidematerial(a))))")
 end
 
-insidematerial(a::ParaxialInterface{T}) where {T<:Real} = AGFFileReader.AIR
-outsidematerial(a::ParaxialInterface{T}) where {T<:Real} = a.outsidematerial
+insidematerial(a::ParaxialInterface{T}) where {T<:Real} = AGFFileReader.Air
+outsidematerial(a::ParaxialInterface{T}) where {T<:Real} = glass(a.outsidematerial)
 reflectance(::ParaxialInterface{T}) where {T<:Real} = zero(T)
 transmission(::ParaxialInterface{T}) where {T<:Real} = one(T)
 opticalcenter(a::ParaxialInterface) = a.centroid
@@ -104,29 +138,31 @@ In all cases the power recorded with the ray is correctly updated. This can be u
 example a beamsplitter surface may be set to either Reflect or Transmit to switch between the two outgoing ray paths.
 
 """
-mutable struct FresnelInterface{T,Y<:AGFFileReader.AbstractGlass,Z<:AGFFileReader.AbstractGlass} <: OpticalInterface{T}
-    # Mutable (with every field const) so an interface lives on the heap and is shared by reference. Intersections store
-    # their interface in a field that can hold any interface type; storing an immutable one there copied both glasses
-    # (several kilobytes) into a new heap box for every intersection.
-    const insidematerial::Y
-    const outsidematerial::Z
-    const reflectance::T
-    const transmission::T
-    const interfacemode::InterfaceMode
+struct FresnelInterface{T} <: OpticalInterface{T}
+    insidematerial::GlassID
+    outsidematerial::GlassID
+    reflectance::T
+    transmission::T
+    interfacemode::InterfaceMode
 
-    function FresnelInterface{T}(insidematerial::Y, outsidematerial::Z; reflectance::T=zero(T), transmission::T=one(T), interfacemode=ReflectOrTransmit) where {Z<:AGFFileReader.AbstractGlass,Y<:AGFFileReader.AbstractGlass,T<:Real}
-        return new{T,Y,Z}(insidematerial, outsidematerial, reflectance, transmission, interfacemode)
+    function FresnelInterface{T}(insidematerial::AGFFileReader.AbstractGlass, outsidematerial::AGFFileReader.AbstractGlass; reflectance::T=zero(T), transmission::T=one(T), interfacemode=ReflectOrTransmit) where {T<:Real}
+        return new{T}(glassid(insidematerial), glassid(outsidematerial), reflectance, transmission, interfacemode)
+    end
+
+    # from glasses that are already registered, e.g. when an interface is built while tracing
+    function FresnelInterface{T}(insidematerial::GlassID, outsidematerial::GlassID; reflectance::T=zero(T), transmission::T=one(T), interfacemode=ReflectOrTransmit) where {T<:Real}
+        return new{T}(insidematerial, outsidematerial, reflectance, transmission, interfacemode)
     end
 
 end
 export FresnelInterface
 
 function Base.show(io::IO, a::FresnelInterface{R}) where {R<:Real}
-    print(io, "FresnelInterface($(glassname(a.insidematerial)), $(glassname(a.outsidematerial)), $(a.reflectance), $(a.transmission), $(a.interfacemode))")
+    print(io, "FresnelInterface($(glassname(insidematerial(a))), $(glassname(outsidematerial(a))), $(a.reflectance), $(a.transmission), $(a.interfacemode))")
 end
 
-insidematerial(a::FresnelInterface) = a.insidematerial
-outsidematerial(a::FresnelInterface) = a.outsidematerial
+insidematerial(a::FresnelInterface) = glass(a.insidematerial)
+outsidematerial(a::FresnelInterface) = glass(a.outsidematerial)
 
 reflectance(a::FresnelInterface{T}) where {T<:Real} = a.reflectance
 transmission(a::FresnelInterface{T}) where {T<:Real} = a.transmission
@@ -150,17 +186,17 @@ If `nothing` then `reflectance` is assumed to be **0** and `transmission` is ass
 ThinGratingInterface(vector, period, insidematerial, outsidematerial; maxorder = 1, minorder = -1, reflectance = nothing, transmission = nothing)
 ```
 """
-mutable struct ThinGratingInterface{T,Y<:AGFFileReader.AbstractGlass,Z<:AGFFileReader.AbstractGlass} <: OpticalInterface{T}
-    const insidematerial::Y
-    const outsidematerial::Z
-    const vector::SVector{3,T}
-    const period::T
-    const maxorder::Int
-    const minorder::Int
-    const transmission::SVector{GRATING_MAX_ORDERS,T}
-    const reflectance::SVector{GRATING_MAX_ORDERS,T}
+struct ThinGratingInterface{T} <: OpticalInterface{T}
+    insidematerial::GlassID
+    outsidematerial::GlassID
+    vector::SVector{3,T}
+    period::T
+    maxorder::Int
+    minorder::Int
+    transmission::SVector{GRATING_MAX_ORDERS,T}
+    reflectance::SVector{GRATING_MAX_ORDERS,T}
 
-    function ThinGratingInterface(vector::SVector{3,T}, period::T, insidematerial::Y, outsidematerial::Z; maxorder::Int=1, minorder::Int=-1, reflectance::Union{Nothing,AbstractVector{T}}=nothing, transmission::Union{Nothing,AbstractVector{T}}=nothing) where {T<:Real,Z<:AGFFileReader.AbstractGlass,Y<:AGFFileReader.AbstractGlass}
+    function ThinGratingInterface(vector::SVector{3,T}, period::T, insidematerial::AGFFileReader.AbstractGlass, outsidematerial::AGFFileReader.AbstractGlass; maxorder::Int=1, minorder::Int=-1, reflectance::Union{Nothing,AbstractVector{T}}=nothing, transmission::Union{Nothing,AbstractVector{T}}=nothing) where {T<:Real}
         @assert maxorder >= minorder
         norders = maxorder - minorder + 1
         @assert norders <= GRATING_MAX_ORDERS "Thin grating is limited to $GRATING_MAX_ORDERS orders"
@@ -179,19 +215,19 @@ mutable struct ThinGratingInterface{T,Y<:AGFFileReader.AbstractGlass,Z<:AGFFileR
         @assert zero(T) <= sum(sreflectance) <= one(T)
         @assert zero(T) <= sum(stransmission) <= one(T)
         @assert zero(T) <= sum(sreflectance) + sum(stransmission) <= one(T) + sqrt(eps(T))
-        new{T,Y,Z}(insidematerial, outsidematerial, normalize(vector), period, maxorder, minorder, stransmission, sreflectance)
+        new{T}(glassid(insidematerial), glassid(outsidematerial), normalize(vector), period, maxorder, minorder, stransmission, sreflectance)
     end
 end
 export ThinGratingInterface
 
-insidematerial(a::ThinGratingInterface) = a.insidematerial
-outsidematerial(a::ThinGratingInterface) = a.outsidematerial
+insidematerial(a::ThinGratingInterface) = glass(a.insidematerial)
+outsidematerial(a::ThinGratingInterface) = glass(a.outsidematerial)
 
 reflectance(a::ThinGratingInterface{T}, order::Int) where {T<:Real} = a.reflectance[order-a.minorder+1]
 transmission(a::ThinGratingInterface{T}, order::Int) where {T<:Real} = a.transmission[order-a.minorder+1]
 
 function Base.show(io::IO, a::ThinGratingInterface{R}) where {R<:Real}
-    print(io, "ThinGratingInterface($(glassname(a.insidematerial)), $(glassname(a.outsidematerial)), $(a.vector), $(a.period), $(a.transmission), $(a.reflectance))")
+    print(io, "ThinGratingInterface($(glassname(insidematerial(a))), $(glassname(outsidematerial(a))), $(a.vector), $(a.period), $(a.transmission), $(a.reflectance))")
 end
 
 ######################################################################
@@ -220,22 +256,22 @@ For reference, see:
 HologramInterface(signalpointordir::SVector{3,T}, signalbeamstate::BeamState, referencepointordir::SVector{3,T}, referencebeamstate::BeamState, recordingλ::T, thickness::T, beforematerial, substratematerial, aftermaterial, signalrecordingmaterial, referencerecordingmaterial, RImodulation::T, include0order  = false)
 ```
 """
-mutable struct HologramInterface{T,X<:AGFFileReader.AbstractGlass,Y<:AGFFileReader.AbstractGlass,Z<:AGFFileReader.AbstractGlass,P<:AbstractGlass,Q<:AbstractGlass} <: OpticalInterface{T}
-    const beforematerial::X
-    const substratematerial::Y
-    const aftermaterial::Z
-    const signalpointordir::SVector{3,T}
-    const signalbeamstate::BeamState
-    const referencepointordir::SVector{3,T}
-    const referencebeamstate::BeamState
-    const recordingλ::T
-    const signalrecordingmaterial::P
-    const referencerecordingmaterial::Q
-    const thickness::T
-    const RImodulation::T
-    const include0order::Bool
+struct HologramInterface{T} <: OpticalInterface{T}
+    beforematerial::GlassID
+    substratematerial::GlassID
+    aftermaterial::GlassID
+    signalpointordir::SVector{3,T}
+    signalbeamstate::BeamState
+    referencepointordir::SVector{3,T}
+    referencebeamstate::BeamState
+    recordingλ::T
+    signalrecordingmaterial::GlassID
+    referencerecordingmaterial::GlassID
+    thickness::T
+    RImodulation::T
+    include0order::Bool
 
-    function HologramInterface(signalpointordir::SVector{3,T}, signalbeamstate::BeamState, referencepointordir::SVector{3,T}, referencebeamstate::BeamState, recordingλ::T, thickness::T, beforematerial::X, substratematerial::Y, aftermaterial::Z, signalrecordingmaterial::P, referencerecordingmaterial::Q, RImodulation::T, include0order::Bool=false) where {T<:Real,X<:AGFFileReader.AbstractGlass,Z<:AGFFileReader.AbstractGlass,Y<:AGFFileReader.AbstractGlass,P<:AGFFileReader.AbstractGlass,Q<:AGFFileReader.AbstractGlass}
+    function HologramInterface(signalpointordir::SVector{3,T}, signalbeamstate::BeamState, referencepointordir::SVector{3,T}, referencebeamstate::BeamState, recordingλ::T, thickness::T, beforematerial::AGFFileReader.AbstractGlass, substratematerial::AGFFileReader.AbstractGlass, aftermaterial::AGFFileReader.AbstractGlass, signalrecordingmaterial::AGFFileReader.AbstractGlass, referencerecordingmaterial::AGFFileReader.AbstractGlass, RImodulation::T, include0order::Bool=false) where {T<:Real}
         @assert substratematerial !== AGFFileReader.Air "Substrate can't be air"
         if signalbeamstate === CollimatedBeam
             signalpointordir = normalize(signalpointordir)
@@ -243,38 +279,26 @@ mutable struct HologramInterface{T,X<:AGFFileReader.AbstractGlass,Y<:AGFFileRead
         if referencebeamstate === CollimatedBeam
             referencepointordir = normalize(referencepointordir)
         end
-        new{T,X,Y,Z,P,Q}(beforematerial, substratematerial, aftermaterial, signalpointordir, signalbeamstate, referencepointordir, referencebeamstate, recordingλ, signalrecordingmaterial, referencerecordingmaterial, thickness, RImodulation, include0order)
+        new{T}(glassid(beforematerial), glassid(substratematerial), glassid(aftermaterial), signalpointordir, signalbeamstate, referencepointordir, referencebeamstate, recordingλ, glassid(signalrecordingmaterial), glassid(referencerecordingmaterial), thickness, RImodulation, include0order)
     end
 end
 export HologramInterface
 
-insidematerial(a::HologramInterface{T}) where {T<:Real} = a.beforematerial
-outsidematerial(a::HologramInterface{T}) where {T<:Real} = a.aftermaterial
-substratematerialid(a::HologramInterface{T}) where {T<:Real} = a.substratematerial
+insidematerial(a::HologramInterface{T}) where {T<:Real} = glass(a.beforematerial)
+outsidematerial(a::HologramInterface{T}) where {T<:Real} = glass(a.aftermaterial)
+substratematerial(a::HologramInterface{T}) where {T<:Real} = glass(a.substratematerial)
+signalrecordingmaterial(a::HologramInterface{T}) where {T<:Real} = glass(a.signalrecordingmaterial)
+referencerecordingmaterial(a::HologramInterface{T}) where {T<:Real} = glass(a.referencerecordingmaterial)
 
 function Base.show(io::IO, a::HologramInterface{R}) where {R<:Real}
-    print(io, "HologramInterface($(glassname(a.beforematerial)), $(glassname(a.substratematerial)), $(glassname(a.aftermaterial)), $(a.signalpointordir), $(a.signalbeamstate), $(a.referencepointordir), $(a.referencebeamstate), $(a.recordingλ), $(a.thickness), $(a.RImodulation))")
+    print(io, "HologramInterface($(glassname(insidematerial(a))), $(glassname(substratematerial(a))), $(glassname(outsidematerial(a))), $(a.signalpointordir), $(a.signalbeamstate), $(a.referencepointordir), $(a.referencebeamstate), $(a.recordingλ), $(a.thickness), $(a.RImodulation))")
 end
 
 ######################################################################
 
 # a few things need a concrete type to prevent allocations resulting from the ambiguities introduce by an abstract type (i.e. OpticalInterface{T})
 # if adding new subtypes of OpticalInterface they must be added to this definition as well (and only paramaterised by T so they are fully specified)
+# They must also be plain data (refer to glasses by GlassID): then intersections and intervals are plain data, which
+# Julia stores inline and returns without allocating.
 AllOpticalInterfaces{T} = Union{NullInterface{T},ParaxialInterface{T},FresnelInterface{T},HologramInterface{T},ThinGratingInterface{T}}
 NullOrFresnel{T} = Union{NullInterface{T},FresnelInterface{T}}
-
-# can't have more than 4 types here or we get allocations because inference on the union stops: https://github.com/JuliaLang/julia/blob/1e6e65691254a7fe81f5da8706bb30aa6cb3f8d2/base/compiler/types.jl#L113
-# use the macro to get around this: @unionsplit OpticalInterface T x f(x)
-import InteractiveUtils
-# TODO REMOVE
-macro unionsplit(type, paramtype, var, call)
-    st = InteractiveUtils.subtypes(@eval $type)
-    orig_expr = Expr(:if, :($var isa $(st[1]){$paramtype}), call)
-    expr = orig_expr
-    for t in st[2:end]
-        push!(expr.args, Expr(:elseif, :($var isa $t{$paramtype}), call))
-        expr = expr.args[end]
-    end
-    push!(expr.args, :(error("unhandled type")))
-    return :($(esc(orig_expr)))
-end

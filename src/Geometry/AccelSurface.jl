@@ -15,10 +15,12 @@ AcceleratedParametricSurface(surf::ParametricSurface{T,N}, numsamples::Int = 17;
 """
 struct AcceleratedParametricSurface{T,N,S<:ParametricSurface{T,N}} <: ParametricSurface{T,N}
     surface::S
-    triangles::Vector{Triangle{T}}
+    triangles::Vector{Triangle{T}} # sorted into spatial clusters
     sidelengths::Vector{T}
     triangles_bbox::BoundingBox{T}
     interface::NullOrFresnel{T}
+    clusters::Vector{UnitRange{Int}} # the triangles of each cluster
+    clusterboxes::Vector{BoundingBox{T}}
 
     function AcceleratedParametricSurface(surf::S, numsamples::Int = 17; interface::NullOrFresnel{T} = NullInterface(T)) where {T<:Real,N,S<:ParametricSurface{T,N}}
         a = AcceleratedParametricSurface(surf, triangulate(surf, numsamples, true, true), interface = interface)
@@ -27,15 +29,46 @@ struct AcceleratedParametricSurface{T,N,S<:ParametricSurface{T,N}} <: Parametric
     end
 
     function AcceleratedParametricSurface(surf::S, triangles::Vector{Triangle{T}}; interface::NullOrFresnel{T} = NullInterface(T)) where {T<:Real,N,S<:ParametricSurface{T,N}}
+        triangles, clusters, clusterboxes = clustertriangles(triangles)
         sidelengths = Vector{T}(undef, length(triangles))
         @inbounds @simd for i in 1:length(triangles)
             t = triangles[i]
             sidelengths[i] = max(norm(t.BA), norm(t.CA))
         end
-        return new{T,N,S}(surf, copy(triangles), sidelengths, BoundingBox(triangles), interface)
+        return new{T,N,S}(surf, triangles, sidelengths, BoundingBox(triangles), interface, clusters, clusterboxes)
     end
 end
 export AcceleratedParametricSurface
+
+"""
+    clustertriangles(triangles; size = 16) -> (sorted triangles, clusters, cluster bounding boxes)
+
+Sorts triangles into spatial clusters of about `size` triangles, so that a ray only tests the triangles of clusters
+whose bounding box it passes through, rather than every triangle of the surface. The triangles are sorted into slabs
+by the x coordinate of their centroid, and each slab into clusters by y.
+"""
+function clustertriangles(triangles::Vector{Triangle{T}}; size::Int = 16) where {T<:Real}
+    n = length(triangles)
+    byx = sortperm(triangles, by = t -> centroid(t)[1])
+    slablength = cld(n, max(1, round(Int, sqrt(n / size))))
+    sorted = Triangle{T}[]
+    clusters = UnitRange{Int}[]
+    for slabstart in 1:slablength:max(n, 1)
+        slab = sort(byx[slabstart:min(slabstart + slablength - 1, n)], by = i -> centroid(triangles[i])[2])
+        for clusterstart in 1:size:length(slab)
+            first = length(sorted) + 1
+            append!(sorted, triangles[slab[clusterstart:min(clusterstart + size - 1, length(slab))]])
+            push!(clusters, first:length(sorted))
+        end
+    end
+    # pad each box a little, so a box that is flat (all its triangles in a plane) still has an inside
+    clusterboxes = map(clusters) do cluster
+        b = BoundingBox(view(sorted, cluster))
+        δ = sqrt(eps(T)) * (one(T) + max(b.xmax - b.xmin, b.ymax - b.ymin, b.zmax - b.zmin))
+        BoundingBox(b.xmin - δ, b.xmax + δ, b.ymin - δ, b.ymax + δ, b.zmin - δ, b.zmax + δ)
+    end
+    return sorted, clusters, clusterboxes
+end
 
 
 uvrange(::Type{AcceleratedParametricSurface{T,N,S}}) where {T<:Real,N,S<:ParametricSurface{T,N}} = uvrange(S)
@@ -108,7 +141,11 @@ Intersection of a ray, `r`, with a triangulated surface, `surf`, no concept of i
 function triangulatedintersection(surf::AcceleratedParametricSurface{T,N,S}, r::AbstractRay{T,N}) where {T<:Real,N,S}
     result = newinintervalpool!(T)
     offset_ray = Ray(origin(r) - ACCEL_SURF_RAY_OFFSET * direction(r), direction(r))
-    for (i, tri) in enumerate(surf.triangles)
+    for (c, cluster) in enumerate(surf.clusters)
+    # only test the triangles of clusters the (offset) ray passes through
+    doesintersect(surf.clusterboxes[c], offset_ray) || continue
+    for i in cluster
+        tri = surf.triangles[i]
         # test if the ray is within the maximum side length from one of the points, if not then skip it
         w = vertex(tri, 1) - origin(r)
         dist = norm(w - dot(w, direction(r)) * direction(r))
@@ -167,7 +204,8 @@ function triangulatedintersection(surf::AcceleratedParametricSurface{T,N,S}, r::
                 end
             end
         end
-    end
+    end # triangles of the cluster
+    end # clusters
 
     nr = length(result)
     if nr === 0

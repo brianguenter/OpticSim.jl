@@ -35,22 +35,20 @@ struct Intersection{T,N} <: FinitePoint{T}
     normal::SVector{N,T}
     u::T
     v::T
-    interface::OpticalInterface{T} # interfaces are heap objects, so storing one here is a pointer copy
+    # Every interface type is plain data, so this union is too, and Julia stores it inline: an Intersection (and an
+    # Interval holding two) contains no pointers and is never allocated on the heap.
+    interface::AllOpticalInterfaces{T}
     flippednormal::Bool
 
-    # @nospecialize: callers usually only know the interface's abstract type, and specializing on the concrete type would
-    # force a runtime dispatch on every call. The field holds any interface type anyway.
-    # flippednormal is positional here: calling a keyword method with an abstractly typed interface is a runtime dispatch
-    # that boxes every argument, so code on the hot path calls this method
-    function Intersection(α::T, point::SVector{N,T}, normal::SVector{N,T}, u::T, v::T, @nospecialize(interface), flippednormal::Bool) where {T<:Real,N}
+    function Intersection(α::T, point::SVector{N,T}, normal::SVector{N,T}, u::T, v::T, interface::AllOpticalInterfaces{T}, flippednormal::Bool) where {T<:Real,N}
         new{T,N}(α, point, normalize(normal), u, v, interface, flippednormal)
     end
 
-    function Intersection(α::T, point::SVector{N,T}, normal::SVector{N,T}, u::T, v::T, @nospecialize(interface); flippednormal::Bool=false) where {T<:Real,N}
+    function Intersection(α::T, point::SVector{N,T}, normal::SVector{N,T}, u::T, v::T, interface::AllOpticalInterfaces{T}; flippednormal::Bool=false) where {T<:Real,N}
         new{T,N}(α, point, normalize(normal), u, v, interface, flippednormal)
     end
 
-    function Intersection(α::T, point::AbstractVector{T}, normal::AbstractVector{T}, u::T, v::T, @nospecialize(interface); flippednormal=false) where {T<:Real}
+    function Intersection(α::T, point::AbstractVector{T}, normal::AbstractVector{T}, u::T, v::T, interface::AllOpticalInterfaces{T}; flippednormal=false) where {T<:Real}
         @assert length(point) == length(normal)
         N = length(point)
         new{T,N}(α, SVector{N,T}(point), SVector{N,T}(normal), u, v, interface, flippednormal)
