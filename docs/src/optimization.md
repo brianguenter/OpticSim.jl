@@ -129,4 +129,16 @@ Both solvers below come from Optimization.jl wrapper packages that enforce bound
 | Cooke triplet, 40° field | 42, 1.62e-4 (stopped: "Unstable") | 179, 1.56e-4 |
 | Cooke triplet | 74, 1.25e-3 | 2146, 5.37e-4 |
 
-`Fminbox(LBFGS())` reached a lower merit on every example, and on the Cooke triplet less than half of `LBFGSB()`'s. It also recovers from a trial point where the system can't be built. `LBFGSB()` stops there instead, which is why it made no progress on the Zemax Cooke triplet. `LBFGSB()` uses far fewer evaluations, but it stops at worse designs. `Fminbox(LBFGS())` is the recommended solver.
+`Fminbox(LBFGS())` reached a lower merit on every example. To check that this holds beyond one starting point, the Cooke triplet problem was also solved from its starting design and four random points within the bounds:
+
+| Start | `LBFGSB()`: evaluations, merit | `Fminbox(LBFGS())`: evaluations, merit |
+|:--|:--|:--|
+| 1 (the starting design) | 298, 4.64e-3 (stopped: "Unstable") | 34635, 5.61e-3 |
+| 2 | 160, 3.04e-3 | 5299, 1.56e-3 |
+| 3 | 120, 3.49e-3 | 2716, 1.80e-3 |
+| 4 | 288, 2.33e-3 | 29275, 4.59e-3 |
+| 5 | 242, 2.66e-3 | 4400, 1.49e-3 |
+
+Neither solver left the bounds in any run. `Fminbox(LBFGS())` found the lower merit in 7 of the 9 runs, but it took 15 to 140 times as many evaluations: up to 22 minutes, against seconds for `LBFGSB()`. Both are local optimizers that often settle in different local minima, so neither always finds the better design.
+
+`Fminbox(LBFGS())` is the recommended solver because it recovers from a trial point where the system can't be built. `LBFGSB()` stops there instead, which is why it made no progress on the Zemax Cooke triplet. `LBFGSB()` is a good choice for quick exploration, for example from several starting points, when every point within the bounds gives a valid system.
