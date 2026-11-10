@@ -134,7 +134,24 @@ function doesintersect(a::BoundingBox{T}, r::AbstractRay{T,3}) where {T<:Real}
     if inside(a, origin(r)) || onsurface(a, origin(r))
         return true
     end
+    tmin, tmax = slabs(a, r)
+    return tmax >= tmin && tmax > zero(T)
+end
+export doesintersect
 
+"""
+    entrydistance(bbox::BoundingBox{T}, r::AbstractRay{T,3}) -> T
+
+Distance along `r` at which it enters `bbox`: zero if it starts inside, `typemax(T)` if it misses. Nothing inside the box
+can be hit closer than this, which lets ray tracing skip objects beyond an intersection it has already found.
+"""
+function entrydistance(a::BoundingBox{T}, r::AbstractRay{T,3}) where {T<:Real}
+    tmin, tmax = slabs(a, r)
+    return tmax >= tmin && tmax > zero(T) ? max(tmin, zero(T)) : typemax(T)
+end
+
+# distances along r at which it enters and leaves the slabs bounding a, i.e. the box if tmin <= tmax
+function slabs(a::BoundingBox{T}, r::AbstractRay{T,3}) where {T<:Real}
     d = direction(r)
     o = origin(r)
 
@@ -229,9 +246,8 @@ function doesintersect(a::BoundingBox{T}, r::AbstractRay{T,3}) where {T<:Real}
         end
     end
 
-    return tmax >= tmin && tmax > zero(T)
+    return tmin, tmax
 end
-export doesintersect
 
 function inside(a::BoundingBox{T}, p::SVector{3,T}) where {T<:Real}
     return a.xmin < p[1] < a.xmax && a.ymin < p[2] < a.ymax && a.zmin < p[3] < a.zmax

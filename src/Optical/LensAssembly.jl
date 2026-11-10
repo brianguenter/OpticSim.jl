@@ -106,14 +106,29 @@ function closestintersection(ass::TupleLensAssembly{T}, r::AbstractRay{T,N})::Un
     return closestingroups(closest, ass.groups, r)
 end
 
-# Closest intersection with the elements of each group, one group at a time by recursion on the tail of the Tuple.
-# Each call loops over a Vector whose element type is concrete, so surfaceintersection needs no dynamic dispatch.
-closestingroups(closest, ::Tuple{}, r::AbstractRay) = closest
-function closestingroups(closest, groups::Tuple, r::AbstractRay)
-    for element in first(groups)
+# Visits each group in turn, one statement per group, so each group's loop is compiled for its own concrete element
+# type. (Recursing on the tail of the Tuple instead stops being specialized for assemblies with several groups, and then
+# allocates a new tail Tuple at every step.)
+@generated function closestingroups(closest, groups::G, r::AbstractRay) where {G<:Tuple}
+    visits = [:(closest = closestingroup(closest, groups[$i], r)) for i in 1:fieldcount(G)]
+    return quote
+        $(visits...)
+        return closest
+    end
+end
+
+# The closest of `closest` and the intersections with the elements of one group. The Vector's element type is concrete,
+# so surfaceintersection needs no dynamic dispatch.
+function closestingroup(closest::Union{Nothing,Intersection{T,N}}, group::AbstractVector, r::AbstractRay{T,N})::Union{Nothing,Intersection{T,N}} where {T<:Real,N}
+    for element in group
+        # nothing in an element can be hit before the ray enters its bounding box, so once an intersection has been found,
+        # elements whose box starts beyond it can be skipped with a cheap box test instead of a full CSG evaluation
+        if element isa CSGTree && closest !== nothing && entrydistance(BoundingBox(element), r) > α(closest)
+            continue
+        end
         closest = closer(closest, elementintersection(element, r))
     end
-    return closestingroups(closest, Base.tail(groups), r)
+    return closest
 end
 
 function BoundingBox(la::LensAssembly{T}) where {T<:Real}
@@ -204,11 +219,15 @@ function trace(assembly::LensAssembly{T}, r::OpticalRay{T,N}, temperature::T=T(A
         opticalinterface = interface(intsct)
         λ = wavelength(r)
 
-        if VERSION < v"1.6.0-DEV"
-            # TODO REMOVE
-            temp = @unionsplit OpticalInterface T opticalinterface processintersection(opticalinterface, surfintsct, nml, r, temperature, pressure, test, recursion == 0)
+        # The interface is one of five concrete types. Julia only splits unions of up to four types automatically, so test
+        # for the common ones explicitly and each call compiles to a direct call.
+        firstray = recursion == 0
+        temp = if opticalinterface isa FresnelInterface{T}
+            processintersection(opticalinterface, surfintsct, nml, r, temperature, pressure, test, firstray)
+        elseif opticalinterface isa ParaxialInterface{T}
+            processintersection(opticalinterface, surfintsct, nml, r, temperature, pressure, test, firstray)
         else
-            temp = processintersection(opticalinterface, surfintsct, nml, r, temperature, pressure, test, recursion == 0)
+            processintersection(opticalinterface, surfintsct, nml, r, temperature, pressure, test, firstray)
         end
 
         if temp === nothing
