@@ -226,6 +226,8 @@ function prism_refraction()
         push!(rays, r)
     end
     raygen = Emitters.Sources.RayListSource(rays)
+    # draw the result; requires a Makie backend, e.g. `using GLMakie`
+    Vis.drawtracerays(sys, raygenerator=raygen, test=true, trackallrays=true)
 end
 
 """FresnelLens constructor doesn't work. Don't use"""

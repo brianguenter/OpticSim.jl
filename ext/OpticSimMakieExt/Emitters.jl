@@ -107,6 +107,14 @@ function Vis.draw!(ax::Makie.AbstractAxis, rays::AbstractVector{OpticSim.Optical
 end
 
 #-------------------------------------
+# ray list source: mark the ray origins
+#-------------------------------------
+function Vis.draw!(ax::Makie.AbstractAxis, s::Sources.RayListSource; parent_transform::Geometry.Transform=Transform(), debug::Bool=false, markersize=8, color=:black, kwargs...)
+    points = [Point3f(parent_transform * OpticSim.origin(r)) for r in s.rays]
+    Makie.scatter!(ax, points; markersize=markersize, color=color)
+end
+
+#-------------------------------------
 # composite source
 #-------------------------------------
 function Vis.draw!(ax::Makie.AbstractAxis, s::Sources.CompositeSource{T}; parent_transform::Geometry.Transform=Transform(), kwargs...) where {T<:Real}
