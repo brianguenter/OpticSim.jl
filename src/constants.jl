@@ -32,5 +32,3 @@ const QTYPE_PRECOMP = 16
 # maximum number of orders for a thin grating interface
 const GRATING_MAX_ORDERS = 10
 
-# MacroLensAssemblyN methods (old macro-based lens assembly, see MacroLensAssembly.jl) will be generated at compile time (faster on first run) for N up to this number
-const PREGENERATED_LENS_ASSEMBLY_SIZE = 10
