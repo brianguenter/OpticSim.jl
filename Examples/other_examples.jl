@@ -249,7 +249,9 @@ function all_examples()
         planoconcaverefl(),
         concaveplano(),
         planoplano(),
-        prism_refraction()
+        prism_refraction(),
+        fresnel(),
+        fresnel(false)
     ]
 end
 export all_examples
