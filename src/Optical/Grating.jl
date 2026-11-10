@@ -38,7 +38,7 @@ function surfaceintersection(l::WrapperSurface{T,S}, r::AbstractRay{T,3}) where 
     else
         intsct = halfspaceintersection(itvl)
         u, v = uv(intsct)
-        intsct = Intersection(α(intsct), point(intsct), normal(intsct), u, v, interface(l), flippednormal=flippednormal(intsct))
+        intsct = Intersection(α(intsct), point(intsct), normal(intsct), u, v, interface(l), flippednormal(intsct))
         if dot(normal(intsct), direction(r)) > zero(T)
             return rayorigininterval(intsct)
         else
