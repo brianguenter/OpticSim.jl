@@ -128,7 +128,7 @@ end
 
 function insertknots(curve::BSplineCurve{T,S,N,M}) where {T,S,N,M}
     newknots, newcontrolpoints = insertknots(curve.knotvector.knots, curve.controlpolygon, M)
-    return BSplineCurve{T,S,N,M}(newknots, newcontrolpoints)
+    return BSplineCurve{T,S,N,M}(KnotVector{S}(newknots), newcontrolpoints)
 end
 
 function insertknots(surf::BSplineSurface{T,S,N,M}) where {T,S,N,M}

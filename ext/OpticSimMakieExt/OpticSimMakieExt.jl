@@ -21,4 +21,11 @@ import Makie.FileIO
 include("Visualization.jl")
 include("Emitters.jl")
 
+# writes the image files for the outpath keyword of trace and traceMT
+function OpticSim.savedetectorimage(path::AbstractString, image::AbstractMatrix{<:Real})
+    brightest = maximum(image)
+    scaled = brightest > 0 ? image ./ brightest : image
+    FileIO.save(path, Makie.Colors.Gray.(scaled))
+end
+
 end # module OpticSimMakieExt

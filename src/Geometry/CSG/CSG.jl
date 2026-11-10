@@ -306,7 +306,7 @@ normal(::EmptyInterval) = nothing
 point(a::DisjointUnion) = point(closestintersection(a))
 normal(a::DisjointUnion) = normal(closestintersection(a))
 point(a::Interval) = point(closestintersection(a))
-normal(a::Interval) = point(closestintersection(a))
+normal(a::Interval) = normal(closestintersection(a))
 
 """
     onsurface(obj::CSGTree{T}, point::SVector{3,T}) -> Bool

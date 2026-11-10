@@ -113,13 +113,16 @@ function union(a::BoundingBox{T}, b::BoundingBox{T}) where {T<:Real}
     return BoundingBox(min(a.xmin, b.xmin), max(a.xmax, b.xmax), min(a.ymin, b.ymin), max(a.ymax, b.ymax), min(a.zmin, b.zmin), max(a.zmax, b.zmax))
 end
 
+"""
+    intersection(a::BoundingBox{T}, b::BoundingBox{T}) -> BoundingBox{T}
+
+The overlap of two bounding boxes. If they don't overlap, the result has zero thickness along the axes where they are
+separate, so it contains no points; it is still a valid box that rays can be tested against.
+"""
 function intersection(a::BoundingBox{T}, b::BoundingBox{T}) where {T<:Real}
-    if a.xmax < b.xmin || a.ymax < b.ymin || a.zmax < b.zmin || b.xmax < a.xmin || b.ymax < a.ymin || b.zmax < b.zmin
-        @info a, b
-        return nothing
-    else
-        return BoundingBox(max(a.xmin, b.xmin), min(a.xmax, b.xmax), max(a.ymin, b.ymin), min(a.ymax, b.ymax), max(a.zmin, b.zmin), min(a.zmax, b.zmax))
-    end
+    xmin, ymin, zmin = max(a.xmin, b.xmin), max(a.ymin, b.ymin), max(a.zmin, b.zmin)
+    xmax, ymax, zmax = min(a.xmax, b.xmax), min(a.ymax, b.ymax), min(a.zmax, b.zmax)
+    return BoundingBox(xmin, max(xmin, xmax), ymin, max(ymin, ymax), zmin, max(zmin, zmax))
 end
 
 """

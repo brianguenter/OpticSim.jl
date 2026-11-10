@@ -78,7 +78,7 @@ function ParaxialLensRect(focaldistance::T, halfsizeu::T, halfsizev::T, surfacen
 end
 
 function ParaxialLensRect(focaldistance::T, halfsizeu::T, halfsizev::T, surfacenormal::SVector{3,T}, centrepoint::SVector{3,T}; rotationvec::SVector{3,T}=SVector{3,T}(0.0, 1.0, 0.0), outsidematerial::AGFFileReader.AbstractGlass=AGFFileReader.Air, decenteruv::Tuple{T,T}=(zero(T), zero(T))) where {T<:Real}
-    r = Rectangle(halfsizeu, halfsizev, surfacenormal, centrepoint)
+    r = Rectangle(halfsizeu, halfsizev, surfacenormal, centrepoint; rotationvec)
     centrepoint = centrepoint + decenteruv[1] * r.uvec + decenteruv[2] * r.vvec
     return ParaxialLens(r, ParaxialInterface(focaldistance, centrepoint, outsidematerial))
 end
@@ -89,7 +89,7 @@ function ParaxialLensHex(focaldistance::T, side_length::T, surfacenormal::Abstra
 end
 
 function ParaxialLensHex(focaldistance::T, side_length::T, surfacenormal::SVector{3,T}, centrepoint::SVector{3,T}; rotationvec::SVector{3,T}=SVector{3,T}(0.0, 1.0, 0.0), outsidematerial::AGFFileReader.AbstractGlass=AGFFileReader.Air, decenteruv::Tuple{T,T}=(zero(T), zero(T))) where {T<:Real}
-    h = Hexagon(side_length, surfacenormal, centrepoint)
+    h = Hexagon(side_length, surfacenormal, centrepoint; rotationvec)
     centrepoint = centrepoint + decenteruv[1] * h.uvec + decenteruv[2] * h.vvec
     return ParaxialLens(h, ParaxialInterface(focaldistance, centrepoint, outsidematerial))
 end
@@ -114,7 +114,7 @@ function ParaxialLensEllipse(focaldistance::T, halfsizeu::T, halfsizev::T, surfa
 end
 
 function ParaxialLensEllipse(focaldistance::T, halfsizeu::T, halfsizev::T, surfacenormal::SVector{3,T}, centrepoint::SVector{3,T}; rotationvec::SVector{3,T}=SVector{3,T}(0.0, 1.0, 0.0), outsidematerial::AGFFileReader.AbstractGlass=AGFFileReader.Air, decenteruv::Tuple{T,T}=(zero(T), zero(T))) where {T<:Real}
-    e = Ellipse(halfsizeu, halfsizev, surfacenormal, centrepoint)
+    e = Ellipse(halfsizeu, halfsizev, surfacenormal, centrepoint; rotationvec)
     centrepoint = centrepoint + decenteruv[1] * e.uvec + decenteruv[2] * e.vvec
     return ParaxialLens(e, ParaxialInterface(focaldistance, centrepoint, outsidematerial))
 end
@@ -154,7 +154,6 @@ function processintersection(opticalinterface::ParaxialInterface{T}, point::SVec
     geometricpathlength = norm(point - origin(incidentray)) + (firstray ? zero(T) : T(RAY_OFFSET))
     thisraypathlength = n * geometricpathlength
     raypathlength = pathlength(incidentray) + thisraypathlength
-    #TODO there is an error in this formula for refraction. If the ray and the normal have a negative dot product the refracted ray will be the negative of the correct direction. Fix this.
 
     # refraction calculated directly for paraxial lens
     # raydirection = normalize((opticalinterface.centroid - point) + direction(incidentray) * opticalinterface.focallength / dot(normal, direction(incidentray)))

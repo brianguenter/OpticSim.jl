@@ -79,17 +79,11 @@ function uv(r::SphericalCap{T}, p::SVector{3,T}) where {T<:Real}
     return θ, ρ
 end
 
+# The solid is the half space below the plane through the rim of the cap, minus the ball the cap is part of. The cap is
+# the part of the ball's surface that lies in that half space.
 function inside(r::SphericalCap{T}, p::SVector{3,T}) where {T<:Real}
-    prel = (p - centroid(r) - radius(r) * r.centrenormal) / radius(r)
-    v = dot(prel, r.vvec)
-    u = dot(prel, r.uvec)
-    if (u == zero(T) && v == zero(T)) || sqrt(u^2 + v^2) < sin(r.ϕmax)
-        l = norm(prel)
-        if l < one(T)
-            return false
-        end
-    end
-    return dot(r.centrenormal, p - centroid(r)) < r.zmax
+    inball = norm(p - centroid(r) - radius(r) * r.centrenormal) < radius(r)
+    return !inball && dot(r.centrenormal, p - centroid(r)) < r.zmax
 end
 
 function onsurface(r::SphericalCap{T}, p::SVector{3,T}) where {T<:Real}
@@ -124,79 +118,27 @@ function surfaceintersection(sph::SphericalCap{T}, r::AbstractRay{T,3}) where {T
     b = 2 * (ox * dx + oy * dy + oz * dz)
     c = (ox^2 + oy^2 + oz^2) - rad^2
 
+    # the solid is the half space below the rim plane minus the ball. Crossings of the rim plane are not part of the cap,
+    # so they get a null interface: they bound the solid for CSG but rays don't interact with them.
+    halfspace = surfaceintersection(Plane(sph.centrenormal, centroid(sph) + sph.zmax * sph.centrenormal), r)
+    halfspace isa EmptyInterval{T} && return halfspace
+
     temp = quadraticroots(a, b, c)
-
-    if temp === nothing
-        if inside(sph, origin(r))
-            return rayorigininterval(Infinity(T))
-        else
-            return EmptyInterval(T)
-        end
+    if temp === nothing || isapprox(temp[1], temp[2], rtol = 1e-12, atol = 2 * eps(T))
+        return halfspace # the ray misses the ball or just touches it
     end
+    t1, t2 = minmax(temp...)
+    t2 <= zero(T) && return halfspace # the ball is behind the ray
 
-    t1, t2 = temp
-
-    if isapprox(t1, t2, rtol = 1e-12, atol = 2 * eps(T))
-        if inside(sph, origin(r))
-            return rayorigininterval(Infinity(T))
-        else
-            return EmptyInterval(T)
-        end
+    # the ray is inside the ball between t1 and t2. The normals point into the ball, out of the solid.
+    function ballintersection(t)
+        pt = point(r, t)
+        θ, ρ = uv(sph, pt)
+        return Intersection(t, pt, normal(sph, θ, ρ), θ, ρ, interface(sph))
     end
-
-    if t1 > zero(T)
-        pt1 = point(r, t1)
-    else
-        pt1 = nothing
-    end
-
-    if t2 > zero(T)
-        pt2 = point(r, t2)
-    else
-        pt2 = nothing
-    end
-
-    let int1 = nothing, int2 = nothing
-        if pt1 !== nothing
-            θ, ρ = uv(sph, pt1)
-            if zero(T) <= ρ <= one(T)
-                int1 = Intersection(t1, pt1, normal(sph, θ, ρ), θ, ρ, interface(sph))
-            end
-        end
-
-        if pt2 !== nothing
-            θ, ρ = uv(sph, pt2)
-            if zero(T) <= ρ <= one(T)
-                int2 = Intersection(t2, pt2, normal(sph, θ, ρ), θ, ρ, interface(sph))
-            end
-        end
-
-        if int1 !== nothing && int2 !== nothing
-            if t1 <= t2
-                return Interval(int1, int2)
-            else
-                return Interval(int2, int1)
-            end
-        elseif int1 !== nothing
-            if inside(sph, origin(r))
-                return rayorigininterval(int1)
-            else
-                return positivehalfspace(int1)
-            end
-        elseif int2 !== nothing
-            if inside(sph, origin(r))
-                return rayorigininterval(int2)
-            else
-                return positivehalfspace(int2)
-            end
-        else
-            if inside(sph, origin(r))
-                return rayorigininterval(Infinity(T))
-            else
-                return EmptyInterval(T)
-            end
-        end
-    end
+    exitball = positivehalfspace(ballintersection(t2))
+    outsideball = t1 > zero(T) ? DisjointUnion(rayorigininterval(ballintersection(t1)), exitball) : exitball
+    return intervalintersection(halfspace, outsideball)
 end
 
 BoundingBox(a::SphericalCap{T}) where {T<:Real} = BoundingBox(Plane(a.centrenormal, a.centrepoint + a.radius * a.centrenormal))

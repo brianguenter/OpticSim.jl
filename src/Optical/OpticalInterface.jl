@@ -171,12 +171,13 @@ struct ThinGratingInterface{T,Y<:AGFFileReader.AbstractGlass,Z<:AGFFileReader.Ab
         if transmission !== nothing
             stransmission = vcat(SVector{length(transmission),T}(transmission), zeros(SVector{GRATING_MAX_ORDERS - length(transmission),T}))
         else
-            stransmission = ones(SVector{GRATING_MAX_ORDERS,T}) / norders
+            # spread the transmitted power evenly over the orders in use
+            stransmission = SVector{GRATING_MAX_ORDERS,T}(ntuple(i -> i <= norders ? one(T) / norders : zero(T), GRATING_MAX_ORDERS))
         end
-        @assert zero(T) <= sum(reflectance) <= one(T)
-        @assert zero(T) <= sum(transmission) <= one(T)
-        @assert zero(T) <= sum(reflectance) + sum(transmission) <= one(T)
-        new{T,Y,Z}(insidematerial, outsidematerial, normalize(vector), period, maxorder, minorder, sreflectance, stransmission)
+        @assert zero(T) <= sum(sreflectance) <= one(T)
+        @assert zero(T) <= sum(stransmission) <= one(T)
+        @assert zero(T) <= sum(sreflectance) + sum(stransmission) <= one(T) + sqrt(eps(T))
+        new{T,Y,Z}(insidematerial, outsidematerial, normalize(vector), period, maxorder, minorder, stransmission, sreflectance)
     end
 end
 export ThinGratingInterface

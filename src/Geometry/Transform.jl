@@ -98,21 +98,10 @@ export unitX4, unitY4, unitZ4, unitW4
 function get_orthogonal_vectors(direction::Vec3{T}) where {T<:Real}
     axis1 = normalize(direction)
 
-    dp = dot(unitX3(T), axis1)
-    # check the special case where the input vector is parallel to the X axis
-    if (dp >= one(T) - eps(T))
-        # axis1 = unitX(T);
-        axis2 = unitY3(T)
-        axis3 = unitZ3(T)
-        return (axis2, axis3)
-    elseif (dp <= -one(T) + eps(T))
-        # axis1 = -unitX(T);
-        axis2 = -unitY3(T)
-        axis3 = -unitZ3(T)
-        return (axis2, axis3)
-    end
-
-    axis3 = normalize(cross(axis1, unitX3(T)))
+    # Cross with the X axis, or with the Y axis when the direction is close to X: crossing nearly parallel vectors gives
+    # a tiny vector and loses precision. (axis2, axis3, axis1) is a right handed frame.
+    reference = abs(dot(unitX3(T), axis1)) > T(0.9) ? unitY3(T) : unitX3(T)
+    axis3 = normalize(cross(axis1, reference))
     axis2 = normalize(cross(axis3, axis1))
     return (axis2, axis3)
 end
@@ -154,6 +143,8 @@ Base.getindex(a::Transform, indices::Vararg{Int,N}) where {N} = getindex(matrix(
 # Base.iterate(a::Transform{Float64}, b::Tuple{StaticArrays.SOneTo{16}, Int64}) = iterate(matrix(a),b)
 
 Base.collect(a::Transform) = collect(matrix(a))
+
+Base.convert(::Type{Transform{T}}, a::Transform) where {T<:Real} = Transform{T}(SMatrix{4,4,T,16}(matrix(a)))
 
 Base.:*(transa::Transform{T}, transb::Transform{T}) where {T<:Real} = Transform{T}(matrix(transa) * matrix(transb))
 
@@ -343,10 +334,10 @@ function rotationX(angle::T) where {T<:Real}
     c = cos(angle)
     s = sin(angle)
 
-    row1 = unitX4()
-    row2 = Vec4(zero(T), c, s, zero(T))
-    row3 = Vec4(zero(T), -s, c, zero(T))
-    row4 = unitW4()
+    row1 = unitX4(T)
+    row2 = Vec4(zero(T), c, -s, zero(T))
+    row3 = Vec4(zero(T), s, c, zero(T))
+    row4 = unitW4(T)
 
     # transposing because the constructors treat these vectors as columns instead of rows
     return transpose(Transform(row1, row2, row3, row4))
@@ -364,10 +355,10 @@ function rotationY(angle::T) where {T<:Real}
     c = cos(angle)
     s = sin(angle)
 
-    row1 = Vec4(c, zero(T), -s, zero(T))
-    row2 = unitY4()
-    row3 = Vec4(s, zero(T), c, zero(T))
-    row4 = unitW4()
+    row1 = Vec4(c, zero(T), s, zero(T))
+    row2 = unitY4(T)
+    row3 = Vec4(-s, zero(T), c, zero(T))
+    row4 = unitW4(T)
 
     # transposing because the constructors treat these vectors as columns instead of rows
     return transpose(Transform(row1, row2, row3, row4))
@@ -385,10 +376,10 @@ function rotationZ(angle::T) where {T<:Real}
     c = cos(angle)
     s = sin(angle)
 
-    row1 = Vec4(c, s, zero(T), zero(T))
-    row2 = Vec4(-s, c, zero(T), zero(T))
-    row3 = unitZ4()
-    row4 = unitW4()
+    row1 = Vec4(c, -s, zero(T), zero(T))
+    row2 = Vec4(s, c, zero(T), zero(T))
+    row3 = unitZ4(T)
+    row4 = unitW4(T)
 
     # transposing because the constructors treat these vectors as columns instead of rows
     return transpose(Transform(row1, row2, row3, row4))
@@ -534,12 +525,21 @@ export decomposeRTS
     rotmatbetween([S::Type], a::SVector{3,T}, b::SVector{3,T}) -> SMatrix{3,3,S}
 
 Returns the rotation matrix of type `S` (default `Float64`) representing the rotation between vetors `a` and `b`, i.e. rotation(a,b) * a = b.
+`a` and `b` need not be unit vectors; only their directions are used.
 """
 rotmatbetween(a::SVector{3,T}, b::SVector{3,T}) where {T<:Real} = rotmatbetween(Float64, a, b)
 function rotmatbetween(::Type{S}, a::SVector{3,T}, b::SVector{3,T}) where {T<:Real,S<:Real}
-    # TODO: Brian, is there a hidden assumption that a and b are normalized?
-    v = cross(a, b)
+    a = normalize(a)
+    b = normalize(b)
     c = dot(a, b)
+    if c < zero(T)
+        # The formula below divides by 1 + c, which loses precision as a and b approach opposite directions and is
+        # infinite when they are. Instead rotate a to -a by π about an axis perpendicular to a, then -a to b, which is
+        # well conditioned because -a and b are within 90° of each other.
+        axis, _ = get_orthogonal_vectors(a)
+        return SMatrix{3,3,S,9}(rotmatbetween(S, -a, b) * (2 * axis * axis' - I))
+    end
+    v = cross(a, b)
     V = SMatrix{3,3,S,9}(0, v[3], -v[2], -v[3], 0, v[1], v[2], -v[1], 0)
     R = I + V + V^2 * one(T) / (one(T) + c)
     return SMatrix{3,3,S,9}(R)

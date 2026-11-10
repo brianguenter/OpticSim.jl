@@ -21,9 +21,10 @@ function snell(surfacenormal::S, raydirection::S, nᵢ::T, nₜ::T) where {T<:Re
         return zero(T), zero(T)
     end
 
-    sinθᵢ = norm(cross(surfacenormal, raydirection))
-    #only interested in magnitude not direction of the vector normal to surfacenormal and raydirection.
-    # If wanted vector then should use -raydirection.
+    # only interested in magnitude not direction of the vector normal to surfacenormal and raydirection.
+    # At grazing incidence rounding can make the norm slightly larger than 1, which would make cos θ = sqrt(1 - sin²θ)
+    # throw a DomainError, so clamp it.
+    sinθᵢ = min(norm(cross(surfacenormal, raydirection)), one(T))
 
     @assert zero(T) <= sinθᵢ
 
@@ -76,8 +77,8 @@ end
 
 Returns reflectance and transmission power coefficients according to the [Fresnel equations](https://en.wikipedia.org/wiki/Fresnel_equations).
 For geometric ray tracing this coefficient can be used directly to compute intensity on the detector plane. For Huygens phase optics need to take the square root to compute the amplitude.
-The power of the transmitted and refracted rays may not sum to one because of the area correction applied to the transmitted component.
-The intensity per area can increase or decrease depending on the indices of refraction.
+The transmitted power includes the correction for the change in beam cross section on refraction, so reflected and
+transmitted power sum to one.
 
 `nᵢ` is the RI of the material which the incident ray travels in, `nₜ` is the RI of the material the transmitted ray travels in.
 `sinθᵢ` and `sinθₜ` are the sin of the angles of incidence and transmission respectively.
@@ -92,16 +93,18 @@ function fresnel(nᵢ::T, nₜ::T, sinθᵢ::T, sinθₜ::T) where {T<:Real}
 
     # nᵢ*sin(θᵢ) = nₜ*sin(θₜ)
     rparallel = ((nᵢ * cosθₜ - nₜ * cosθᵢ) / (nᵢ * cosθₜ + nₜ * cosθᵢ))^2
-    tparallel = (2nᵢ * cosθᵢ / (nᵢ * cosθₜ + nₜ * cosθᵢ))^2
     rperp = ((nᵢ * cosθᵢ - nₜ * cosθₜ) / (nᵢ * cosθᵢ + nₜ * cosθₜ))^2
-    tperp = (2nᵢ * cosθᵢ / (nᵢ * cosθᵢ + nₜ * cosθₜ))^2
 
-    # transmitted amplitude scale factor
-    Tₐ = ((nₜ * cosθₜ) / (nᵢ * cosθᵢ))
+    # Transmitted power: the squared amplitude coefficients times nₜcosθₜ/(nᵢcosθᵢ), which compensates for the change in
+    # intensity per area caused by the differing angles and indices. Written without that division so it stays finite
+    # (zero) at grazing incidence, where cosθᵢ = 0.
+    numerator = 4 * nᵢ * cosθᵢ * nₜ * cosθₜ
+    tparallel = numerator / (nᵢ * cosθₜ + nₜ * cosθᵢ)^2
+    tperp = numerator / (nᵢ * cosθᵢ + nₜ * cosθₜ)^2
 
     # assuming random polarization
     ravg = 0.5 * (rparallel + rperp)
-    tavg = 0.5 * (tparallel + tperp) * Tₐ  #compensate for change in intensity per area caused by the differing angles of incidence and refraction as well as differing indices.
+    tavg = 0.5 * (tparallel + tperp)
 
     return (ravg, tavg)
 end

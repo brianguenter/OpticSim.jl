@@ -376,20 +376,6 @@ function Q(m::Int, n::Int, x::T)::T where {T<:Real}
     end
 end
 
-function plot!(m::Int, n::Int)
-    @assert m >= 0 && n >= 0
-    us = 0:0.01:1
-    vs = []
-    for u in us
-        if m === 0
-            push!(vs, u^2 * (1 - u^2) * Q(m, n, u^2))
-        else
-            push!(vs, u^m * Q(m, n, u^2))
-        end
-    end
-    Plots.plot!(us, vs, label=m === 0 ? "\$u^2(1-u^2)Q^{$m}_{$n}(u^2)\$" : "\$u^mQ^{$m}_{$n}(u^2)\$")
-end
-
 end # module QType
 
 #########################################################################################################

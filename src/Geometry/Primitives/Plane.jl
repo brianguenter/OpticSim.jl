@@ -35,10 +35,11 @@ struct Plane{T,N} <: ParametricSurface{T,N}
     function Plane(surfacenormal::SVector{N,T}, pointonplane::SVector{N,T}; interface::NullOrFresnel{T} = NullInterface(T), vishalfsizeu::T = zero(T), vishalfsizev::T = zero(T), visvec::SVector{N,T} = SVector{3,T}(0.0, 1.0, 0.0)) where {T<:Real,N}
         norml = normalize(surfacenormal)
         d = dot(norml, pointonplane)
-        if abs(dot(visvec, norml)) == one(T)
-            visvec = SVector{3,T}(1.0, 0.0, 0.0)
+        visvec = normalize(visvec)
+        if abs(dot(visvec, norml)) >= one(T) - sqrt(eps(T)) # visvec is parallel to the normal so can't define the u axis
+            visvec = abs(norml[1]) < T(0.9) ? SVector{3,T}(1.0, 0.0, 0.0) : SVector{3,T}(0.0, 1.0, 0.0)
         end
-        uvec = normalize(cross(normalize(visvec), norml))
+        uvec = normalize(cross(visvec, norml))
         vvec = normalize(cross(norml, uvec))
         return new{T,N}(norml, d, pointonplane, interface, vishalfsizeu, vishalfsizev, uvec, vvec)
     end
