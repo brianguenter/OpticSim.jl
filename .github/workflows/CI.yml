@@ -1,55 +1,141 @@
 name: CI
 on:
   push:
-    branches: [main, 'test/**', 'tnd/**']
+    branches:
+      - main
     tags: ['*']
   pull_request:
+  workflow_dispatch:
+concurrency:
+  # Skip intermediate builds: always.
+  # Cancel intermediate builds: only if it is a pull request build.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
+permissions:
+  actions: write        # lets julia-actions/cache delete old caches
+  contents: write       # lets the coverage job update the `badges` branch
+  pull-requests: write  # lets the coverage job comment on PRs
 jobs:
   test:
-    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
+    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    env:
+      # Only one job measures and reports coverage; the others just run the tests.
+      COVERAGE_JOB: ${{ matrix.os == 'ubuntu-latest' && matrix.version == '1.13' }}
     strategy:
       fail-fast: false
       matrix:
-        version: ['1.12']
+        version:
+          - '1.12'  # the oldest Julia OpticSim supports (Project.toml: julia = "1.12")
+          - '1.13'
         os: [ubuntu-latest, windows-latest]
         arch: [x64]
         include:
-          - os: ubuntu-latest
-            prefix: xvfb-run
+          # Apple Silicon (macos-latest runners are ARM)
+          - os: macos-latest
+            arch: aarch64
+            version: '1.12'
+          - os: macos-latest
+            arch: aarch64
+            version: '1.13'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
       - uses: julia-actions/setup-julia@v2
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
-        id: setup-julia
-      - name: Install Mesa (Windows only)
-        if: runner.os == 'Windows'
-        shell: cmd
-        working-directory: ${{ steps.setup-julia.outputs.julia-bindir }}
+      - uses: julia-actions/cache@v3
+        with:
+          delete-old-caches: true   # default, shown here so it's explicit
+      - uses: julia-actions/julia-buildpkg@v1
+      - uses: julia-actions/julia-runtest@v1
+        with:
+          coverage: ${{ env.COVERAGE_JOB }}
+
+      # ---------- Coverage reporting (one job only, no external service) ----------
+      - uses: julia-actions/julia-processcoverage@v1
+        if: env.COVERAGE_JOB == 'true'
+
+      - name: Summarize coverage
+        id: coverage
+        if: env.COVERAGE_JOB == 'true'
+        shell: bash
         run: |
-          curl.exe -L --output mesa.7z --url https://github.com/pal1000/mesa-dist-win/releases/download/24.1.5/mesa3d-24.1.5-release-mingw.7z
-          "C:\Program Files\7-Zip\7z.exe" x mesa.7z
-          mklink opengl32.dll "x64\opengl32.dll"
-          mklink libglapi.dll "x64\libglapi.dll"
-      - name: Install GR dependencies (Linux only)
-        if: runner.os == 'Linux'
+          # lcov.info has "SF:<file>" then "DA:<line>,<hits>" for each tracked line.
+          awk -F'[:,]' '
+            /^SF:/ { file = substr($0, 4) }
+            /^DA:/ { found[file]++; tf++; if ($3 + 0 > 0) { hit[file]++; th++ } }
+            END {
+              for (f in found) printf "%s|%d|%d\n", f, hit[f] + 0, found[f] > "rows.txt"
+              printf "%d %d\n", th + 0, tf + 0 > "totals.txt"
+            }' lcov.info
+          read th tf < totals.txt
+          pct=$(awk -v h="$th" -v t="$tf" 'BEGIN { printf "%.1f", t ? 100 * h / t : 0 }')
+          {
+            echo "## Code coverage: ${pct}%"
+            echo
+            echo "${th} of ${tf} lines covered (Julia ${{ matrix.version }}, ${{ matrix.os }})"
+            echo
+            echo "| File | Lines hit | Coverage |"
+            echo "|---|---:|---:|"
+            sort rows.txt | awk -F'|' '{ printf "| `%s` | %d / %d | %.1f%% |\n", $1, $2, $3, $3 ? 100 * $2 / $3 : 0 }'
+          } > coverage.md
+          cat coverage.md >> "$GITHUB_STEP_SUMMARY"
+          echo "pct=${pct}" >> "$GITHUB_OUTPUT"
+
+      - name: Build HTML coverage report
+        if: env.COVERAGE_JOB == 'true'
+        shell: bash
         run: |
-          sudo apt-get update
-          sudo apt install libxt6 libxrender1 libxext6 libgl1 libglx-mesa0 libqt5widgets5
-      - uses: actions/cache@v3
+          sudo apt-get update -qq && sudo apt-get install -y -qq lcov
+          genhtml lcov.info --output-directory site --title "Coverage" \
+            --ignore-errors source,inconsistent,unmapped
+
+      - name: Upload coverage report
+        if: env.COVERAGE_JOB == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: |
+            lcov.info
+            coverage.md
+            site/
+          retention-days: 14
+
+      - name: Comment coverage on PR
+        if: env.COVERAGE_JOB == 'true' && github.event_name == 'pull_request'
+        continue-on-error: true   # PRs from forks get a read-only token and can't comment
+        shell: bash
         env:
-          cache-name: cache-artifacts
-        with:
-          path: ~/.julia/artifacts
-          key: ${{ runner.os }}-${{ matrix.arch }}-test-${{ env.cache-name }}-${{ hashFiles('**/Project.toml') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.arch }}-test-${{ env.cache-name }}-
-            ${{ runner.os }}-${{ matrix.arch }}-test-
-            ${{ runner.os }}-${{ matrix.arch }}-
-            ${{ runner.os }}-
-      - uses: julia-actions/julia-runtest@latest
-        with:
-          prefix: ${{ matrix.prefix }}
-     
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          { cat coverage.md; echo; echo "_Updated for commit ${SHA}_"; } > comment.md
+          # Update the bot's previous comment if there is one, otherwise post a new one.
+          gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --edit-last --body-file comment.md \
+            || gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --body-file comment.md
+
+      - name: Publish badge and HTML report
+        if: env.COVERAGE_JOB == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PCT: ${{ steps.coverage.outputs.pct }}
+        run: |
+          color=$(awk -v p="$PCT" 'BEGIN {
+            if (p >= 90) print "brightgreen"; else if (p >= 75) print "green";
+            else if (p >= 60) print "yellow"; else if (p >= 40) print "orange"; else print "red" }')
+          cd site
+          printf '{"schemaVersion":1,"label":"coverage","message":"%s%%","color":"%s","cacheSeconds":300}\n' \
+            "$PCT" "$color" > coverage.json
+          touch .nojekyll   # serve the HTML as-is on GitHub Pages
+          # The coverage-report branch holds a single commit that is replaced
+          # every time, so it never grows.
+          git init -q -b coverage-report
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Coverage ${PCT}% for ${GITHUB_SHA}"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" coverage-report
