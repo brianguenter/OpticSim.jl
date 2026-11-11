@@ -193,8 +193,9 @@ end # testset Reflection
     track = Vector{OpticSim.LensTrace{Float64,3}}(undef, 0)
     res = trace(a, r5, test=true, trackrays=track)
     @test (res === nothing) # TIR
-    @test isapprox(point(track[end]), [5.49905367197174, 5.66882664623822, 0.0], rtol=COMP_TOLERANCE)
-    @test isapprox(pathlength(track[end]), 47.6825931025333, rtol=COMP_TOLERANCE)
+    # after TIR the ray reaches the lens edge, which absorbs it (it used to TIR off the absorbing edge too)
+    @test isapprox(point(track[end]), [4.39773093613491, 4.037086685039017, -8.729925380122722], rtol=COMP_TOLERANCE)
+    @test isapprox(pathlength(track[end]), 33.00063507541268, rtol=COMP_TOLERANCE)
 
     a = TestData.evenasphericsystem()
     res = trace(a, r1, test=true)
@@ -228,8 +229,9 @@ end # testset Reflection
     track = Vector{OpticSim.LensTrace{Float64,3}}(undef, 0)
     res = trace(a, r3, test=true, trackrays=track)
     @test (res === nothing) # TIR
-    @test isapprox(point(track[end]), [-6.097868437446996, -6.097868437446997, 0.0], rtol=COMP_TOLERANCE)
-    @test isapprox(pathlength(track[end]), 48.34832912579036, rtol=COMP_TOLERANCE)
+    # after TIR the ray reaches the lens edge, which absorbs it (it used to TIR off the absorbing edge too)
+    @test isapprox(point(track[end]), [-4.677557103808075, -4.677557103808075, -8.583256139438442], rtol=COMP_TOLERANCE)
+    @test isapprox(pathlength(track[end]), 34.656614203773856, rtol=COMP_TOLERANCE)
     track = Vector{OpticSim.LensTrace{Float64,3}}(undef, 0)
     res = trace(a, r4, test=true, trackrays=track)
     @test isapprox(point(res), [0.0, 7.485281534548376, -67.8], rtol=COMP_TOLERANCE)
@@ -237,8 +239,9 @@ end # testset Reflection
     track = Vector{OpticSim.LensTrace{Float64,3}}(undef, 0)
     res = trace(a, r5, test=true, trackrays=track)
     @test (res === nothing) # TIR
-    @test isapprox(point(track[end]), [6.197436823172213, 6.440993733499131, 0.0], rtol=COMP_TOLERANCE)
-    @test isapprox(pathlength(track[end]), 48.292537161700146, rtol=COMP_TOLERANCE)
+    # after TIR the ray reaches the lens edge, which absorbs it (it used to TIR off the absorbing edge too)
+    @test isapprox(point(track[end]), [6.2935706969201295, 6.3037855750348655, -4.298739183015263], rtol=COMP_TOLERANCE)
+    @test isapprox(pathlength(track[end]), 41.75579529264225, rtol=COMP_TOLERANCE)
 
     a = TestData.zernikesystem()
     res = trace(a, r1, test=true)

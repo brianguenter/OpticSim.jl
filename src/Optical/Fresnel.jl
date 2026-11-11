@@ -161,6 +161,12 @@ function processintersection(opticalinterface::FresnelInterface{T}, point::SVect
         internal_trans = exp(-α * geometricpathlength)
     end
 
+    # An interface that neither reflects nor transmits absorbs all light, e.g. a blackened lens edge, including light that
+    # would otherwise be totally internally reflected
+    if reflectance(opticalinterface) == zero(T) && transmission(opticalinterface) == zero(T)
+        return nothing
+    end
+
     # TODO - this is an approximation (total hack) for now until we get better modeling of thin film reflectors, antireflection coatings, etc.
     powᵣ = max(powᵣ, reflectance(opticalinterface)) * internal_trans
     powₜ = powₜ * transmission(opticalinterface) * internal_trans

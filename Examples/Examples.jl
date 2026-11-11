@@ -7,6 +7,7 @@ module Examples
 using ..OpticSim
 using ..OpticSim.Geometry
 using ..OpticSim.Emitters
+using ..OpticSim: maxcurvature, paraxialtrace, lastcurvature, entrancepupildistance, pupilrays, spotmerit, passaxialbeam
 
 using AGFFileReader
 using StaticArrays
@@ -16,7 +17,7 @@ using LinearAlgebra
 
 # include("docs_examples.jl")
 include("other_examples.jl")
-include("optimization_helpers.jl")
+include("biotar.jl")
 include("optimization_examples.jl")
 
 end #module Examples
