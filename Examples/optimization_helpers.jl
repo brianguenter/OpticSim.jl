@@ -19,13 +19,17 @@ A lens optimization problem.
 - `build(x)`: the optical system for variable values `x`
 - `merit(x)`: the value to minimize, the mean over the fields of the squared RMS spot radius (mm²)
 - `fields`: field angles in degrees, used by [`rmsspotradii`](@ref)
+- `rays`: for each field, the rays traced at `x0`, as (ray, weight) pairs
+- `aimedrays(x)`: the rays traced for variables `x`; the same as `rays` unless the example aims its rays at the
+  entrance pupil of each design
 
 Optimization.jl takes the bounds as separate vectors: `lb = first.(ex.bounds)`, `ub = last.(ex.bounds)`.
 
-The rays for each field and wavelength fill the entrance pupil in a hexapolar grid. The example functions take a
-`rings` keyword: `rings` rings give 1 + 3 rings (rings + 1) rays, 127 for the default of 6.
+The rays for each field and wavelength come from an emitter ([`pupilsource`](@ref)) that fills the entrance pupil in a
+hexapolar grid. The example functions take a `rings` keyword: `rings` rings give 1 + 3 rings (rings + 1) rays, 127 for
+6.
 """
-struct OptimizationExample{B,M}
+struct OptimizationExample{B,M,A}
     name::String
     source::String
     variables::Vector{String}
@@ -35,13 +39,14 @@ struct OptimizationExample{B,M}
     merit::M
     fields::Vector{Float64}
     rays::Vector{Vector{Tuple{OpticalRay{Float64,3},Float64}}} # per field: (ray, weight)
+    aimedrays::A
 
-    function OptimizationExample(name, source, variables, x0, bounds, build::B, merit::M, fields, rays) where {B,M}
+    function OptimizationExample(name, source, variables, x0, bounds, build::B, merit::M, fields, rays; aimedrays::A=(_ -> rays)) where {B,M,A}
         @assert length(variables) == length(x0) == length(bounds) "one name, starting value and bounds per variable"
         for (v, x, (l, u)) in zip(variables, x0, bounds)
             @assert l <= x <= u "$v: starting value $x is outside its bounds ($l, $u)"
         end
-        new{B,M}(name, source, variables, x0, bounds, build, merit, fields, rays)
+        new{B,M,A}(name, source, variables, x0, bounds, build, merit, fields, rays, aimedrays)
     end
 end
 
@@ -88,35 +93,92 @@ end
 #############################################################################
 # Rays and merit function
 
-# Collimated rays filling an entrance pupil of diameter `epd`, `zpupil` after the first lens vertex (which is at z = 0;
-# light travels toward -z), at field angle `angle` in degrees. Returns (ray, weight) pairs, `weight` being the
-# wavelength's weight.
-function pupilrays(angle, epd, zpupil, wavelengths, weights; rings=6)
-    d = SVector(0.0, sind(angle), -cosd(angle))
-    pupil = collect(Origins.Hexapolar(rings, epd / 2, epd / 2))
-    rays = Tuple{OpticalRay{Float64,3},Float64}[]
-    for (λ, w) in zip(wavelengths, weights), p in pupil
-        start = SVector(p[1], p[2], -zpupil) - 30.0 * d # start 30mm before the pupil, in front of the lens
-        push!(rays, (OpticalRay(start, d, 1.0, λ), w))
-    end
-    return rays
+"""
+    pupilsource(angle, epd, zpupil, λ; rings = 6, distance = 30.0) -> Sources.Source
+
+An emitter for a field angle: a collimated beam filling an entrance pupil of diameter `epd`, `zpupil` after the first
+lens vertex (which is at z = 0; light travels toward -z), at field angle `angle` in degrees, wavelength `λ` in μm. Its
+origins are a hexapolar grid with `rings` rings, `1 + 3 rings (rings + 1)` rays, in a plane parallel to the pupil
+`distance` before it along the beam, which must put them in front of the lens.
+"""
+function pupilsource(angle, epd, zpupil, λ; rings=6, distance=30.0)
+    # the number type of the pupil position: with automatic differentiation the pupil can depend on the optimization
+    # variables, and the source then generates rays of that type
+    T = float(promote_type(typeof(zpupil), typeof(distance)))
+    d = SVector{3,T}(0, sind(angle), -cosd(angle))
+    # the grid's origins are in the z = 0 plane of the source's frame; translating the frame shifts them to the pupil
+    # plane, moved `distance` back along the beam
+    Sources.Source(T; transform=translation(SVector{3,T}(0, 0, -zpupil) - distance * d),
+        origins=Origins.Hexapolar(rings, T(epd / 2), T(epd / 2)), directions=Directions.Constant(d),
+        spectrum=Spectrum.DeltaFunction(T(λ)))
+end
+
+# The rays of `pupilsource` for each wavelength, as (ray, weight) pairs, `weight` being the wavelength's weight.
+function pupilrays(angle, epd, zpupil, wavelengths, weights; rings=6, distance=30.0)
+    [(r, w) for (λ, w) in zip(wavelengths, weights) for r in pupilsource(angle, epd, zpupil, λ; rings, distance)]
 end
 
 # Weighted RMS radius of where `rays` hit the detector, about their weighted centroid, in mm. NaN if none hit.
-function rmsspotradius(system, rays, ::Type{T}) where {T}
-    points = SVector{3,T}[]
-    weights = T[]
-    for (r, w) in rays
-        rT = OpticalRay(SVector{3,T}(OpticSim.origin(r)), SVector{3,T}(OpticSim.direction(r)), T(OpticSim.power(r)), T(OpticSim.wavelength(r)))
-        res = trace(system, rT, test=true)
-        if res isa LensTrace
-            push!(points, point(res))
-            push!(weights, T(w))
+#
+# Only rays that pass through each lens surface once, in order, count, as in a sequential lens design program. OpticSim
+# traces non-sequentially, so a ray can also reach the image by a stray path, e.g. reflecting inside a thick element or
+# skimming a lens rim; such light is flare, not part of the image.
+rmsspotradius(system, rays, ::Type{T}) where {T} = rmsradius(only(fieldhits(system, [rays], T)))
+
+# weighted RMS radius of (point, weight) pairs about their weighted centroid; NaN if there are none
+function rmsradius(hits::AbstractVector{Tuple{SVector{3,T},T}}) where {T}
+    isempty(hits) && return T(NaN)
+    total = sum(last, hits)
+    centroid = sum(w * p for (p, w) in hits) / total
+    return sqrt(sum(w * sum(abs2, p - centroid) for (p, w) in hits) / total)
+end
+
+"""
+    fieldhits(system, fieldrays, T) -> Vector{Vector{Tuple{SVector{3,T},T}}}
+
+Traces each field's rays through `system` and returns, for each field, the image points of the rays that pass through
+each lens surface once, in order, with their weights.
+
+The rays are traced in parallel from a work queue (start Julia with several threads, e.g. `julia -t 8`, to use this).
+The rays of all fields are split into small chunks; one worker per thread repeatedly takes the next chunk from a shared
+atomic counter, so faster cores, or threads whose rays happen to be cheap (vignetted rays stop early), take more chunks
+and no thread sits idle at the end. The workers are `:static`, so a worker never moves between threads mid trace, as
+OpticSim's interval pools are per thread. Each worker traces through its own copy of the optical system, because tracing
+writes to the system's detector image; the copies share the lens geometry. The results are kept per chunk and combined in
+chunk order, so the result is the same whichever thread traced which chunk, and for any number of threads.
+"""
+function fieldhits(system::AxisymmetricOpticalSystem, fieldrays, ::Type{T}; chunksize::Int=16) where {T}
+    sequentialhits = lenssurfaces(system.prescription)
+    jobs = [(field, r, w) for (field, rays) in enumerate(fieldrays) for (r, w) in rays]
+    chunks = collect(Iterators.partition(eachindex(jobs), chunksize))
+    results = [Tuple{Int,SVector{3,T},T}[] for _ in chunks]
+    next = Threads.Atomic{Int}(1) # the next chunk to trace
+    function worker()
+        csg = copy(system.system)
+        while (k = Threads.atomic_add!(next, 1)) <= length(chunks)
+            for j in chunks[k]
+                field, r, w = jobs[j]
+                rT = OpticalRay(SVector{3,T}(OpticSim.origin(r)), SVector{3,T}(OpticSim.direction(r)), T(OpticSim.power(r)), T(OpticSim.wavelength(r)))
+                res = trace(csg, rT, test=true)
+                if res isa LensTrace && OpticSim.nhits(res) == sequentialhits
+                    push!(results[k], (field, point(res), T(w)))
+                end
+            end
         end
     end
-    isempty(points) && return T(NaN)
-    centroid = sum(weights .* points) / sum(weights)
-    return sqrt(sum(w * sum(abs2, p - centroid) for (w, p) in zip(weights, points)) / sum(weights))
+    nworkers = min(Threads.nthreads(), length(chunks))
+    if nworkers <= 1
+        worker()
+    else
+        Threads.@threads :static for _ in 1:nworkers
+            worker()
+        end
+    end
+    hits = [Tuple{SVector{3,T},T}[] for _ in fieldrays]
+    for result in results, (field, p, w) in result
+        push!(hits[field], (p, w))
+    end
+    return hits
 end
 
 # mean over the fields of the squared RMS spot radius
@@ -124,10 +186,14 @@ end
 # NaN if a surface cannot span its clear aperture, which can happen to a radius set by a solve rather than bounded
 # directly: such a system cannot be built. Solvers treat NaN as a failed step and backtrack.
 function spotmerit(prescription::DataFrame, fieldrays, ::Type{T}) where {T}
-    validsurfaces(prescription) || return T(NaN)
+    (validsurfaces(prescription) && !surfacescross(prescription)) || return T(NaN)
     system = AxisymmetricOpticalSystem{T}(prescription, 1, 1)
-    return sum(rmsspotradius(system, rays, T)^2 for rays in fieldrays) / length(fieldrays)
+    return sum(rmsradius(h)^2 for h in fieldhits(system, fieldrays, T)) / length(fieldrays)
 end
+
+# number of surfaces a ray refracts at on its sequential path: the rows where the material changes (a stop in air
+# isn't one, a stop on a lens surface is)
+lenssurfaces(p::DataFrame) = count(i -> !isequal(p[i, :Material], p[i-1, :Material]), 2:(size(p, 1)-1))
 
 # true if every lens surface reaches its semi-diameter: 1 - (1 + conic) c² h² > 0, and for spheres |radius| > h
 function validsurfaces(p::DataFrame)
@@ -145,7 +211,7 @@ end
 
 RMS spot radius about the centroid for each field of `example` with variables `x`, in μm.
 """
-rmsspotradii(ex::OptimizationExample, x) = [1000 * rmsspotradius(ex.build(x), rays, Float64) for rays in ex.rays]
+rmsspotradii(ex::OptimizationExample, x) = [1000 * rmsspotradius(ex.build(x), rays, Float64) for rays in ex.aimedrays(x)]
 
 """
     fieldrays(example::OptimizationExample) -> RayListSource
@@ -192,6 +258,19 @@ function surfacesag(row, h)
         end
     end
     return z
+end
+
+# true if two neighboring surfaces cross somewhere in their shared clear aperture: a lens would intersect itself or its
+# neighbor. Such a system can't be built, so the merit function returns NaN for it, like for a surface that can't span its
+# clear aperture.
+function surfacescross(p::DataFrame; samples=16)
+    for i in 2:(size(p, 1)-2)
+        a, b = p[i, :], p[i+1, :]
+        for h in range(0.0, min(a.SemiDiameter, b.SemiDiameter), length=samples)
+            a.Thickness + surfacesag(b, h) - surfacesag(a, h) < 0 && return true
+        end
+    end
+    return false
 end
 
 """

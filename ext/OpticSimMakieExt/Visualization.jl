@@ -22,11 +22,11 @@ function Vis.display(fig=current_main_scene[])
     Makie.display(fig)
 end
 
-function Vis.scene(resolution=(1000, 1000))
+function Vis.scene(resolution=(1000, 1000); show_axis::Bool=true)
     @assert resolution[1] > 0 && resolution[2] > 0
 
     fig = Makie.Figure(size=resolution)
-    ax = Makie.LScene(fig[1, 1]; scenekw=(; camera=Makie.cam3d_cad!))
+    ax = Makie.LScene(fig[1, 1]; show_axis, scenekw=(; camera=Makie.cam3d_cad!))
     current_main_scene[] = fig
     current_3d_scene[] = ax
 
@@ -317,27 +317,33 @@ function Vis.drawtracerays(system::AbstractOpticalSystem{T};
     kwargs...
 ) where {T<:Real}
     verbose && println("Drawing System...")
-    fig, lscene = Vis.scene(resolution)
+    # the 3D axis box is no use in a side view, and it upsets the side view's camera fit, so leave it out
+    fig, lscene = Vis.scene(resolution; show_axis=view !== :side)
     Vis.drawtracerays!(lscene, system; raygenerator=raygenerator, verbose=verbose, drawsys=true, drawgen=true, kwargs...)
     view === :side && Vis.sideview!(lscene)
     Vis.display(fig)
     return isnoninteractive() ? fig : nothing
 end
 
-function Vis.sideview!(ls::Makie.LScene)
+function Vis.sideview!(ls::Makie.LScene; distance=nothing)
     cam = Makie.cameracontrols(ls.scene)
     cam.settings.projectiontype[] = Makie.Orthographic
     cam.settings.center[] = false # keep this view instead of re-centering when the figure is rendered
     bb = Makie.data_limits(ls.scene)
     center = Makie.Vec3d(bb.origin .+ bb.widths ./ 2)
-    # orthographic: the visible half-height is the camera distance, the half-width that times the panel aspect ratio.
-    # Fit the system length (z) and height (y) with a small margin.
-    viewport = Makie.widths(ls.scene.viewport[])
-    aspect = viewport[2] > 0 ? viewport[1] / viewport[2] : 1.0
-    distance = max(0.55 * bb.widths[3] / aspect, 0.6 * bb.widths[2])
+    distance = something(distance, sidefitdistance(ls))
     # look along +x at the y-z plane, y up: the optical axis is horizontal and light travelling toward -z goes left to right
     Makie.update_cam!(ls.scene, cam, center .+ Makie.Vec3d(distance, 0, 0), center, Makie.Vec3d(0, 1, 0))
     return ls
+end
+
+# camera distance that fits the contents of `ls` in a side view. Orthographic: the visible half-height is the camera
+# distance, the half-width that times the panel aspect ratio. Fits the system length (z) and height (y) with a margin.
+function sidefitdistance(ls::Makie.LScene)
+    bb = Makie.data_limits(ls.scene)
+    viewport = Makie.widths(ls.scene.viewport[])
+    aspect = viewport[2] > 0 ? viewport[1] / viewport[2] : 1.0
+    return max(0.55 * bb.widths[3] / aspect, 0.6 * bb.widths[2])
 end
 
 function Vis.drawcomparison(systems::AbstractVector{<:AbstractOpticalSystem};
@@ -348,13 +354,19 @@ function Vis.drawcomparison(systems::AbstractVector{<:AbstractOpticalSystem};
     kwargs...
 )
     fig = Makie.Figure(size=resolution)
-    lscene = nothing
+    lscenes = Makie.LScene[]
     for (i, system) in enumerate(systems)
         titles === nothing || Makie.Label(fig[2i-1, 1], titles[i], fontsize=18, tellwidth=false)
         lscene = Makie.LScene(fig[2i, 1]; show_axis=false, scenekw=(; camera=Makie.cam3d_cad!))
         Vis.drawtracerays!(lscene, system; raygenerator=raygenerator, drawsys=true, kwargs...)
-        view === :side && Vis.sideview!(lscene)
+        push!(lscenes, lscene)
     end
+    if view === :side
+        # one scale for all the drawings, so they can be compared: the one that fits the largest
+        distance = maximum(sidefitdistance, lscenes)
+        foreach(ls -> Vis.sideview!(ls; distance), lscenes)
+    end
+    lscene = last(lscenes)
     current_main_scene[] = fig
     current_3d_scene[] = lscene
     Vis.display(fig)

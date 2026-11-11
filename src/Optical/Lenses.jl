@@ -65,8 +65,10 @@ function AsphericLens(insidematerial::T, frontvertex::S, frontradius::S, frontco
             lens_front = leaf(surf, offset)
         end
         if abs(frontradius) - frontdecenter_l <= semidiameter
-            # if optical surface is smaller than semidiameter then use a plane to fill the gap
-            plane = leaf(Plane(SVector{3,S}(0, 0, 1), SVector{3,S}(0, 0, frontvertex - frontradius), vishalfsizeu=semidiameter, vishalfsizev=semidiameter, interface=interface = opticinterface(S, insidematerial, lastmaterial, frontsurfacereflectance, interfacemode)))
+            # The sphere cannot reach the lens rim (its radius is smaller than the semidiameter), so a flat ring fills the gap
+            # between them. It lies outside the optical aperture; like the barrel it absorbs, as a real lens has it blackened
+            # or covered by its mount.
+            plane = leaf(Plane(SVector{3,S}(0, 0, 1), SVector{3,S}(0, 0, frontvertex - frontradius), vishalfsizeu=semidiameter, vishalfsizev=semidiameter, interface=FresnelInterface{S}(insidematerial, lastmaterial, reflectance=zero(S), transmission=zero(S))))
             if frontradius > zero(S)
                 lens_front = lens_front ∪ plane
             else
@@ -100,7 +102,8 @@ function AsphericLens(insidematerial::T, frontvertex::S, frontradius::S, frontco
             lens_rear = leaf(SphericalCap(abs(backradius), ϕmax, SVector{3,S}(0, 0, -1), SVector{3,S}(backdecenter[1], backdecenter[2], frontvertex - thickness), interface=opticinterface(S, insidematerial, nextmaterial, backsurfacereflectance, interfacemode)))
         end
         if abs(backradius) - backdecenter_l <= semidiameter
-            plane = leaf(Plane(SVector{3,S}(0, 0, -1), SVector{3,S}(0, 0, frontvertex - thickness - backradius), vishalfsizeu=semidiameter, vishalfsizev=semidiameter, interface=interface = opticinterface(S, insidematerial, nextmaterial, backsurfacereflectance, interfacemode)))
+            # a flat ring fills the gap between the sphere and the lens rim; it absorbs, like the front one
+            plane = leaf(Plane(SVector{3,S}(0, 0, -1), SVector{3,S}(0, 0, frontvertex - thickness - backradius), vishalfsizeu=semidiameter, vishalfsizev=semidiameter, interface=FresnelInterface{S}(insidematerial, nextmaterial, reflectance=zero(S), transmission=zero(S))))
             if backradius < zero(S)
                 lens_rear = lens_rear ∪ plane
             else

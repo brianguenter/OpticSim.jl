@@ -164,3 +164,46 @@ end
     dirs = [o[1] for o in out if o !== nothing]
     @test !isempty(dirs) && all(d -> d[3] > 0 && d[1] ≈ 0.55 / 2, dirs)
 end
+
+@testitem "Regression: ForwardDiff through the pole of a concave surface" begin
+    using StaticArrays, ForwardDiff
+    using OpticSim.Geometry
+    # An on-axis ray hits a concave spherical surface (a SphericalCap) at its pole, where its polar uv coordinates are
+    # singular. The normal used to be computed from them, and when the ray's derivative was a tiny rounding residue,
+    # as in real traces, the normal's derivative came out NaN.
+    D = ForwardDiff.Dual{:t,Float64,1}
+    cap = SphericalCap(D(28.3), D(1.0), SVector{3,D}(0, 0, 1), SVector{3,D}(0, 0, 0))
+    r = Ray(SVector{3,D}(D(0.0, ForwardDiff.Partials((1e-17,))), D(0.0), D(-10.0)), SVector{3,D}(0, 0, 1))
+    hit = closestintersection(surfaceintersection(cap, r), false)
+    @test OpticSim.normal(hit) ≈ [0.0, 0.0, 1.0]
+    @test all(x -> all(isfinite, ForwardDiff.partials(x)), OpticSim.normal(hit))
+    OpticSim.emptyintervalpool!(D)
+end
+
+@testitem "Regression: absorbing surfaces don't reflect" begin
+    using StaticArrays
+    using OpticSim: AGFFileReader, OpticalRay, processintersection
+    # A ray in glass meets an absorbing surface (a blackened lens edge) beyond the critical angle. Total internal
+    # reflection used to override the surface's zero reflectance, so stray rays bounced off lens edges.
+    glass = AGFFileReader.Examples_N_BK7
+    edge = FresnelInterface{Float64}(glass, AGFFileReader.Air, reflectance=0.0, transmission=0.0)
+    n = SVector(1.0, 0.0, 0.0)                      # outward normal of the edge
+    d = SVector(sind(80), 0.0, -cosd(80))            # 80° incidence from inside the glass: beyond the critical angle
+    r = OpticalRay(SVector(-1.0, 0.0, 0.0), d, 1.0, 0.55)
+    @test processintersection(edge, SVector(0.0, 0.0, 0.0), n, r, 20.0, 1.0, true) === nothing
+    # the same ray at an ordinary glass-air surface is totally internally reflected
+    surface = FresnelInterface{Float64}(glass, AGFFileReader.Air)
+    @test processintersection(surface, SVector(0.0, 0.0, 0.0), n, r, 20.0, 1.0, true) !== nothing
+end
+
+@testitem "Regression: the ring filling a lens beyond its sphere absorbs" begin
+    using StaticArrays
+    using OpticSim: AGFFileReader
+    # A spherical surface of radius 5 can't reach a semidiameter of 6, so a flat ring fills the gap to the rim. It's
+    # outside the optical aperture and absorbs, like the barrel; it used to refract like the optical surface.
+    lens = SphericalLens(AGFFileReader.Examples_N_BK7, 0.0, 5.0, Inf, 8.0, 6.0)()
+    hit = closestintersection(surfaceintersection(lens, Ray([5.5, 0.0, 10.0], [0.0, 0.0, -1.0])), false)
+    i = interface(hit)
+    @test OpticSim.reflectance(i) == 0 && OpticSim.transmission(i) == 0
+    OpticSim.emptyintervalpool!()
+end

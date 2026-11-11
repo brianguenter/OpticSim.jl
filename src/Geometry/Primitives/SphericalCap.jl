@@ -131,10 +131,14 @@ function surfaceintersection(sph::SphericalCap{T}, r::AbstractRay{T,3}) where {T
     t2 <= zero(T) && return halfspace # the ball is behind the ray
 
     # the ray is inside the ball between t1 and t2. The normals point into the ball, out of the solid.
+    ballcenter = centroid(sph) + rad * sph.centrenormal
     function ballintersection(t)
         pt = point(r, t)
         θ, ρ = uv(sph, pt)
-        return Intersection(t, pt, normal(sph, θ, ρ), θ, ρ, interface(sph))
+        # The normal points at the ball's center. Computed directly rather than from (θ, ρ): those are polar coordinates,
+        # singular at the cap's pole, where an on-axis ray hits, and their derivative there is infinite, which made
+        # automatic differentiation return NaN.
+        return Intersection(t, pt, ballcenter - pt, θ, ρ, interface(sph))
     end
     exitball = positivehalfspace(ballintersection(t2))
     outsideball = t1 > zero(T) ? DisjointUnion(rayorigininterval(ballintersection(t1)), exitball) : exitball

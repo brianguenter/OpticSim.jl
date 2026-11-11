@@ -24,15 +24,25 @@ using Printf
 include(joinpath(@__DIR__, "Examples.jl"))
 
 """
-    solveexample(example; solver = Optim.Fminbox(Optim.LBFGS()), maxiters = 300) -> solution
+    solveexample(example; solver = Optim.Fminbox(Optim.LBFGS()), maxiters = 300) -> (u, retcode, solution)
 
 Create the optimization problem for `example`, with its starting values, bounds and merit function, and solve it.
-The solver enforces the bounds. Gradients come from ForwardDiff.
+The solver enforces the bounds. Gradients come from ForwardDiff. Returns the optimized variables `u`, the solver's
+return code and its full solution.
+
+The solver works with each variable scaled to run from 0 to 1 across its bounds. Lens variables have very different
+scales: a curvature change of 0.001/mm affects the image about as much as a spacing change of millimeters, so without
+scaling the gradient is thousands of times larger for curvatures, and gradient based solvers barely move spacings.
 """
 function solveexample(example; solver=Optim.Fminbox(Optim.LBFGS()), maxiters=300)
-    merit = OptimizationFunction((x, _) -> example.merit(x), Optimization.AutoForwardDiff())
-    problem = OptimizationProblem(merit, example.x0; lb=first.(example.bounds), ub=last.(example.bounds))
-    return solve(problem, solver; maxiters)
+    lower, upper = first.(example.bounds), last.(example.bounds)
+    unscale(s) = lower .+ s .* (upper .- lower)
+    # one ForwardDiff pass carrying all the derivatives is faster than the default of several passes
+    merit = OptimizationFunction((s, _) -> example.merit(unscale(s)), Optimization.AutoForwardDiff(chunksize=length(example.x0)))
+    s0 = (example.x0 .- lower) ./ (upper .- lower)
+    problem = OptimizationProblem(merit, s0; lb=zeros(length(s0)), ub=ones(length(s0)))
+    solution = solve(problem, solver; maxiters)
+    return (u=unscale(solution.u), retcode=solution.retcode, solution=solution)
 end
 
 """
@@ -115,10 +125,38 @@ function optimize_cooke_triplet()
     return example, solution
 end
 
-# run all four when this file is run as a script
+"""
+Zeiss's f/1.4 Biotar (Merté, 1927), 5 fields and the F, d and C lines. First the patent's lens is refocused (only the
+image distance free), then the curvatures, group spacings, stop position and glass thicknesses are optimized starting
+from the refocused lens, and the two are compared. The optimization took 4.2 minutes with 8 threads on the performance
+cores of a 24-core laptop processor, and about half an hour on one thread; start Julia with `julia -t auto` to use every
+core.
+"""
+function optimize_biotar()
+    patent = Examples.biotar_refocus_optimization()
+    refocused = solveexample(patent)
+    printresults(patent, refocused)
+    example = Examples.biotar_optimization(image=refocused.u[1])
+    solution = solveexample(example)
+    printresults(example, solution)
+
+    println("\nPatent lens refocused vs optimized:")
+    for (name, ex, x) in (("patent, refocused", patent, refocused.u), ("optimized", example, solution.u))
+        system = ex.build(x)
+        rays = ex.aimedrays(x)
+        # rays that pass through each lens surface once, in order, as the merit function counts them
+        reached = sum(count(((r, _),) -> (lt = trace(system, r, test=true); lt !== nothing && OpticSim.nhits(lt) == Examples.lenssurfaces(system.prescription)), f) for f in rays)
+        @printf("  %-18s merit %.4e mm²   rays reaching the image %d of %d\n", name, ex.merit(x), reached, sum(length, rays))
+        println("      RMS spot radius (μm) for fields ", round.(ex.fields, digits=1), "°: ", round.(Examples.rmsspotradii(ex, x), digits=1))
+    end
+    return patent, refocused, example, solution
+end
+
+# run all of them when this file is run as a script
 if abspath(PROGRAM_FILE) == @__FILE__
     optimize_singlet()
     optimize_aspheric_singlet()
     optimize_cooke40()
     optimize_cooke_triplet()
+    optimize_biotar()
 end

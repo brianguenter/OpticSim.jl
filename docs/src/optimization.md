@@ -7,22 +7,26 @@ OpticSim systems can be optimized with any Julia optimizer that supports paramet
 
 The solver enforces the bounds, so a lens thickness or air gap can never leave its allowed range, and you don't have to tune merit weights to keep it there.
 
-The `Examples` module in the repository (`Examples/optimization_examples.jl`) contains four optimization problems, three of them recreated from published Zemax examples. Each is an `OptimizationExample` with:
+The `Examples` module in the repository (`Examples/optimization_examples.jl`) contains five optimization problems: three recreated from published Zemax examples, and Zeiss's 1927 f/1.4 Biotar from its patent. Each is an `OptimizationExample` with:
 - the free variables, their starting values and bounds;
 - a `build(x)` function returning the optical system;
 - a `merit(x)` function: the mean over the fields of the squared RMS spot radius about the centroid.
 
-The merit function works with automatic differentiation, so solvers get exact gradients from ForwardDiff.
+The merit function works with automatic differentiation, so solvers get exact gradients from ForwardDiff. Its rays come from an emitter for each field and wavelength (`Examples.pupilsource`): a `Sources.Source` with a hexapolar grid of origins filling the entrance pupil. Only rays that pass through each lens surface once, in order, count, as in a sequential lens design program: OpticSim traces non-sequentially, and light reaching the image by a stray path, such as a reflection inside a thick element, is flare, not part of the image.
 
 ## Solving an example
 
-`Examples/run_optimization_examples.jl` has a complete example for each lens: `optimize_singlet()`, `optimize_aspheric_singlet()`, `optimize_cooke40()` and `optimize_cooke_triplet()`. Each one creates the optimization problem, solves it and prints the variables before and after, the RMS spot radius per field and the clearance between neighboring lens surfaces. `Examples/Project.toml` has everything they need. Run all four from the repository root with:
+`Examples/run_optimization_examples.jl` has a complete example for each lens: `optimize_singlet()`, `optimize_aspheric_singlet()`, `optimize_cooke40()`, `optimize_cooke_triplet()` and `optimize_biotar()`. Each one creates the optimization problem, solves it and prints the variables before and after, the RMS spot radius per field and the clearance between neighboring lens surfaces. `Examples/Project.toml` has everything they need. Run them all from the repository root with:
 
 ```
-julia --project=Examples Examples/run_optimization_examples.jl
+julia -t auto --project=Examples Examples/run_optimization_examples.jl
 ```
 
-The core of each example is:
+`-t auto` starts Julia with a thread per core: the merit function traces its rays in parallel. The rays are split into small chunks that the threads take from a shared queue, so fast and slow cores both stay busy, and the result doesn't depend on the number of threads. For the Biotar, 24 threads on a 24-core laptop processor (8 performance and 16 efficiency cores) evaluate the merit 13 times as fast as one thread and its gradient 9 times as fast.
+
+The examples' `solveexample` function scales each variable to run from 0 to 1 across its bounds before passing it to the solver. Lens variables have very different scales: a change of 0.001/mm in a curvature affects the image about as much as a change of millimeters in a spacing. Without scaling the gradient is thousands of times larger for curvatures, and a gradient-based solver barely moves the spacings: in an unscaled Biotar optimization the spacings changed by less than a micrometer. It also passes `Optimization.AutoForwardDiff(chunksize = length(x0))`, which computes all the derivatives in one pass instead of several.
+
+The core of each example, without the scaling, is:
 
 ```julia
 using OpticSim
@@ -62,8 +66,9 @@ The drawings below were made this way.
 | Aspheric singlet | derived from the Zemax tutorial | 6 | 523, 587, 651 → 46, 17, 58 |
 | Cooke triplet, 40° field | Zemax sample file | 8 | 4.9, 17.2, 12.9 → 5.7, 16.0, 13.3 |
 | Cooke triplet | OpticSim `cooketriplet` | 8 | 144, 127 → 20, 26 |
+| Zeiss Biotar f/1.4 | patent DE 485,798 (1927) | 20 | 123, 92, 125, 161, 153 → 42, 44, 70, 75, 81 |
 
-The results are from `Fminbox(LBFGS())`; see [Choosing a solver](@ref).
+The results are from `Fminbox(LBFGS())`; see [Choosing a solver](@ref). The Biotar's are with scaled variables, the others' without.
 
 ### Singlet
 
@@ -112,6 +117,48 @@ OpticSim's `cooketriplet` with its five lens radii, both air gaps and the distan
 
 Four variables end at their bounds. One of them is the gap between the second and third lenses, at its 0.5mm minimum, which leaves 0.40mm between the lenses at their edges.
 
+### Zeiss Biotar f/1.4
+
+Willy Merté's Biotar for Carl Zeiss Jena, 1927, is regarded as the first double Gauss lens: six elements in four groups, a singlet, a cemented doublet, the stop, a cemented doublet and a singlet. `Examples.biotar()` is the lens, `Examples.biotar_optimization()` the optimization problem.
+
+![The Biotar, with the five field bundles](assets/optimization/biotar.png)
+
+#### Reconstructing the prescription
+
+The prescription is Example 2 of the patent, DE 485,798 (US 1,786,916), normalized to a 100mm focal length. Neither patent is available as clean text: the numbers come from the OCR text of the scanned German patent, which is garbled in places. The reconstruction was checked by tracing it:
+
+- **Example 2 as read** has ten radii, nine thicknesses and the patent's glasses (nd and ν). Its glass assignment follows the structure: I in the front singlet, II and III in the front doublet, IV and V in the rear doublet, VI in the rear singlet.
+- **One radius is corrected.** The cemented surface r4 reads −115.0. Every other radius of Example 2 is Example 1's scaled by 0.967 to 0.970, and Example 1's r4 is −1118.78, a nearly flat cemented surface, so r4 is taken as −1082. With −115 the paraxial focal length is 98.95mm and the second element would have a negative edge thickness at f/1.4; with −1082 the focal length is 99.9mm, the patent's 100.
+- **The glasses** are modelled from the patent's nd and ν with `AGFFileReader.modelglass`.
+- **Clear apertures and the stop position are not in the patent.** The deep inner surfaces 5 and 6 meet at a height of about 22.8mm, which limits them to 22.5mm, and a stop large enough for f/1.43, 22.2mm in radius, fits between them only 10.75 to 11.86mm after surface 5; it is placed at 11.3mm. The other clear apertures pass that beam. At the edge of the f/1.4 beam the second element comes to a knife edge, so the patent lens loses its outermost axial rays.
+- **The image distance is not in the patent either**; the baseline is the patent lens refocused for the merit function below (65.6mm).
+
+The traced lens confirms the reconstruction: a narrow axial beam comes to a 4μm RMS spot, and the five field bundles focus as above.
+
+#### The optimization
+
+- **Fields:** 0°, 5.3°, 8.8°, 12.3° and 17.3°: relative field heights 0, 0.3, 0.5, 0.7 and 1 of a 17.3° half field. The first f/1.4 Biotar was a 5cm lens for 35mm cine film, whose silent-era full aperture (before optical soundtracks) was 0.980 x 0.735in, 24.89 x 18.67mm, 4:3, with a 31.1mm diagonal: atan(15.56/50) = 17.3°.
+- **Wavelengths:** the F, d and C lines, 486.1, 587.6 and 656.3nm, equally weighted.
+- **Rays:** f/1.4 beams from an emitter per field and wavelength, aimed at the paraxial entrance pupil of each design, so the beams follow the stop when it and the groups in front of it move. 217 rays per field and wavelength, 3255 in all; the final result is from 631 per field and wavelength, about 9500 in all.
+- **Free (20 variables):** the curvatures of the first nine surfaces (within 25%), the five spacings of the four groups, the stop and the image (group 1 to group 2, group 2 to the stop, the stop to group 3, group 3 to group 4, and the last surface to the image), and the six glass thicknesses (within 10%). Each cemented surface is one radius shared by its two elements. The last radius is set by a paraxial solve that keeps the focal length at the patent lens's 99.9mm, so the optimizer can't trade focal length, and with it f-number, for image quality.
+
+![The Biotar before and after optimization](assets/optimization/biotar_comparison.png)
+
+RMS spot radius in μm, with 1261 rays per field and wavelength, a denser sampling than the optimization's:
+
+| | 0° | 5.3° | 8.8° | 12.3° | 17.3° | Merit (mm²) |
+|:--|:--|:--|:--|:--|:--|:--|
+| Patent, refocused | 121 | 87 | 127 | 158 | 151 | 1.72e-2 |
+| Optimized | 42 | 44 | 72 | 74 | 81 | 4.18e-3 |
+
+The optimized lens's merit is 76% lower, with the same focal length, glasses and aperture, and it passes more of each off-axis bundle than the patent lens: it didn't improve by vignetting rays. The optimizer used every kind of variable:
+
+- **Radii:** within 15% of the patent's, except the last, set by the focal length solve, which went from −120 to −185.
+- **Spacings:** the stop moved 1.2mm towards the rear group, the gap between the rear groups closed from 0.97 to 0.51mm, and the image moved 5.3mm closer.
+- **Glass thicknesses:** all within 3% of the patent's.
+
+Merté designed the lens by hand, with logarithm tables, for 1920s glass, and corrected it for his own priorities, not this merit function. The comparison shows what a modern optimizer does with the same glasses and layout, not that the patent lens was poor.
+
 ## Bounds and lens geometry
 
 The solver evaluated thousands of points across these runs, and none of them was outside the bounds.
@@ -124,6 +171,7 @@ The solver evaluated thousands of points across these runs, and none of them was
 | Aspheric singlet | 10.08mm | lens edge thickness |
 | Cooke triplet, 40° field | 1.00mm | middle lens center thickness (fixed) |
 | Cooke triplet | 0.40mm | air gap between lenses 2 and 3, at the edge |
+| Zeiss Biotar f/1.4 | 0.51mm | air gap between the rear groups, at the center |
 
 A radius set by a solve, like the Cooke sample's last radius, is not a free variable and can't be bounded. If a solve gives a radius smaller than its surface's semi-diameter, the system can't be built, so the merit function returns `NaN` and the solver backs off.
 
@@ -151,3 +199,13 @@ Both solvers below come from Optimization.jl wrapper packages that enforce bound
 Neither solver left the bounds in any run. `Fminbox(LBFGS())` found the lower merit in 7 of the 9 runs, but it took 15 to 140 times as many evaluations: up to 22 minutes, against seconds for `LBFGSB()`. Both are local optimizers that often settle in different local minima, so neither always finds the better design.
 
 `Fminbox(LBFGS())` is the recommended solver because it recovers from a trial point where the system can't be built. `LBFGSB()` stops there instead, which is why it made no progress on the Zemax Cooke triplet. `LBFGSB()` is a good choice for quick exploration, for example from several starting points, when every point within the bounds gives a valid system.
+
+On the Biotar, with scaled variables and the 20 variable problem (3255 rays per evaluation):
+
+| Solver | Result | Merit (start 1.72e-2) | Evaluations, of them NaN | Time, one thread |
+|:--|:--|:--|:--|:--|
+| `Fminbox(LBFGS())` | Success | 4.12e-3 | 2748, 2 | 28 minutes |
+| Ipopt, limited memory Hessian | stopped at its iteration limit | 4.89e-3 | 15291, 10592 | 16 minutes |
+| `LBFGSB()` | stopped at its first NaN: "Unstable" | no progress | | |
+
+Ipopt, through OptimizationMOI, handles bounds directly and backs off from NaN, but spent most of its evaluations on designs whose surfaces cross. With 8 threads on the performance cores the `Fminbox(LBFGS())` optimization took 4.2 minutes, and 24 threads make each gradient another 1.6 times as fast.

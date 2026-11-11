@@ -157,18 +157,19 @@ left to right, orthographic projection, fitted to the system (see [`sideview!`](
 drawtracerays
 
 """
-    sideview!(lscene)
+    sideview!(lscene; distance = nothing)
 
 Show the contents of `lscene` from the side, like a lens layout drawing: looking along the x axis at the y-z plane, so
 the optical axis (z) is horizontal and light travelling toward -z goes left to right, with orthographic projection,
-zoomed to fit. Returns `lscene`.
+zoomed to fit, or with the camera `distance` given, which sets the scale (the visible half-height). Returns `lscene`.
 """
 sideview!
 
 """
     drawcomparison(systems; raygenerator, titles = nothing, view = :side, resolution = (1400, 380 * length(systems)), kwargs...)
 
-Draw several optical systems one above the other, tracing the same rays from `raygenerator` through each: for example
+Draw several optical systems one above the other, at the same scale, tracing the same rays from `raygenerator` through
+each: for example
 a design before and after optimization. `titles` labels each drawing, `view` is `:side` or `:perspective` (see
 [`drawtracerays`](@ref OpticSim.Vis.drawtracerays)), and other keyword arguments such as `trackallrays`, `test` and
 `colorbysourcenum` are passed on to `drawtracerays!`.
