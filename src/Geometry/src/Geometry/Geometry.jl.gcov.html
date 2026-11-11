@@ -1,0 +1,254 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - Coverage - src/Geometry/src/Geometry/Geometry.jl</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">src/Geometry/src/Geometry</a> - Geometry.jl<span style="font-size: 80%;"> (source / <a href="Geometry.jl.func-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">Coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryLo">42.9&nbsp;%</td>
+            <td class="headerCovTableEntry">49</td>
+            <td class="headerCovTableEntry">21</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2026-11-11 20:00:33</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryHi">-</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+          </tr>
+                  <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : # MIT license</span>
+<span id="L2"><span class="lineNum">       2</span>              : # Copyright (c) Microsoft Corporation. All rights reserved.</span>
+<span id="L3"><span class="lineNum">       3</span>              : # See LICENSE in the project root for full license information.</span>
+<span id="L4"><span class="lineNum">       4</span>              : </span>
+<span id="L5"><span class="lineNum">       5</span>              : # declaring the Geometry module. in the future we might add or move existing code to it. currently it contains the basic types: Vec3, Vec4 and Transform</span>
+<span id="L6"><span class="lineNum">       6</span>              : module Geometry</span>
+<span id="L7"><span class="lineNum">       7</span>              : </span>
+<span id="L8"><span class="lineNum">       8</span>              : include(&quot;Transform.jl&quot;)</span>
+<span id="L9"><span class="lineNum">       9</span>              : </span>
+<span id="L10"><span class="lineNum">      10</span>              : end # module Geometry</span>
+<span id="L11"><span class="lineNum">      11</span>              : export Geometry</span>
+<span id="L12"><span class="lineNum">      12</span>              : </span>
+<span id="L13"><span class="lineNum">      13</span>              : </span>
+<span id="L14"><span class="lineNum">      14</span>              : using .Geometry</span>
+<span id="L15"><span class="lineNum">      15</span>              : </span>
+<span id="L16"><span class="lineNum">      16</span>              : include(&quot;Ray.jl&quot;)</span>
+<span id="L17"><span class="lineNum">      17</span>              : </span>
+<span id="L18"><span class="lineNum">      18</span>              : include(&quot;Surface.jl&quot;)</span>
+<span id="L19"><span class="lineNum">      19</span>              : </span>
+<span id="L20"><span class="lineNum">      20</span>              : # not ideal having this like this, but we need the types for Intersection</span>
+<span id="L21"><span class="lineNum">      21</span>              : include(&quot;../Optical/OpticalInterface.jl&quot;)</span>
+<span id="L22"><span class="lineNum">      22</span>              : </span>
+<span id="L23"><span class="lineNum">      23</span>              : include(&quot;CSG/Intersection.jl&quot;)</span>
+<span id="L24"><span class="lineNum">      24</span>              : include(&quot;CSG/Interval.jl&quot;)</span>
+<span id="L25"><span class="lineNum">      25</span>              : </span>
+<span id="L26"><span class="lineNum">      26</span>              : include(&quot;Primitives/NonCSG/Triangle.jl&quot;)</span>
+<span id="L27"><span class="lineNum">      27</span>              : </span>
+<span id="L28"><span class="lineNum">      28</span>              : include(&quot;BoundingBox.jl&quot;)</span>
+<span id="L29"><span class="lineNum">      29</span>              : </span>
+<span id="L30"><span class="lineNum">      30</span>              : include(&quot;Primitives/Plane.jl&quot;)</span>
+<span id="L31"><span class="lineNum">      31</span>              : include(&quot;Primitives/Cylinder.jl&quot;)</span>
+<span id="L32"><span class="lineNum">      32</span>              : include(&quot;Primitives/Sphere.jl&quot;)</span>
+<span id="L33"><span class="lineNum">      33</span>              : include(&quot;Primitives/SphericalCap.jl&quot;)</span>
+<span id="L34"><span class="lineNum">      34</span>              : </span>
+<span id="L35"><span class="lineNum">      35</span>              : include(&quot;Primitives/NonCSG/PlanarShape.jl&quot;)</span>
+<span id="L36"><span class="lineNum">      36</span>              : include(&quot;Primitives/NonCSG/Rectangle.jl&quot;)</span>
+<span id="L37"><span class="lineNum">      37</span>              : include(&quot;Primitives/NonCSG/Hexagon.jl&quot;)</span>
+<span id="L38"><span class="lineNum">      38</span>              : include(&quot;Primitives/NonCSG/ConvexPolygon.jl&quot;)</span>
+<span id="L39"><span class="lineNum">      39</span>              : include(&quot;Primitives/NonCSG/Ellipse.jl&quot;)</span>
+<span id="L40"><span class="lineNum">      40</span>              : include(&quot;Primitives/NonCSG/Stop.jl&quot;)</span>
+<span id="L41"><span class="lineNum">      41</span>              : </span>
+<span id="L42"><span class="lineNum">      42</span>              : </span>
+<span id="L43"><span class="lineNum">      43</span>              : </span>
+<span id="L44"><span class="lineNum">      44</span>              : include(&quot;AccelSurface.jl&quot;)</span>
+<span id="L45"><span class="lineNum">      45</span>              : </span>
+<span id="L46"><span class="lineNum">      46</span>              : include(&quot;Primitives/Curves/Knots.jl&quot;)</span>
+<span id="L47"><span class="lineNum">      47</span>              : include(&quot;Primitives/Curves/Spline.jl&quot;)</span>
+<span id="L48"><span class="lineNum">      48</span>              : include(&quot;Primitives/Curves/BSpline.jl&quot;)</span>
+<span id="L49"><span class="lineNum">      49</span>              : include(&quot;Primitives/Curves/Bezier.jl&quot;)</span>
+<span id="L50"><span class="lineNum">      50</span>              : include(&quot;Primitives/Curves/PowerBasis.jl&quot;)</span>
+<span id="L51"><span class="lineNum">      51</span>              : </span>
+<span id="L52"><span class="lineNum">      52</span>              : include(&quot;CSG/CSG.jl&quot;)</span>
+<span id="L53"><span class="lineNum">      53</span>              : </span>
+<span id="L54"><span class="lineNum">      54</span>              : include(&quot;Primitives/AsphericSurface.jl&quot;)</span>
+<span id="L55"><span class="lineNum">      55</span>              : include(&quot;Primitives/Zernike.jl&quot;)</span>
+<span id="L56"><span class="lineNum">      56</span>              : include(&quot;Primitives/Qtype.jl&quot;)</span>
+<span id="L57"><span class="lineNum">      57</span>              : include(&quot;Primitives/Chebyshev.jl&quot;)</span>
+<span id="L58"><span class="lineNum">      58</span>              : include(&quot;Primitives/GridSag.jl&quot;)</span>
+<span id="L59"><span class="lineNum">      59</span>              : </span>
+<span id="L60"><span class="lineNum">      60</span>              : include(&quot;AnalyticIntersection.jl&quot;)</span>
+<span id="L61"><span class="lineNum">      61</span>              : include(&quot;SphericalPolygon.jl&quot;)</span>
+<span id="L62"><span class="lineNum">      62</span>              : </span>
+<span id="L63"><span class="lineNum">      63</span>              : ###########################################################################################################</span>
+<span id="L64"><span class="lineNum">      64</span>              : </span>
+<span id="L65"><span class="lineNum">      65</span>              : export BoundedCylinder, Cuboid, HexagonalPrism, RectangularPrism, TriangularPrism, Spider</span>
+<span id="L66"><span class="lineNum">      66</span>              : </span>
+<span id="L67"><span class="lineNum">      67</span>              : &quot;&quot;&quot;</span>
+<span id="L68"><span class="lineNum">      68</span>              :     BoundedCylinder(radius::T, height::T; interface::NullOrFresnel{T} = nullinterface(T)) -&gt; CSGGenerator{T}</span>
+<span id="L69"><span class="lineNum">      69</span>              : </span>
+<span id="L70"><span class="lineNum">      70</span>              : Create a cylinder with planar caps on both ends centered at `(0, 0, 0)` with axis `(0, 0, 1)`.</span>
+<span id="L71"><span class="lineNum">      71</span>              : &quot;&quot;&quot;</span>
+<span id="L72"><span class="lineNum">      72</span> <span class="tlaUNC tlaBgUNC">           0 : function BoundedCylinder(radius::T, height::T; interface::NullOrFresnel{T}=NullInterface(T)) where {T&lt;:Real}</span></span>
+<span id="L73"><span class="lineNum">      73</span> <span class="tlaUNC">           0 :     barrel = Cylinder(radius, height, interface=interface)</span></span>
+<span id="L74"><span class="lineNum">      74</span> <span class="tlaUNC">           0 :     top = Plane(SVector{3,T}(0.0, 0.0, 1.0), SVector{3,T}(0.0, 0.0, height / 2), vishalfsizeu=radius, vishalfsizev=radius)</span></span>
+<span id="L75"><span class="lineNum">      75</span> <span class="tlaUNC">           0 :     bottom = Plane(SVector{3,T}(0.0, 0.0, -1.0), SVector{3,T}(0.0, 0.0, -height / 2), vishalfsizeu=radius, vishalfsizev=radius)</span></span>
+<span id="L76"><span class="lineNum">      76</span> <span class="tlaUNC">           0 :     return barrel ∩ top ∩ bottom</span></span>
+<span id="L77"><span class="lineNum">      77</span>              : end</span>
+<span id="L78"><span class="lineNum">      78</span>              : </span>
+<span id="L79"><span class="lineNum">      79</span>              : &quot;&quot;&quot;</span>
+<span id="L80"><span class="lineNum">      80</span>              :     Cuboid(halfsizex::T, halfsizey::T, halfsizez::T; interface::NullOrFresnel{T} = nullinterface(T)) -&gt; CSGGenerator{T}</span>
+<span id="L81"><span class="lineNum">      81</span>              : </span>
+<span id="L82"><span class="lineNum">      82</span>              : Create a cuboid centered at `(0, 0, 0)`.</span>
+<span id="L83"><span class="lineNum">      83</span>              : &quot;&quot;&quot;</span>
+<span id="L84"><span class="lineNum">      84</span> <span class="tlaGNC tlaBgGNC">        1876 : function Cuboid(halfsizex::T, halfsizey::T, halfsizez::T; interface::NullOrFresnel{T}=NullInterface(T)) where {T&lt;:Real}</span></span>
+<span id="L85"><span class="lineNum">      85</span> <span class="tlaGNC">         938 :     xmin = Plane(SVector{3,T}(-1.0, 0.0, 0.0), SVector{3,T}(-halfsizex, 0.0, 0.0); vishalfsizeu=halfsizez, vishalfsizev=halfsizey, interface)</span></span>
+<span id="L86"><span class="lineNum">      86</span> <span class="tlaGNC">         938 :     xmax = Plane(SVector{3,T}(1.0, 0.0, 0.0), SVector{3,T}(halfsizex, 0.0, 0.0); vishalfsizeu=halfsizez, vishalfsizev=halfsizey, interface)</span></span>
+<span id="L87"><span class="lineNum">      87</span> <span class="tlaGNC">         938 :     ymin = Plane(SVector{3,T}(0.0, -1.0, 0.0), SVector{3,T}(0.0, -halfsizey, 0.0); vishalfsizeu=halfsizez, vishalfsizev=halfsizex, interface)</span></span>
+<span id="L88"><span class="lineNum">      88</span> <span class="tlaGNC">         938 :     ymax = Plane(SVector{3,T}(0.0, 1.0, 0.0), SVector{3,T}(0.0, halfsizey, 0.0); vishalfsizeu=halfsizez, vishalfsizev=halfsizex, interface)</span></span>
+<span id="L89"><span class="lineNum">      89</span> <span class="tlaGNC">         938 :     zmin = Plane(SVector{3,T}(0.0, 0.0, -1.0), SVector{3,T}(0.0, 0.0, -halfsizez); vishalfsizeu=halfsizex, vishalfsizev=halfsizey, interface)</span></span>
+<span id="L90"><span class="lineNum">      90</span> <span class="tlaGNC">         938 :     zmax = Plane(SVector{3,T}(0.0, 0.0, 1.0), SVector{3,T}(0.0, 0.0, halfsizez); vishalfsizeu=halfsizex, vishalfsizev=halfsizey, interface)</span></span>
+<span id="L91"><span class="lineNum">      91</span> <span class="tlaGNC">         938 :     return xmin ∩ xmax ∩ ymin ∩ ymax ∩ zmin ∩ zmax</span></span>
+<span id="L92"><span class="lineNum">      92</span>              : end</span>
+<span id="L93"><span class="lineNum">      93</span>              : </span>
+<span id="L94"><span class="lineNum">      94</span>              : &quot;&quot;&quot;</span>
+<span id="L95"><span class="lineNum">      95</span>              :     HexagonalPrism(side_length::T, visheight::T = 2.0; interface::NullOrFresnel{T} = nullinterface(T)) -&gt; CSGGenerator{T}</span>
+<span id="L96"><span class="lineNum">      96</span>              : </span>
+<span id="L97"><span class="lineNum">      97</span>              : Create an infinitely tall hexagonal prism with axis `(0, 0, 1)`, the longer hexagon diameter is along the x axis.</span>
+<span id="L98"><span class="lineNum">      98</span>              : For visualization `visheight` is used, **note that this does not fully represent the surface**.</span>
+<span id="L99"><span class="lineNum">      99</span>              : &quot;&quot;&quot;</span>
+<span id="L100"><span class="lineNum">     100</span> <span class="tlaGNC">        1862 : function HexagonalPrism(side_length::T, visheight::T=2.0; interface::NullOrFresnel{T}=NullInterface(T)) where {T&lt;:Real}</span></span>
+<span id="L101"><span class="lineNum">     101</span> <span class="tlaGNC">         931 :     h = side_length * sqrt(3.0) / 2.0</span></span>
+<span id="L102"><span class="lineNum">     102</span> <span class="tlaGNC">         931 :     hcos = h * sqrt(3.0) / 2.0</span></span>
+<span id="L103"><span class="lineNum">     103</span> <span class="tlaGNC">         931 :     hsin = h / 2.0</span></span>
+<span id="L104"><span class="lineNum">     104</span> <span class="tlaGNC">         931 :     vishalfsizeu = visheight / 2.0</span></span>
+<span id="L105"><span class="lineNum">     105</span> <span class="tlaGNC">         931 :     vishalfsizev = side_length * 1.0001 / 2.0</span></span>
+<span id="L106"><span class="lineNum">     106</span> <span class="tlaGNC">         931 :     s1 = Plane(SVector{3,T}(0.0, 1.0, 0.0), SVector{3,T}(0.0, h, 0.0); vishalfsizeu, vishalfsizev, interface)</span></span>
+<span id="L107"><span class="lineNum">     107</span> <span class="tlaGNC">         931 :     s2 = Plane(SVector{3,T}(0.0, -1.0, 0.0), SVector{3,T}(0.0, -h, 0.0); vishalfsizeu, vishalfsizev, interface)</span></span>
+<span id="L108"><span class="lineNum">     108</span> <span class="tlaGNC">         931 :     s3 = Plane(SVector{3,T}(hcos, hsin, 0.0), SVector{3,T}(hcos, hsin, 0.0); vishalfsizeu, vishalfsizev, interface)</span></span>
+<span id="L109"><span class="lineNum">     109</span> <span class="tlaGNC">         931 :     s4 = Plane(SVector{3,T}(-hcos, -hsin, 0.0), SVector{3,T}(-hcos, -hsin, 0.0); vishalfsizeu, vishalfsizev, interface)</span></span>
+<span id="L110"><span class="lineNum">     110</span> <span class="tlaGNC">         931 :     s5 = Plane(SVector{3,T}(hcos, -hsin, 0.0), SVector{3,T}(hcos, -hsin, 0.0); vishalfsizeu, vishalfsizev, interface)</span></span>
+<span id="L111"><span class="lineNum">     111</span> <span class="tlaGNC">         931 :     s6 = Plane(SVector{3,T}(-hcos, hsin, 0.0), SVector{3,T}(-hcos, hsin, 0.0); vishalfsizeu, vishalfsizev, interface)</span></span>
+<span id="L112"><span class="lineNum">     112</span> <span class="tlaGNC">         931 :     return s1 ∩ s2 ∩ s3 ∩ s4 ∩ s5 ∩ s6</span></span>
+<span id="L113"><span class="lineNum">     113</span>              : end</span>
+<span id="L114"><span class="lineNum">     114</span>              : </span>
+<span id="L115"><span class="lineNum">     115</span>              : &quot;&quot;&quot;</span>
+<span id="L116"><span class="lineNum">     116</span>              :     RectangularPrism(halfsizex::T, halfsizey::T, visheight::T=2.0; interface::NullOrFresnel{T} = nullinterface(T)) -&gt; CSGGenerator{T}</span>
+<span id="L117"><span class="lineNum">     117</span>              : </span>
+<span id="L118"><span class="lineNum">     118</span>              : Create an infinitely tall rectangular prism with axis `(0, 0, 1)`.</span>
+<span id="L119"><span class="lineNum">     119</span>              : For visualization `visheight` is used, **note that this does not fully represent the surface**.</span>
+<span id="L120"><span class="lineNum">     120</span>              : &quot;&quot;&quot;</span>
+<span id="L121"><span class="lineNum">     121</span> <span class="tlaUNC tlaBgUNC">           0 : function RectangularPrism(halfsizex::T, halfsizey::T, visheight::T=2.0; interface::NullOrFresnel{T}=NullInterface(T)) where {T&lt;:Real}</span></span>
+<span id="L122"><span class="lineNum">     122</span> <span class="tlaUNC">           0 :     vishalfsizeu = visheight / 2.0</span></span>
+<span id="L123"><span class="lineNum">     123</span> <span class="tlaUNC">           0 :     s1 = Plane(SVector{3,T}(0.0, 1.0, 0.0), SVector{3,T}(0.0, halfsizey, 0.0); vishalfsizeu, vishalfsizev=halfsizex, interface)</span></span>
+<span id="L124"><span class="lineNum">     124</span> <span class="tlaUNC">           0 :     s2 = Plane(SVector{3,T}(0.0, -1.0, 0.0), SVector{3,T}(0.0, -halfsizey, 0.0); vishalfsizeu, vishalfsizev=halfsizex, interface)</span></span>
+<span id="L125"><span class="lineNum">     125</span> <span class="tlaUNC">           0 :     s3 = Plane(SVector{3,T}(1.0, 0.0, 0.0), SVector{3,T}(halfsizex, 0.0, 0.0); vishalfsizeu, vishalfsizev=halfsizey, interface)</span></span>
+<span id="L126"><span class="lineNum">     126</span> <span class="tlaUNC">           0 :     s4 = Plane(SVector{3,T}(-1.0, 0.0, 0.0), SVector{3,T}(-halfsizex, 0.0, 0.0); vishalfsizeu, vishalfsizev=halfsizey, interface)</span></span>
+<span id="L127"><span class="lineNum">     127</span> <span class="tlaUNC">           0 :     return s1 ∩ s2 ∩ s3 ∩ s4</span></span>
+<span id="L128"><span class="lineNum">     128</span>              : end</span>
+<span id="L129"><span class="lineNum">     129</span>              : </span>
+<span id="L130"><span class="lineNum">     130</span>              : &quot;&quot;&quot;</span>
+<span id="L131"><span class="lineNum">     131</span>              :     TriangularPrism(side_length::T, visheight::T = 2.0; interface::NullOrFresnel{T} = nullinterface(T)) -&gt; CSGGenerator{T}</span>
+<span id="L132"><span class="lineNum">     132</span>              : </span>
+<span id="L133"><span class="lineNum">     133</span>              : Create an infinitely tall triangular prism with axis `(0, 0, 1)`.</span>
+<span id="L134"><span class="lineNum">     134</span>              : For visualization `visheight` is used, **note that this does not fully represent the surface**.</span>
+<span id="L135"><span class="lineNum">     135</span>              : &quot;&quot;&quot;</span>
+<span id="L136"><span class="lineNum">     136</span> <span class="tlaUNC">           0 : function TriangularPrism(side_length::T, visheight::T=2.0; interface::NullOrFresnel{T}=NullInterface(T)) where {T&lt;:Real}</span></span>
+<span id="L137"><span class="lineNum">     137</span> <span class="tlaUNC">           0 :     vishalfsizeu = visheight / 2</span></span>
+<span id="L138"><span class="lineNum">     138</span> <span class="tlaUNC">           0 :     vishalfsizev = side_length / 2</span></span>
+<span id="L139"><span class="lineNum">     139</span> <span class="tlaUNC">           0 :     p1 = Plane(</span></span>
+<span id="L140"><span class="lineNum">     140</span>              :         SVector{3,T}(-1.0, 0.0, 0.0),</span>
+<span id="L141"><span class="lineNum">     141</span>              :         SVector{3,T}(-side_length / 4, 0.0, 0.0);</span>
+<span id="L142"><span class="lineNum">     142</span>              :         interface, vishalfsizeu, vishalfsizev</span>
+<span id="L143"><span class="lineNum">     143</span>              :     )</span>
+<span id="L144"><span class="lineNum">     144</span> <span class="tlaUNC">           0 :     p2 = Plane(</span></span>
+<span id="L145"><span class="lineNum">     145</span>              :         SVector{3,T}(sind(30), cosd(30), 0.0),</span>
+<span id="L146"><span class="lineNum">     146</span>              :         SVector{3,T}(side_length / 4 * sind(30), side_length / 4 * cosd(30), 0.0);</span>
+<span id="L147"><span class="lineNum">     147</span>              :         interface, vishalfsizeu, vishalfsizev</span>
+<span id="L148"><span class="lineNum">     148</span>              :     )</span>
+<span id="L149"><span class="lineNum">     149</span> <span class="tlaUNC">           0 :     p3 = Plane(</span></span>
+<span id="L150"><span class="lineNum">     150</span>              :         SVector{3,T}(sind(30), -cosd(30), 0.0),</span>
+<span id="L151"><span class="lineNum">     151</span>              :         SVector{3,T}(side_length / 4 * sind(30), -side_length / 4 * cosd(30), 0.0);</span>
+<span id="L152"><span class="lineNum">     152</span>              :         interface, vishalfsizeu, vishalfsizev</span>
+<span id="L153"><span class="lineNum">     153</span>              :     )</span>
+<span id="L154"><span class="lineNum">     154</span> <span class="tlaUNC">           0 :     return p1 ∩ p2 ∩ p3</span></span>
+<span id="L155"><span class="lineNum">     155</span>              : end</span>
+<span id="L156"><span class="lineNum">     156</span>              : </span>
+<span id="L157"><span class="lineNum">     157</span>              : &quot;&quot;&quot;</span>
+<span id="L158"><span class="lineNum">     158</span>              :     Spider(narms::Int, armwidth::T, radius::T, origin::SVector{3,T} = SVector{3,T}(0.0, 0.0, 0.0), normal::SVector{3,T} = SVector{3,T}(0.0, 0.0, 1.0)) -&gt; Vector{Rectangle{T}}</span>
+<span id="L159"><span class="lineNum">     159</span>              : </span>
+<span id="L160"><span class="lineNum">     160</span>              : Creates a 'spider' obscuration with `narms` rectangular arms evenly spaced around a circle defined by `origin` and `normal`.</span>
+<span id="L161"><span class="lineNum">     161</span>              : Each arm is a rectangle `armwidth`×`radius`.</span>
+<span id="L162"><span class="lineNum">     162</span>              : </span>
+<span id="L163"><span class="lineNum">     163</span>              : e.g. for 3 and 4 arms we get:</span>
+<span id="L164"><span class="lineNum">     164</span>              : ```</span>
+<span id="L165"><span class="lineNum">     165</span>              :    |         _|_</span>
+<span id="L166"><span class="lineNum">     166</span>              :   / \\         |</span>
+<span id="L167"><span class="lineNum">     167</span>              : ```</span>
+<span id="L168"><span class="lineNum">     168</span>              : &quot;&quot;&quot;</span>
+<span id="L169"><span class="lineNum">     169</span> <span class="tlaUNC">           0 : function Spider(narms::Int, armwidth::T, radius::T, origin::SVector{3,T}=SVector{3,T}(0.0, 0.0, 0.0), normal::SVector{3,T}=SVector{3,T}(0.0, 0.0, 1.0)) where {T&lt;:Real}</span></span>
+<span id="L170"><span class="lineNum">     170</span> <span class="tlaUNC">           0 :     dθ = 2π / narms</span></span>
+<span id="L171"><span class="lineNum">     171</span> <span class="tlaUNC">           0 :     rects = Vector{Rectangle{T}}(undef, 0)</span></span>
+<span id="L172"><span class="lineNum">     172</span> <span class="tlaUNC">           0 :     for i in 0:(narms-1)</span></span>
+<span id="L173"><span class="lineNum">     173</span> <span class="tlaUNC">           0 :         θ = i * dθ</span></span>
+<span id="L174"><span class="lineNum">     174</span> <span class="tlaUNC">           0 :         r = Rectangle(armwidth / 2, radius / 2, normal, origin + SVector(radius / 2 * cos(θ), radius / 2 * sin(θ), 0.0), rotationvec=SVector(cos(θ), sin(θ), 0.0), interface=opaqueinterface(T))</span></span>
+<span id="L175"><span class="lineNum">     175</span> <span class="tlaUNC">           0 :         push!(rects, r)</span></span>
+<span id="L176"><span class="lineNum">     176</span> <span class="tlaUNC">           0 :     end</span></span>
+<span id="L177"><span class="lineNum">     177</span> <span class="tlaUNC">           0 :     return rects</span></span>
+<span id="L178"><span class="lineNum">     178</span>              : end</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>

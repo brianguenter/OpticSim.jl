@@ -1,0 +1,575 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - Coverage - src/src/optimization.jl</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">src/src</a> - optimization.jl<span style="font-size: 80%;"> (source / <a href="optimization.jl.func-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">Coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryLo">54.3&nbsp;%</td>
+            <td class="headerCovTableEntry">221</td>
+            <td class="headerCovTableEntry">120</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2026-11-11 20:00:33</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryHi">-</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+          </tr>
+                  <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : # MIT license</span>
+<span id="L2"><span class="lineNum">       2</span>              : # Copyright (c) Microsoft Corporation. All rights reserved.</span>
+<span id="L3"><span class="lineNum">       3</span>              : # See LICENSE in the project root for full license information.</span>
+<span id="L4"><span class="lineNum">       4</span>              : </span>
+<span id="L5"><span class="lineNum">       5</span>              : # Lens optimization support: the LensOptimizationProblem type for describing an optimization problem, paraxial solves,</span>
+<span id="L6"><span class="lineNum">       6</span>              : # emitters that fill the entrance pupil, a threaded spot size merit function and a lens geometry check. The example</span>
+<span id="L7"><span class="lineNum">       7</span>              : # problems are in Examples/optimization_examples.jl. The &quot;Optimization functions&quot; section of docs/src/optimization.md</span>
+<span id="L8"><span class="lineNum">       8</span>              : # says what each function is for and when to use it.</span>
+<span id="L9"><span class="lineNum">       9</span>              : </span>
+<span id="L10"><span class="lineNum">      10</span>              : export LensOptimizationProblem, optimizelens, rmsspotradii, surfaceseparations, fieldrays</span>
+<span id="L11"><span class="lineNum">      11</span>              : </span>
+<span id="L12"><span class="lineNum">      12</span>              : &quot;&quot;&quot;</span>
+<span id="L13"><span class="lineNum">      13</span>              :     optimizelens(lens::LensOptimizationProblem; solver = Optim.Fminbox(Optim.LBFGS()), maxiters = 300) -&gt; (u, retcode, solution)</span>
+<span id="L14"><span class="lineNum">      14</span>              : </span>
+<span id="L15"><span class="lineNum">      15</span>              : Create an Optimization.jl problem for `lens`, with its starting values, bounds and merit function, and solve it. The</span>
+<span id="L16"><span class="lineNum">      16</span>              : solver enforces the bounds. Gradients come from ForwardDiff. Returns the optimized variables `u`, the solver's return code</span>
+<span id="L17"><span class="lineNum">      17</span>              : and its full solution.</span>
+<span id="L18"><span class="lineNum">      18</span>              : </span>
+<span id="L19"><span class="lineNum">      19</span>              : The solver works with each variable scaled to run from 0 to 1 across its bounds. Lens variables have very different</span>
+<span id="L20"><span class="lineNum">      20</span>              : scales: a curvature change of 0.001/mm affects the image about as much as a spacing change of millimeters, so without</span>
+<span id="L21"><span class="lineNum">      21</span>              : scaling the gradient is thousands of times larger for curvatures, and gradient based solvers barely move spacings.</span>
+<span id="L22"><span class="lineNum">      22</span>              : </span>
+<span id="L23"><span class="lineNum">      23</span>              : Available when Optimization, OptimizationOptimJL and ForwardDiff are loaded:</span>
+<span id="L24"><span class="lineNum">      24</span>              : </span>
+<span id="L25"><span class="lineNum">      25</span>              : ```julia</span>
+<span id="L26"><span class="lineNum">      26</span>              : using OpticSim, Optimization, OptimizationOptimJL, ForwardDiff</span>
+<span id="L27"><span class="lineNum">      27</span>              : ex = Examples.singlet_optimization()</span>
+<span id="L28"><span class="lineNum">      28</span>              : result = optimizelens(ex)</span>
+<span id="L29"><span class="lineNum">      29</span>              : ```</span>
+<span id="L30"><span class="lineNum">      30</span>              : &quot;&quot;&quot;</span>
+<span id="L31"><span class="lineNum">      31</span>              : function optimizelens end</span>
+<span id="L32"><span class="lineNum">      32</span>              : </span>
+<span id="L33"><span class="lineNum">      33</span>              : &quot;&quot;&quot;</span>
+<span id="L34"><span class="lineNum">      34</span>              :     LensOptimizationProblem</span>
+<span id="L35"><span class="lineNum">      35</span>              : </span>
+<span id="L36"><span class="lineNum">      36</span>              : A lens optimization problem.</span>
+<span id="L37"><span class="lineNum">      37</span>              : </span>
+<span id="L38"><span class="lineNum">      38</span>              : - `name`, `source`: what the problem is and where its specification comes from</span>
+<span id="L39"><span class="lineNum">      39</span>              : - `variables`: a description of each free variable, with units</span>
+<span id="L40"><span class="lineNum">      40</span>              : - `x0`: starting values of the free variables</span>
+<span id="L41"><span class="lineNum">      41</span>              : - `bounds`: `(lower, upper)` for each free variable</span>
+<span id="L42"><span class="lineNum">      42</span>              : - `build(x)`: the optical system for variable values `x`</span>
+<span id="L43"><span class="lineNum">      43</span>              : - `merit(x)`: the value to minimize, the mean over the fields of the squared RMS spot radius (mm²)</span>
+<span id="L44"><span class="lineNum">      44</span>              : - `fields`: field angles in degrees, used by [`rmsspotradii`](@ref)</span>
+<span id="L45"><span class="lineNum">      45</span>              : - `rays`: for each field, the rays traced at `x0`, as (ray, weight) pairs</span>
+<span id="L46"><span class="lineNum">      46</span>              : - `aimedrays(x)`: the rays traced for variables `x`; the same as `rays` unless the problem aims its rays at the</span>
+<span id="L47"><span class="lineNum">      47</span>              :   entrance pupil of each design</span>
+<span id="L48"><span class="lineNum">      48</span>              : </span>
+<span id="L49"><span class="lineNum">      49</span>              : Optimization.jl takes the bounds as separate vectors: `lb = first.(ex.bounds)`, `ub = last.(ex.bounds)`.</span>
+<span id="L50"><span class="lineNum">      50</span>              : </span>
+<span id="L51"><span class="lineNum">      51</span>              : The rays for each field and wavelength come from an emitter ([`OpticSim.pupilsource`](@ref)) that fills the entrance pupil in a</span>
+<span id="L52"><span class="lineNum">      52</span>              : hexapolar grid. The example problems in `Examples` take a `rings` keyword: `rings` rings give 1 + 3 rings (rings + 1) rays, 127 for</span>
+<span id="L53"><span class="lineNum">      53</span>              : 6.</span>
+<span id="L54"><span class="lineNum">      54</span>              : &quot;&quot;&quot;</span>
+<span id="L55"><span class="lineNum">      55</span>              : struct LensOptimizationProblem{B,M,A}</span>
+<span id="L56"><span class="lineNum">      56</span>              :     name::String</span>
+<span id="L57"><span class="lineNum">      57</span>              :     source::String</span>
+<span id="L58"><span class="lineNum">      58</span>              :     variables::Vector{String}</span>
+<span id="L59"><span class="lineNum">      59</span>              :     x0::Vector{Float64}</span>
+<span id="L60"><span class="lineNum">      60</span>              :     bounds::Vector{Tuple{Float64,Float64}}</span>
+<span id="L61"><span class="lineNum">      61</span>              :     build::B</span>
+<span id="L62"><span class="lineNum">      62</span>              :     merit::M</span>
+<span id="L63"><span class="lineNum">      63</span>              :     fields::Vector{Float64}</span>
+<span id="L64"><span class="lineNum">      64</span>              :     rays::Vector{Vector{Tuple{OpticalRay{Float64,3},Float64}}} # per field: (ray, weight)</span>
+<span id="L65"><span class="lineNum">      65</span>              :     aimedrays::A</span>
+<span id="L66"><span class="lineNum">      66</span>              : </span>
+<span id="L67"><span class="lineNum">      67</span> <span class="tlaUNC tlaBgUNC">           0 :     function LensOptimizationProblem(name, source, variables, x0, bounds, build::B, merit::M, fields, rays; aimedrays::A=(_ -&gt; rays)) where {B,M,A}</span></span>
+<span id="L68"><span class="lineNum">      68</span> <span class="tlaUNC">           0 :         @assert length(variables) == length(x0) == length(bounds) &quot;one name, starting value and bounds per variable&quot;</span></span>
+<span id="L69"><span class="lineNum">      69</span> <span class="tlaUNC">           0 :         for (v, x, (l, u)) in zip(variables, x0, bounds)</span></span>
+<span id="L70"><span class="lineNum">      70</span> <span class="tlaUNC">           0 :             @assert l &lt;= x &lt;= u &quot;$v: starting value $x is outside its bounds ($l, $u)&quot;</span></span>
+<span id="L71"><span class="lineNum">      71</span> <span class="tlaUNC">           0 :         end</span></span>
+<span id="L72"><span class="lineNum">      72</span> <span class="tlaUNC">           0 :         new{B,M,A}(name, source, variables, x0, bounds, build, merit, fields, rays, aimedrays)</span></span>
+<span id="L73"><span class="lineNum">      73</span>              :     end</span>
+<span id="L74"><span class="lineNum">      74</span>              : end</span>
+<span id="L75"><span class="lineNum">      75</span>              : </span>
+<span id="L76"><span class="lineNum">      76</span> <span class="tlaUNC">           0 : function Base.show(io::IO, ex::LensOptimizationProblem)</span></span>
+<span id="L77"><span class="lineNum">      77</span> <span class="tlaUNC">           0 :     println(io, ex.name)</span></span>
+<span id="L78"><span class="lineNum">      78</span> <span class="tlaUNC">           0 :     println(io, &quot;  &quot;, ex.source)</span></span>
+<span id="L79"><span class="lineNum">      79</span> <span class="tlaUNC">           0 :     for (v, x, (l, u)) in zip(ex.variables, ex.x0, ex.bounds)</span></span>
+<span id="L80"><span class="lineNum">      80</span> <span class="tlaUNC">           0 :         println(io, &quot;  &quot;, rpad(v, 44), &quot; start &quot;, rpad(round(x, sigdigits=6), 12), &quot; bounds (&quot;, l, &quot;, &quot;, u, &quot;)&quot;)</span></span>
+<span id="L81"><span class="lineNum">      81</span> <span class="tlaUNC">           0 :     end</span></span>
+<span id="L82"><span class="lineNum">      82</span>              : end</span>
+<span id="L83"><span class="lineNum">      83</span>              : #############################################################################</span>
+<span id="L84"><span class="lineNum">      84</span>              : # Paraxial helpers, used to recreate Zemax solves and to find the entrance pupil</span>
+<span id="L85"><span class="lineNum">      85</span>              : </span>
+<span id="L86"><span class="lineNum">      86</span>              : # largest curvature magnitude that keeps a surface's radius at least 1% larger than its semi-diameter</span>
+<span id="L87"><span class="lineNum">      87</span> <span class="tlaUNC">           0 : maxcurvature(semidiameter) = 1 / (1.01 * semidiameter)</span></span>
+<span id="L88"><span class="lineNum">      88</span>              : </span>
+<span id="L89"><span class="lineNum">      89</span>              : # Paraxial (y, nu = n u) ray trace through surfaces with curvatures `c`, followed by thicknesses `t`, with refractive index</span>
+<span id="L90"><span class="lineNum">      90</span>              : # `n[i]` after surface i and `n0` before the first. Returns the ray at the surface after the last thickness.</span>
+<span id="L91"><span class="lineNum">      91</span> <span class="tlaGNC tlaBgGNC">           1 : function paraxialtrace(y, nu, c, t, n, n0)</span></span>
+<span id="L92"><span class="lineNum">      92</span> <span class="tlaGNC">           1 :     nbefore = n0</span></span>
+<span id="L93"><span class="lineNum">      93</span> <span class="tlaGNC">           1 :     for i in eachindex(c)</span></span>
+<span id="L94"><span class="lineNum">      94</span> <span class="tlaGNC">           2 :         nu = nu - y * c[i] * (n[i] - nbefore)</span></span>
+<span id="L95"><span class="lineNum">      95</span> <span class="tlaGNC">           2 :         y = y + t[i] * nu / n[i]</span></span>
+<span id="L96"><span class="lineNum">      96</span> <span class="tlaGNC">           2 :         nbefore = n[i]</span></span>
+<span id="L97"><span class="lineNum">      97</span> <span class="tlaGNC">           3 :     end</span></span>
+<span id="L98"><span class="lineNum">      98</span> <span class="tlaGNC">           1 :     return y, nu</span></span>
+<span id="L99"><span class="lineNum">      99</span>              : end</span>
+<span id="L100"><span class="lineNum">     100</span>              : </span>
+<span id="L101"><span class="lineNum">     101</span>              : # Curvature of the last surface that gives effective focal length `f` in air, as Zemax's F number solve does.</span>
+<span id="L102"><span class="lineNum">     102</span>              : # `c`, `t`, `n` describe the surfaces before the last one (see paraxialtrace).</span>
+<span id="L103"><span class="lineNum">     103</span> <span class="tlaUNC tlaBgUNC">           0 : function lastcurvature(f, c, t, n, n0=1.0)</span></span>
+<span id="L104"><span class="lineNum">     104</span> <span class="tlaUNC">           0 :     y, nu = paraxialtrace(one(f), zero(f), c, t, n, n0)</span></span>
+<span id="L105"><span class="lineNum">     105</span> <span class="tlaUNC">           0 :     return (nu + 1 / f) / (y * (1 - n[end]))</span></span>
+<span id="L106"><span class="lineNum">     106</span>              : end</span>
+<span id="L107"><span class="lineNum">     107</span>              : </span>
+<span id="L108"><span class="lineNum">     108</span>              : # Distance from the first surface to the entrance pupil, for an aperture stop after the surfaces `c`, `t`, `n`.</span>
+<span id="L109"><span class="lineNum">     109</span> <span class="tlaUNC">           0 : function entrancepupildistance(c, t, n, n0=1.0)</span></span>
+<span id="L110"><span class="lineNum">     110</span> <span class="tlaUNC">           0 :     isempty(c) &amp;&amp; return 0.0</span></span>
+<span id="L111"><span class="lineNum">     111</span> <span class="tlaUNC">           0 :     a, _ = paraxialtrace(1.0, 0.0, c, t, n, n0) # parallel ray at height 1</span></span>
+<span id="L112"><span class="lineNum">     112</span> <span class="tlaUNC">           0 :     b, _ = paraxialtrace(0.0, n0, c, t, n, n0)  # ray through the first vertex at slope 1</span></span>
+<span id="L113"><span class="lineNum">     113</span> <span class="tlaUNC">           0 :     return b / a                                # the chief ray crosses the axis this far after the first vertex</span></span>
+<span id="L114"><span class="lineNum">     114</span>              : end</span>
+<span id="L115"><span class="lineNum">     115</span>              : </span>
+<span id="L116"><span class="lineNum">     116</span>              : #############################################################################</span>
+<span id="L117"><span class="lineNum">     117</span>              : # Clear apertures that follow the design</span>
+<span id="L118"><span class="lineNum">     118</span>              : </span>
+<span id="L119"><span class="lineNum">     119</span>              : &quot;&quot;&quot;</span>
+<span id="L120"><span class="lineNum">     120</span>              :     axialrayheights(prescription, height, λ) -&gt; Vector</span>
+<span id="L121"><span class="lineNum">     121</span>              : </span>
+<span id="L122"><span class="lineNum">     122</span>              : Real ray trace of a ray parallel to the axis at `height` (mm), wavelength `λ` (μm), through `prescription`, in the</span>
+<span id="L123"><span class="lineNum">     123</span>              : meridional plane. Returns the ray's height at each row from the first lens surface to the last row before the image</span>
+<span id="L124"><span class="lineNum">     124</span>              : (lens surfaces and the stop), NaN from where it misses a surface or is totally internally reflected. Spherical and flat</span>
+<span id="L125"><span class="lineNum">     125</span>              : surfaces only.</span>
+<span id="L126"><span class="lineNum">     126</span>              : &quot;&quot;&quot;</span>
+<span id="L127"><span class="lineNum">     127</span> <span class="tlaGNC tlaBgGNC">          59 : function axialrayheights(p::DataFrame, height, λ)</span></span>
+<span id="L128"><span class="lineNum">     128</span> <span class="tlaGNC">          59 :     n = size(p, 1)</span></span>
+<span id="L129"><span class="lineNum">     129</span> <span class="tlaGNC">         118 :     T = float(promote_type(typeof(height), nonmissingtype(eltype(p.Thickness)), nonmissingtype(eltype(p.Radius))))</span></span>
+<span id="L130"><span class="lineNum">     130</span> <span class="tlaGNC">         292 :     nindex(i) = isglass(p, i) ? T(AGFFileReader.index(p[i, :Material], λ)) : one(T)</span></span>
+<span id="L131"><span class="lineNum">     131</span> <span class="tlaGNC">          59 :     y, dz, dy = T(height), one(T), zero(T) # height and direction; the ray starts at the first surface's vertex plane</span></span>
+<span id="L132"><span class="lineNum">     132</span> <span class="tlaGNC">          59 :     nbefore = one(T)</span></span>
+<span id="L133"><span class="lineNum">     133</span> <span class="tlaGNC">          59 :     heights = T[]</span></span>
+<span id="L134"><span class="lineNum">     134</span> <span class="tlaGNC">          59 :     for i in 2:n-1</span></span>
+<span id="L135"><span class="lineNum">     135</span> <span class="tlaGNC">         175 :         row = p[i, :]</span></span>
+<span id="L136"><span class="lineNum">     136</span> <span class="tlaGNC">         350 :         conic = hasproperty(row, :Conic) &amp;&amp; !ismissing(row.Conic) ? row.Conic : 0.0</span></span>
+<span id="L137"><span class="lineNum">     137</span> <span class="tlaGNC">         175 :         (row.SurfaceType == &quot;Aspheric&quot; || !iszero(conic)) &amp;&amp; throw(ArgumentError(&quot;axialrayheights: row $i is not spherical&quot;))</span></span>
+<span id="L138"><span class="lineNum">     138</span> <span class="tlaGNC">         291 :         c = isfinite(row.Radius) ? 1 / row.Radius : zero(T)</span></span>
+<span id="L139"><span class="lineNum">     139</span>              :         # from the vertex plane to the surface: c (z² + y²) - 2z = 0 along the ray, the root nearest the plane</span>
+<span id="L140"><span class="lineNum">     140</span> <span class="tlaGNC">         175 :         b = dz - c * y * dy</span></span>
+<span id="L141"><span class="lineNum">     141</span> <span class="tlaGNC">         175 :         disc = b^2 - c^2 * y^2</span></span>
+<span id="L142"><span class="lineNum">     142</span> <span class="tlaGNC">         175 :         disc &lt; 0 &amp;&amp; return [heights; fill(T(NaN), n - 1 - i)] # misses the surface</span></span>
+<span id="L143"><span class="lineNum">     143</span> <span class="tlaGNC">         174 :         t = c * y^2 / (b + sqrt(disc))</span></span>
+<span id="L144"><span class="lineNum">     144</span> <span class="tlaGNC">         174 :         z, y = t * dz, y + t * dy</span></span>
+<span id="L145"><span class="lineNum">     145</span> <span class="tlaGNC">         174 :         push!(heights, y)</span></span>
+<span id="L146"><span class="lineNum">     146</span>              :         # refract: the unit normal (1 - c z, -c y) points along the ray</span>
+<span id="L147"><span class="lineNum">     147</span> <span class="tlaGNC">         174 :         nafter = nindex(i)</span></span>
+<span id="L148"><span class="lineNum">     148</span> <span class="tlaGNC">         174 :         if nafter != nbefore</span></span>
+<span id="L149"><span class="lineNum">     149</span> <span class="tlaGNC">         116 :             nz, ny = 1 - c * z, -c * y</span></span>
+<span id="L150"><span class="lineNum">     150</span> <span class="tlaGNC">         116 :             cosi = dz * nz + dy * ny</span></span>
+<span id="L151"><span class="lineNum">     151</span> <span class="tlaGNC">         116 :             μ = nbefore / nafter</span></span>
+<span id="L152"><span class="lineNum">     152</span> <span class="tlaGNC">         116 :             k = 1 - μ^2 * (1 - cosi^2)</span></span>
+<span id="L153"><span class="lineNum">     153</span> <span class="tlaGNC">         116 :             k &lt; 0 &amp;&amp; return [heights; fill(T(NaN), n - 1 - i)] # total internal reflection</span></span>
+<span id="L154"><span class="lineNum">     154</span> <span class="tlaGNC">         116 :             g = sqrt(k) - μ * cosi</span></span>
+<span id="L155"><span class="lineNum">     155</span> <span class="tlaGNC">         116 :             dz, dy = μ * dz + g * nz, μ * dy + g * ny</span></span>
+<span id="L156"><span class="lineNum">     156</span>              :         end</span>
+<span id="L157"><span class="lineNum">     157</span> <span class="tlaGNC">         174 :         nbefore = nafter</span></span>
+<span id="L158"><span class="lineNum">     158</span>              :         # on to the next vertex plane</span>
+<span id="L159"><span class="lineNum">     159</span> <span class="tlaGNC">         174 :         i &lt; n - 1 &amp;&amp; (t = (p[i, :Thickness] - z) / dz; y += t * dy)</span></span>
+<span id="L160"><span class="lineNum">     160</span> <span class="tlaGNC">         290 :     end</span></span>
+<span id="L161"><span class="lineNum">     161</span> <span class="tlaGNC">          58 :     return heights</span></span>
+<span id="L162"><span class="lineNum">     162</span>              : end</span>
+<span id="L163"><span class="lineNum">     163</span>              : </span>
+<span id="L164"><span class="lineNum">     164</span>              : &quot;&quot;&quot;</span>
+<span id="L165"><span class="lineNum">     165</span>              :     passaxialbeam(prescription, height, wavelengths) -&gt; DataFrame</span>
+<span id="L166"><span class="lineNum">     166</span>              : </span>
+<span id="L167"><span class="lineNum">     167</span>              : A copy of `prescription` whose lens surfaces are each at least large enough to pass the axial beam: a semi-diameter at</span>
+<span id="L168"><span class="lineNum">     168</span>              : least the height of its marginal ray, the ray parallel to the axis at `height` (the entrance pupil radius), at each of</span>
+<span id="L169"><span class="lineNum">     169</span>              : `wavelengths`. If the stop is smaller than that beam, the marginal ray is the one through the edge of the stop instead.</span>
+<span id="L170"><span class="lineNum">     170</span>              : The stop keeps its size.</span>
+<span id="L171"><span class="lineNum">     171</span>              : </span>
+<span id="L172"><span class="lineNum">     172</span>              : Use it in an optimization's `build(x)` so the clear apertures follow the design, like a lens design program's automatic</span>
+<span id="L173"><span class="lineNum">     173</span>              : semi-diameters: only the stop then limits the axial beam, and the optimizer can't stop the lens down with another</span>
+<span id="L174"><span class="lineNum">     174</span>              : surface. A semi-diameter is never made smaller than in `prescription`, so off-axis vignetting by the rims stays. If the</span>
+<span id="L175"><span class="lineNum">     175</span>              : beam can't pass a surface the semi-diameters become NaN and the system is invalid ([`OpticSim.surfacescross`](@ref)).</span>
+<span id="L176"><span class="lineNum">     176</span>              : &quot;&quot;&quot;</span>
+<span id="L177"><span class="lineNum">     177</span> <span class="tlaGNC">           3 : function passaxialbeam(p::DataFrame, height, wavelengths)</span></span>
+<span id="L178"><span class="lineNum">     178</span> <span class="tlaGNC">           3 :     stop = findfirst(==(&quot;Stop&quot;), p.SurfaceType)</span></span>
+<span id="L179"><span class="lineNum">     179</span> <span class="tlaGNC">           6 :     heights = map(wavelengths) do λ</span></span>
+<span id="L180"><span class="lineNum">     180</span> <span class="tlaGNC">           3 :         h = axialrayheights(p, height, λ)</span></span>
+<span id="L181"><span class="lineNum">     181</span> <span class="tlaGNC">           3 :         if stop !== nothing &amp;&amp; !isnan(h[stop-1]) &amp;&amp; abs(h[stop-1]) &gt; p[stop, :SemiDiameter]</span></span>
+<span id="L182"><span class="lineNum">     182</span>              :             # the stop limits the beam: find the entrance height whose ray just reaches the stop's edge</span>
+<span id="L183"><span class="lineNum">     183</span> <span class="tlaGNC">           1 :             lo, hi = 0.0, Float64(primalvalue(height))</span></span>
+<span id="L184"><span class="lineNum">     184</span> <span class="tlaGNC">           1 :             for _ in 1:50</span></span>
+<span id="L185"><span class="lineNum">     185</span> <span class="tlaGNC">          50 :                 mid = (lo + hi) / 2</span></span>
+<span id="L186"><span class="lineNum">     186</span> <span class="tlaGNC">          50 :                 abs(primalvalue(axialrayheights(p, mid, λ)[stop-1])) &gt; p[stop, :SemiDiameter] ? (hi = mid) : (lo = mid)</span></span>
+<span id="L187"><span class="lineNum">     187</span> <span class="tlaGNC">          99 :             end</span></span>
+<span id="L188"><span class="lineNum">     188</span> <span class="tlaGNC">           1 :             h = axialrayheights(p, lo, λ)</span></span>
+<span id="L189"><span class="lineNum">     189</span>              :         end</span>
+<span id="L190"><span class="lineNum">     190</span> <span class="tlaGNC">           3 :         abs.(h)</span></span>
+<span id="L191"><span class="lineNum">     191</span>              :     end</span>
+<span id="L192"><span class="lineNum">     192</span> <span class="tlaGNC">           3 :     q = copy(p)</span></span>
+<span id="L193"><span class="lineNum">     193</span> <span class="tlaGNC">           6 :     S = promote_type(nonmissingtype(eltype(p.SemiDiameter)), eltype(first(heights)))</span></span>
+<span id="L194"><span class="lineNum">     194</span> <span class="tlaGNC">          15 :     sd = S[i == 1 || i == size(p, 1) || i == stop ? p[i, :SemiDiameter] : max(p[i, :SemiDiameter], maximum(h[i-1] for h in heights)) for i in 1:size(p, 1)]</span></span>
+<span id="L195"><span class="lineNum">     195</span> <span class="tlaGNC">           3 :     q[!, :SemiDiameter] = sd</span></span>
+<span id="L196"><span class="lineNum">     196</span> <span class="tlaGNC">           3 :     return q</span></span>
+<span id="L197"><span class="lineNum">     197</span>              : end</span>
+<span id="L198"><span class="lineNum">     198</span>              : </span>
+<span id="L199"><span class="lineNum">     199</span>              : #############################################################################</span>
+<span id="L200"><span class="lineNum">     200</span>              : # Rays and merit function</span>
+<span id="L201"><span class="lineNum">     201</span>              : </span>
+<span id="L202"><span class="lineNum">     202</span>              : &quot;&quot;&quot;</span>
+<span id="L203"><span class="lineNum">     203</span>              :     pupilsource(angle, epd, zpupil, λ; rings = 6, distance = 30.0) -&gt; Sources.Source</span>
+<span id="L204"><span class="lineNum">     204</span>              : </span>
+<span id="L205"><span class="lineNum">     205</span>              : An emitter for a field angle: a collimated beam filling an entrance pupil of diameter `epd`, `zpupil` after the first</span>
+<span id="L206"><span class="lineNum">     206</span>              : lens vertex (which is at z = 0; light travels toward -z), at field angle `angle` in degrees, wavelength `λ` in μm. Its</span>
+<span id="L207"><span class="lineNum">     207</span>              : origins are a hexapolar grid with `rings` rings, `1 + 3 rings (rings + 1)` rays, in a plane parallel to the pupil</span>
+<span id="L208"><span class="lineNum">     208</span>              : `distance` before it along the beam, which must put them in front of the lens.</span>
+<span id="L209"><span class="lineNum">     209</span>              : &quot;&quot;&quot;</span>
+<span id="L210"><span class="lineNum">     210</span> <span class="tlaUNC tlaBgUNC">           0 : function pupilsource(angle, epd, zpupil, λ; rings=6, distance=30.0)</span></span>
+<span id="L211"><span class="lineNum">     211</span>              :     # the number type of the pupil position: with automatic differentiation the pupil can depend on the optimization</span>
+<span id="L212"><span class="lineNum">     212</span>              :     # variables, and the source then generates rays of that type</span>
+<span id="L213"><span class="lineNum">     213</span> <span class="tlaUNC">           0 :     T = float(promote_type(typeof(zpupil), typeof(distance)))</span></span>
+<span id="L214"><span class="lineNum">     214</span> <span class="tlaUNC">           0 :     d = SVector{3,T}(0, sind(angle), -cosd(angle))</span></span>
+<span id="L215"><span class="lineNum">     215</span>              :     # the grid's origins are in the z = 0 plane of the source's frame; translating the frame shifts them to the pupil</span>
+<span id="L216"><span class="lineNum">     216</span>              :     # plane, moved `distance` back along the beam</span>
+<span id="L217"><span class="lineNum">     217</span> <span class="tlaUNC">           0 :     Emitters.Sources.Source(T; transform=translation(SVector{3,T}(0, 0, -zpupil) - distance * d),</span></span>
+<span id="L218"><span class="lineNum">     218</span>              :         origins=Emitters.Origins.Hexapolar(rings, T(epd / 2), T(epd / 2)), directions=Emitters.Directions.Constant(d),</span>
+<span id="L219"><span class="lineNum">     219</span>              :         spectrum=Emitters.Spectrum.DeltaFunction(T(λ)))</span>
+<span id="L220"><span class="lineNum">     220</span>              : end</span>
+<span id="L221"><span class="lineNum">     221</span>              : </span>
+<span id="L222"><span class="lineNum">     222</span>              : # The rays of `pupilsource` for each wavelength, as (ray, weight) pairs, `weight` being the wavelength's weight.</span>
+<span id="L223"><span class="lineNum">     223</span> <span class="tlaUNC">           0 : function pupilrays(angle, epd, zpupil, wavelengths, weights; rings=6, distance=30.0)</span></span>
+<span id="L224"><span class="lineNum">     224</span> <span class="tlaUNC">           0 :     [(r, w) for (λ, w) in zip(wavelengths, weights) for r in pupilsource(angle, epd, zpupil, λ; rings, distance)]</span></span>
+<span id="L225"><span class="lineNum">     225</span>              : end</span>
+<span id="L226"><span class="lineNum">     226</span>              : </span>
+<span id="L227"><span class="lineNum">     227</span>              : # Weighted RMS radius of where `rays` hit the detector, about their weighted centroid, in mm. NaN if none hit.</span>
+<span id="L228"><span class="lineNum">     228</span>              : #</span>
+<span id="L229"><span class="lineNum">     229</span>              : # Only rays that pass through each lens surface once, in order, count, as in a sequential lens design program. OpticSim</span>
+<span id="L230"><span class="lineNum">     230</span>              : # traces non-sequentially, so a ray can also reach the image by a stray path, e.g. reflecting inside a thick element or</span>
+<span id="L231"><span class="lineNum">     231</span>              : # skimming a lens rim; such light is flare, not part of the image.</span>
+<span id="L232"><span class="lineNum">     232</span> <span class="tlaUNC">           0 : rmsspotradius(system, rays, ::Type{T}) where {T} = rmsradius(only(fieldhits(system, [rays], T)))</span></span>
+<span id="L233"><span class="lineNum">     233</span>              : </span>
+<span id="L234"><span class="lineNum">     234</span>              : # weighted RMS radius of (point, weight) pairs about their weighted centroid; NaN if there are none</span>
+<span id="L235"><span class="lineNum">     235</span> <span class="tlaUNC">           0 : function rmsradius(hits::AbstractVector{Tuple{SVector{3,T},T}}) where {T}</span></span>
+<span id="L236"><span class="lineNum">     236</span> <span class="tlaUNC">           0 :     isempty(hits) &amp;&amp; return T(NaN)</span></span>
+<span id="L237"><span class="lineNum">     237</span> <span class="tlaUNC">           0 :     total = sum(last, hits)</span></span>
+<span id="L238"><span class="lineNum">     238</span> <span class="tlaUNC">           0 :     centroid = sum(w * p for (p, w) in hits) / total</span></span>
+<span id="L239"><span class="lineNum">     239</span> <span class="tlaUNC">           0 :     return sqrt(sum(w * sum(abs2, p - centroid) for (p, w) in hits) / total)</span></span>
+<span id="L240"><span class="lineNum">     240</span>              : end</span>
+<span id="L241"><span class="lineNum">     241</span>              : </span>
+<span id="L242"><span class="lineNum">     242</span>              : &quot;&quot;&quot;</span>
+<span id="L243"><span class="lineNum">     243</span>              :     fieldhits(system, fieldrays, T) -&gt; Vector{Vector{Tuple{SVector{3,T},T}}}</span>
+<span id="L244"><span class="lineNum">     244</span>              : </span>
+<span id="L245"><span class="lineNum">     245</span>              : Traces each field's rays through `system` and returns, for each field, the image points of the rays that pass through</span>
+<span id="L246"><span class="lineNum">     246</span>              : each lens surface once, in order, with their weights.</span>
+<span id="L247"><span class="lineNum">     247</span>              : </span>
+<span id="L248"><span class="lineNum">     248</span>              : The rays are traced in parallel from a work queue (start Julia with several threads, e.g. `julia -t 8`, to use this).</span>
+<span id="L249"><span class="lineNum">     249</span>              : The rays of all fields are split into small chunks; one worker per thread repeatedly takes the next chunk from a shared</span>
+<span id="L250"><span class="lineNum">     250</span>              : atomic counter, so faster cores, or threads whose rays happen to be cheap (vignetted rays stop early), take more chunks</span>
+<span id="L251"><span class="lineNum">     251</span>              : and no thread sits idle at the end. The workers are `:static`, so a worker never moves between threads mid trace, as</span>
+<span id="L252"><span class="lineNum">     252</span>              : OpticSim's interval pools are per thread. Each worker traces through its own copy of the optical system, because tracing</span>
+<span id="L253"><span class="lineNum">     253</span>              : writes to the system's detector image; the copies share the lens geometry. The results are kept per chunk and combined in</span>
+<span id="L254"><span class="lineNum">     254</span>              : chunk order, so the result is the same whichever thread traced which chunk, and for any number of threads.</span>
+<span id="L255"><span class="lineNum">     255</span>              : &quot;&quot;&quot;</span>
+<span id="L256"><span class="lineNum">     256</span> <span class="tlaUNC">           0 : function fieldhits(system::AxisymmetricOpticalSystem, fieldrays, ::Type{T}; chunksize::Int=16) where {T}</span></span>
+<span id="L257"><span class="lineNum">     257</span> <span class="tlaUNC">           0 :     sequentialhits = lenssurfaces(system.prescription)</span></span>
+<span id="L258"><span class="lineNum">     258</span> <span class="tlaUNC">           0 :     jobs = [(field, r, w) for (field, rays) in enumerate(fieldrays) for (r, w) in rays]</span></span>
+<span id="L259"><span class="lineNum">     259</span> <span class="tlaUNC">           0 :     chunks = collect(Iterators.partition(eachindex(jobs), chunksize))</span></span>
+<span id="L260"><span class="lineNum">     260</span> <span class="tlaUNC">           0 :     results = [Tuple{Int,SVector{3,T},T}[] for _ in chunks]</span></span>
+<span id="L261"><span class="lineNum">     261</span> <span class="tlaUNC">           0 :     next = Threads.Atomic{Int}(1) # the next chunk to trace</span></span>
+<span id="L262"><span class="lineNum">     262</span> <span class="tlaUNC">           0 :     function worker()</span></span>
+<span id="L263"><span class="lineNum">     263</span> <span class="tlaUNC">           0 :         csg = copy(system.system)</span></span>
+<span id="L264"><span class="lineNum">     264</span> <span class="tlaUNC">           0 :         while (k = Threads.atomic_add!(next, 1)) &lt;= length(chunks)</span></span>
+<span id="L265"><span class="lineNum">     265</span> <span class="tlaUNC">           0 :             for j in chunks[k]</span></span>
+<span id="L266"><span class="lineNum">     266</span> <span class="tlaUNC">           0 :                 field, r, w = jobs[j]</span></span>
+<span id="L267"><span class="lineNum">     267</span> <span class="tlaUNC">           0 :                 rT = OpticalRay(SVector{3,T}(origin(r)), SVector{3,T}(direction(r)), T(power(r)), T(wavelength(r)))</span></span>
+<span id="L268"><span class="lineNum">     268</span> <span class="tlaUNC">           0 :                 res = trace(csg, rT, test=true)</span></span>
+<span id="L269"><span class="lineNum">     269</span> <span class="tlaUNC">           0 :                 if res isa LensTrace &amp;&amp; nhits(res) == sequentialhits</span></span>
+<span id="L270"><span class="lineNum">     270</span> <span class="tlaUNC">           0 :                     push!(results[k], (field, point(res), T(w)))</span></span>
+<span id="L271"><span class="lineNum">     271</span>              :                 end</span>
+<span id="L272"><span class="lineNum">     272</span> <span class="tlaUNC">           0 :             end</span></span>
+<span id="L273"><span class="lineNum">     273</span> <span class="tlaUNC">           0 :         end</span></span>
+<span id="L274"><span class="lineNum">     274</span>              :     end</span>
+<span id="L275"><span class="lineNum">     275</span> <span class="tlaUNC">           0 :     nworkers = min(Threads.nthreads(), length(chunks))</span></span>
+<span id="L276"><span class="lineNum">     276</span> <span class="tlaUNC">           0 :     if nworkers &lt;= 1</span></span>
+<span id="L277"><span class="lineNum">     277</span> <span class="tlaUNC">           0 :         worker()</span></span>
+<span id="L278"><span class="lineNum">     278</span>              :     else</span>
+<span id="L279"><span class="lineNum">     279</span> <span class="tlaUNC">           0 :         Threads.@threads :static for _ in 1:nworkers</span></span>
+<span id="L280"><span class="lineNum">     280</span> <span class="tlaUNC">           0 :             worker()</span></span>
+<span id="L281"><span class="lineNum">     281</span> <span class="tlaUNC">           0 :         end</span></span>
+<span id="L282"><span class="lineNum">     282</span>              :     end</span>
+<span id="L283"><span class="lineNum">     283</span> <span class="tlaUNC">           0 :     hits = [Tuple{SVector{3,T},T}[] for _ in fieldrays]</span></span>
+<span id="L284"><span class="lineNum">     284</span> <span class="tlaUNC">           0 :     for result in results, (field, p, w) in result</span></span>
+<span id="L285"><span class="lineNum">     285</span> <span class="tlaUNC">           0 :         push!(hits[field], (p, w))</span></span>
+<span id="L286"><span class="lineNum">     286</span> <span class="tlaUNC">           0 :     end</span></span>
+<span id="L287"><span class="lineNum">     287</span> <span class="tlaUNC">           0 :     return hits</span></span>
+<span id="L288"><span class="lineNum">     288</span>              : end</span>
+<span id="L289"><span class="lineNum">     289</span>              : </span>
+<span id="L290"><span class="lineNum">     290</span>              : # mean over the fields of the squared RMS spot radius</span>
+<span id="L291"><span class="lineNum">     291</span>              : #</span>
+<span id="L292"><span class="lineNum">     292</span>              : # NaN if a surface cannot span its clear aperture, which can happen to a radius set by a solve rather than bounded</span>
+<span id="L293"><span class="lineNum">     293</span>              : # directly: such a system cannot be built. Solvers treat NaN as a failed step and backtrack.</span>
+<span id="L294"><span class="lineNum">     294</span> <span class="tlaUNC">           0 : function spotmerit(prescription::DataFrame, fieldrays, ::Type{T}) where {T}</span></span>
+<span id="L295"><span class="lineNum">     295</span> <span class="tlaUNC">           0 :     (validsurfaces(prescription) &amp;&amp; !surfacescross(prescription)) || return T(NaN)</span></span>
+<span id="L296"><span class="lineNum">     296</span> <span class="tlaUNC">           0 :     system = AxisymmetricOpticalSystem{T}(prescription, 1, 1)</span></span>
+<span id="L297"><span class="lineNum">     297</span> <span class="tlaUNC">           0 :     return sum(rmsradius(h)^2 for h in fieldhits(system, fieldrays, T)) / length(fieldrays)</span></span>
+<span id="L298"><span class="lineNum">     298</span>              : end</span>
+<span id="L299"><span class="lineNum">     299</span>              : </span>
+<span id="L300"><span class="lineNum">     300</span>              : # number of surfaces a ray refracts at on its sequential path: the rows where the material changes (a stop in air</span>
+<span id="L301"><span class="lineNum">     301</span>              : # isn't one, a stop on a lens surface is)</span>
+<span id="L302"><span class="lineNum">     302</span> <span class="tlaUNC">           0 : lenssurfaces(p::DataFrame) = count(i -&gt; !isequal(p[i, :Material], p[i-1, :Material]), 2:(size(p, 1)-1))</span></span>
+<span id="L303"><span class="lineNum">     303</span>              : </span>
+<span id="L304"><span class="lineNum">     304</span>              : # true if every lens surface reaches its semi-diameter: 1 - (1 + conic) c² h² &gt; 0, and for spheres |radius| &gt; h</span>
+<span id="L305"><span class="lineNum">     305</span> <span class="tlaUNC">           0 : function validsurfaces(p::DataFrame)</span></span>
+<span id="L306"><span class="lineNum">     306</span> <span class="tlaUNC">           0 :     for i in 2:(size(p, 1)-1)</span></span>
+<span id="L307"><span class="lineNum">     307</span> <span class="tlaUNC">           0 :         R, h = p[i, :Radius], p[i, :SemiDiameter]</span></span>
+<span id="L308"><span class="lineNum">     308</span> <span class="tlaUNC">           0 :         isfinite(R) || continue</span></span>
+<span id="L309"><span class="lineNum">     309</span> <span class="tlaUNC">           0 :         k = hasproperty(p, :Conic) &amp;&amp; !ismissing(p[i, :Conic]) ? p[i, :Conic] : 0</span></span>
+<span id="L310"><span class="lineNum">     310</span> <span class="tlaUNC">           0 :         1 - (1 + k) * h^2 / R^2 &gt; 0 || return false</span></span>
+<span id="L311"><span class="lineNum">     311</span> <span class="tlaUNC">           0 :     end</span></span>
+<span id="L312"><span class="lineNum">     312</span> <span class="tlaUNC">           0 :     return true</span></span>
+<span id="L313"><span class="lineNum">     313</span>              : end</span>
+<span id="L314"><span class="lineNum">     314</span>              : </span>
+<span id="L315"><span class="lineNum">     315</span>              : &quot;&quot;&quot;</span>
+<span id="L316"><span class="lineNum">     316</span>              :     rmsspotradii(lens::LensOptimizationProblem, x) -&gt; Vector</span>
+<span id="L317"><span class="lineNum">     317</span>              : </span>
+<span id="L318"><span class="lineNum">     318</span>              : RMS spot radius about the centroid for each field of `lens` with variables `x`, in μm.</span>
+<span id="L319"><span class="lineNum">     319</span>              : &quot;&quot;&quot;</span>
+<span id="L320"><span class="lineNum">     320</span> <span class="tlaUNC">           0 : rmsspotradii(lens::LensOptimizationProblem, x) = [1000 * rmsspotradius(lens.build(x), rays, Float64) for rays in lens.aimedrays(x)]</span></span>
+<span id="L321"><span class="lineNum">     321</span>              : </span>
+<span id="L322"><span class="lineNum">     322</span>              : &quot;&quot;&quot;</span>
+<span id="L323"><span class="lineNum">     323</span>              :     fieldrays(lens::LensOptimizationProblem) -&gt; RayListSource</span>
+<span id="L324"><span class="lineNum">     324</span>              : </span>
+<span id="L325"><span class="lineNum">     325</span>              : The rays `lens` traces, at its middle wavelength, ready to draw: each field's rays get that field's number as</span>
+<span id="L326"><span class="lineNum">     326</span>              : `sourcenum`, so drawing with `colorbysourcenum = true` colors each field differently. Use a smaller `rings` when</span>
+<span id="L327"><span class="lineNum">     327</span>              : creating the problem for a less cluttered drawing:</span>
+<span id="L328"><span class="lineNum">     328</span>              : </span>
+<span id="L329"><span class="lineNum">     329</span>              : ```julia</span>
+<span id="L330"><span class="lineNum">     330</span>              : ex = Examples.singlet_optimization(rings=3)</span>
+<span id="L331"><span class="lineNum">     331</span>              : Vis.drawtracerays(ex.build(ex.x0); raygenerator=fieldrays(ex), view=:side, trackallrays=true, test=true, colorbysourcenum=true)</span>
+<span id="L332"><span class="lineNum">     332</span>              : ```</span>
+<span id="L333"><span class="lineNum">     333</span>              : &quot;&quot;&quot;</span>
+<span id="L334"><span class="lineNum">     334</span> <span class="tlaUNC">           0 : function fieldrays(lens::LensOptimizationProblem)</span></span>
+<span id="L335"><span class="lineNum">     335</span> <span class="tlaUNC">           0 :     rays = OpticalRay{Float64,3}[]</span></span>
+<span id="L336"><span class="lineNum">     336</span> <span class="tlaUNC">           0 :     for (field, fieldrays) in enumerate(lens.rays)</span></span>
+<span id="L337"><span class="lineNum">     337</span> <span class="tlaUNC">           0 :         wavelengths = unique(wavelength(r) for (r, _) in fieldrays)</span></span>
+<span id="L338"><span class="lineNum">     338</span> <span class="tlaUNC">           0 :         λ = wavelengths[(length(wavelengths)+1)÷2]</span></span>
+<span id="L339"><span class="lineNum">     339</span> <span class="tlaUNC">           0 :         for (r, _) in fieldrays</span></span>
+<span id="L340"><span class="lineNum">     340</span> <span class="tlaUNC">           0 :             wavelength(r) == λ &amp;&amp; push!(rays, OpticalRay(origin(r), direction(r), 1.0, λ; sourcenum=field))</span></span>
+<span id="L341"><span class="lineNum">     341</span> <span class="tlaUNC">           0 :         end</span></span>
+<span id="L342"><span class="lineNum">     342</span> <span class="tlaUNC">           0 :     end</span></span>
+<span id="L343"><span class="lineNum">     343</span> <span class="tlaUNC">           0 :     return Emitters.Sources.RayListSource(rays)</span></span>
+<span id="L344"><span class="lineNum">     344</span>              : end</span>
+<span id="L345"><span class="lineNum">     345</span>              : </span>
+<span id="L346"><span class="lineNum">     346</span>              : </span>
+<span id="L347"><span class="lineNum">     347</span>              : #############################################################################</span>
+<span id="L348"><span class="lineNum">     348</span>              : # Geometry check</span>
+<span id="L349"><span class="lineNum">     349</span>              : #</span>
+<span id="L350"><span class="lineNum">     350</span>              : # A design can only be built if its parts are in order along the axis at every height: no lens element passes through its</span>
+<span id="L351"><span class="lineNum">     351</span>              : # own other surface (negative glass thickness) or into the next element, the stop or the image. The check follows how</span>
+<span id="L352"><span class="lineNum">     352</span>              : # AxisymmetricOpticalSystem builds the parts:</span>
+<span id="L353"><span class="lineNum">     353</span>              : #</span>
+<span id="L354"><span class="lineNum">     354</span>              : # - a lens element (a glass row of the prescription, between surfaces i and i + 1) is a solid of radius equal to the larger</span>
+<span id="L355"><span class="lineNum">     355</span>              : #   of its two surfaces' semi-diameters. A spherical surface ends at its own semi-diameter, or at its sphere's equator</span>
+<span id="L356"><span class="lineNum">     356</span>              : #   if the sphere is too small, and a flat ring continues from there to the rim. Conic and aspheric surfaces continue past</span>
+<span id="L357"><span class="lineNum">     357</span>              : #   their own semi-diameter to the rim.</span>
+<span id="L358"><span class="lineNum">     358</span>              : # - the stop is an opaque plane with a hole of its semi-diameter; it extends without limit outside the hole.</span>
+<span id="L359"><span class="lineNum">     359</span>              : # - the image is a plane of its semi-diameter.</span>
+<span id="L360"><span class="lineNum">     360</span>              : #</span>
+<span id="L361"><span class="lineNum">     361</span>              : # Cemented elements share a surface, so their separation there is zero, which is allowed.</span>
+<span id="L362"><span class="lineNum">     362</span>              : </span>
+<span id="L363"><span class="lineNum">     363</span>              : # sag of a prescription surface at height h: conic plus even aspheric terms. NaN where the surface doesn't exist.</span>
+<span id="L364"><span class="lineNum">     364</span> <span class="tlaGNC tlaBgGNC">         216 : function prescriptionsag(row, h)</span></span>
+<span id="L365"><span class="lineNum">     365</span> <span class="tlaGNC">         432 :     R = coalesce(row.Radius, Inf)</span></span>
+<span id="L366"><span class="lineNum">     366</span> <span class="tlaGNC">         432 :     k = hasproperty(row, :Conic) &amp;&amp; !ismissing(row.Conic) ? row.Conic : 0.0</span></span>
+<span id="L367"><span class="lineNum">     367</span> <span class="tlaGNC">         216 :     z = 0.0</span></span>
+<span id="L368"><span class="lineNum">     368</span> <span class="tlaGNC">         216 :     if isfinite(R)</span></span>
+<span id="L369"><span class="lineNum">     369</span> <span class="tlaGNC">          72 :         c = 1 / R</span></span>
+<span id="L370"><span class="lineNum">     370</span> <span class="tlaGNC">          72 :         t = 1 - (1 + k) * c^2 * h^2</span></span>
+<span id="L371"><span class="lineNum">     371</span> <span class="tlaGNC">          72 :         t &lt; 0 &amp;&amp; return NaN # the surface does not exist at this height</span></span>
+<span id="L372"><span class="lineNum">     372</span> <span class="tlaGNC">          72 :         z = c * h^2 / (1 + sqrt(t))</span></span>
+<span id="L373"><span class="lineNum">     373</span>              :     end</span>
+<span id="L374"><span class="lineNum">     374</span> <span class="tlaGNC">         216 :     if row.SurfaceType == &quot;Aspheric&quot; &amp;&amp; hasproperty(row, :Parameters) &amp;&amp; !ismissing(row.Parameters)</span></span>
+<span id="L375"><span class="lineNum">     375</span> <span class="tlaUNC tlaBgUNC">           0 :         for (order, a) in row.Parameters</span></span>
+<span id="L376"><span class="lineNum">     376</span> <span class="tlaUNC">           0 :             z += a * h^parse(Int, order)</span></span>
+<span id="L377"><span class="lineNum">     377</span> <span class="tlaUNC">           0 :         end</span></span>
+<span id="L378"><span class="lineNum">     378</span>              :     end</span>
+<span id="L379"><span class="lineNum">     379</span> <span class="tlaGNC tlaBgGNC">         216 :     return z</span></span>
+<span id="L380"><span class="lineNum">     380</span>              : end</span>
+<span id="L381"><span class="lineNum">     381</span>              : </span>
+<span id="L382"><span class="lineNum">     382</span>              : # sag of a surface as OpticSim builds it into a lens element: a spherical surface ends at its own semidiameter, or at its</span>
+<span id="L383"><span class="lineNum">     383</span>              : # sphere's equator if that comes first, and a flat ring at that height continues to the element rim. Conic and aspheric</span>
+<span id="L384"><span class="lineNum">     384</span>              : # surfaces continue to the rim.</span>
+<span id="L385"><span class="lineNum">     385</span> <span class="tlaGNC">         216 : function elementsag(row, h)</span></span>
+<span id="L386"><span class="lineNum">     386</span> <span class="tlaGNC">         432 :     R = coalesce(row.Radius, Inf)</span></span>
+<span id="L387"><span class="lineNum">     387</span> <span class="tlaGNC">         432 :     conic = hasproperty(row, :Conic) &amp;&amp; !ismissing(row.Conic) ? row.Conic : 0.0</span></span>
+<span id="L388"><span class="lineNum">     388</span> <span class="tlaGNC">         216 :     if isfinite(R) &amp;&amp; iszero(conic) &amp;&amp; row.SurfaceType != &quot;Aspheric&quot;</span></span>
+<span id="L389"><span class="lineNum">     389</span> <span class="tlaGNC">         144 :         stop = min(coalesce(row.SemiDiameter, Inf), abs(R))</span></span>
+<span id="L390"><span class="lineNum">     390</span> <span class="tlaGNC">          72 :         h &gt;= stop &amp;&amp; return stop &gt;= abs(R) ? R : prescriptionsag(row, stop) # the flat ring</span></span>
+<span id="L391"><span class="lineNum">     391</span>              :     end</span>
+<span id="L392"><span class="lineNum">     392</span> <span class="tlaGNC">         198 :     return prescriptionsag(row, h)</span></span>
+<span id="L393"><span class="lineNum">     393</span>              : end</span>
+<span id="L394"><span class="lineNum">     394</span>              : </span>
+<span id="L395"><span class="lineNum">     395</span> <span class="tlaGNC">         178 : isglass(p::DataFrame, i) = !(ismissing(p[i, :Material]) || p[i, :Material] == AGFFileReader.Air)</span></span>
+<span id="L396"><span class="lineNum">     396</span>              : </span>
+<span id="L397"><span class="lineNum">     397</span>              : # The solid parts along the axis, in order: lens elements, the stop and the image. Each is (front, back, inner, outer): its</span>
+<span id="L398"><span class="lineNum">     398</span>              : # front and back surface rows, and the heights between which it is present.</span>
+<span id="L399"><span class="lineNum">     399</span> <span class="tlaGNC">           2 : function lensparts(p::DataFrame)</span></span>
+<span id="L400"><span class="lineNum">     400</span> <span class="tlaGNC">           2 :     n = size(p, 1)</span></span>
+<span id="L401"><span class="lineNum">     401</span> <span class="tlaGNC">           2 :     parts = Tuple{Int,Int,Float64,Float64}[]</span></span>
+<span id="L402"><span class="lineNum">     402</span> <span class="tlaGNC">           2 :     for i in 2:n</span></span>
+<span id="L403"><span class="lineNum">     403</span> <span class="tlaGNC">          16 :         sd = Float64(primalvalue(coalesce(p[i, :SemiDiameter], Inf)))</span></span>
+<span id="L404"><span class="lineNum">     404</span> <span class="tlaGNC">           8 :         if i == n</span></span>
+<span id="L405"><span class="lineNum">     405</span> <span class="tlaGNC">           2 :             push!(parts, (i, i, 0.0, sd))           # the image</span></span>
+<span id="L406"><span class="lineNum">     406</span> <span class="tlaGNC">           6 :         elseif p[i, :SurfaceType] == &quot;Stop&quot;</span></span>
+<span id="L407"><span class="lineNum">     407</span> <span class="tlaGNC">           2 :             push!(parts, (i, i, sd, Inf))           # opaque outside the hole</span></span>
+<span id="L408"><span class="lineNum">     408</span> <span class="tlaGNC">           4 :         elseif isglass(p, i)</span></span>
+<span id="L409"><span class="lineNum">     409</span> <span class="tlaGNC">           2 :             push!(parts, (i, i + 1, 0.0, max(sd, Float64(primalvalue(p[i+1, :SemiDiameter])))))</span></span>
+<span id="L410"><span class="lineNum">     410</span>              :         end</span>
+<span id="L411"><span class="lineNum">     411</span> <span class="tlaGNC">          14 :     end</span></span>
+<span id="L412"><span class="lineNum">     412</span> <span class="tlaGNC">           2 :     return parts</span></span>
+<span id="L413"><span class="lineNum">     413</span>              : end</span>
+<span id="L414"><span class="lineNum">     414</span>              : </span>
+<span id="L415"><span class="lineNum">     415</span>              : # axial position of surface row j at height h, the first surface's vertex being at 0</span>
+<span id="L416"><span class="lineNum">     416</span> <span class="tlaGNC">         216 : function surfacez(p::DataFrame, j, h)</span></span>
+<span id="L417"><span class="lineNum">     417</span> <span class="tlaGNC">         216 :     vertex = sum((p[k, :Thickness] for k in 2:(j-1)); init=0.0)</span></span>
+<span id="L418"><span class="lineNum">     418</span> <span class="tlaGNC">         216 :     return vertex + elementsag(p[j, :], h)</span></span>
+<span id="L419"><span class="lineNum">     419</span>              : end</span>
+<span id="L420"><span class="lineNum">     420</span>              : </span>
+<span id="L421"><span class="lineNum">     421</span>              : # heights to check: evenly spaced, plus every height where a part starts or ends or a flat ring begins, where the closest</span>
+<span id="L422"><span class="lineNum">     422</span>              : # approach often is</span>
+<span id="L423"><span class="lineNum">     423</span> <span class="tlaGNC">           2 : function checkheights(p::DataFrame, parts, samples)</span></span>
+<span id="L424"><span class="lineNum">     424</span> <span class="tlaGNC">           4 :     top = maximum(outer for (_, _, _, outer) in parts if isfinite(outer))</span></span>
+<span id="L425"><span class="lineNum">     425</span> <span class="tlaGNC">           2 :     hs = collect(range(0.0, top, length=samples))</span></span>
+<span id="L426"><span class="lineNum">     426</span> <span class="tlaGNC">           2 :     for (_, _, inner, outer) in parts</span></span>
+<span id="L427"><span class="lineNum">     427</span> <span class="tlaGNC">           6 :         isfinite(outer) &amp;&amp; push!(hs, outer)</span></span>
+<span id="L428"><span class="lineNum">     428</span> <span class="tlaGNC">           6 :         inner &gt; 0 &amp;&amp; push!(hs, inner)</span></span>
+<span id="L429"><span class="lineNum">     429</span> <span class="tlaGNC">           6 :     end</span></span>
+<span id="L430"><span class="lineNum">     430</span> <span class="tlaGNC">           2 :     for i in 2:size(p, 1)</span></span>
+<span id="L431"><span class="lineNum">     431</span> <span class="tlaGNC">          16 :         R = Float64(primalvalue(coalesce(p[i, :Radius], Inf)))</span></span>
+<span id="L432"><span class="lineNum">     432</span> <span class="tlaGNC">           8 :         isfinite(R) &amp;&amp; abs(R) &lt; top &amp;&amp; push!(hs, abs(R))</span></span>
+<span id="L433"><span class="lineNum">     433</span> <span class="tlaGNC">          14 :     end</span></span>
+<span id="L434"><span class="lineNum">     434</span> <span class="tlaGNC">           2 :     return sort!(unique!(hs))</span></span>
+<span id="L435"><span class="lineNum">     435</span>              : end</span>
+<span id="L436"><span class="lineNum">     436</span>              : </span>
+<span id="L437"><span class="lineNum">     437</span>              : # Calls f(kind, a, b, separation, h) for each height h and each clearance there: the glass thickness of each element</span>
+<span id="L438"><span class="lineNum">     438</span>              : # (&quot;glass&quot;, between its surfaces a and b) and the gap from each part to the next part present at that height (&quot;air&quot;, from</span>
+<span id="L439"><span class="lineNum">     439</span>              : # surface a to surface b).</span>
+<span id="L440"><span class="lineNum">     440</span> <span class="tlaGNC">           4 : function foreachclearance(f, p::DataFrame; samples=32)</span></span>
+<span id="L441"><span class="lineNum">     441</span> <span class="tlaGNC">           2 :     parts = lensparts(p)</span></span>
+<span id="L442"><span class="lineNum">     442</span> <span class="tlaGNC">           2 :     for h in checkheights(p, parts, samples)</span></span>
+<span id="L443"><span class="lineNum">     443</span> <span class="tlaGNC">          70 :         previous = nothing</span></span>
+<span id="L444"><span class="lineNum">     444</span> <span class="tlaGNC">          70 :         for (front, back, inner, outer) in parts</span></span>
+<span id="L445"><span class="lineNum">     445</span> <span class="tlaGNC">         210 :             inner &lt;= h &lt;= outer || continue</span></span>
+<span id="L446"><span class="lineNum">     446</span> <span class="tlaGNC">         154 :             back != front &amp;&amp; f(&quot;glass&quot;, front, back, surfacez(p, back, h) - surfacez(p, front, h), h)</span></span>
+<span id="L447"><span class="lineNum">     447</span> <span class="tlaGNC">         154 :             if previous !== nothing &amp;&amp; previous != front # cemented elements share a surface; no gap to check</span></span>
+<span id="L448"><span class="lineNum">     448</span> <span class="tlaGNC">          84 :                 f(&quot;air&quot;, previous, front, surfacez(p, front, h) - surfacez(p, previous, h), h)</span></span>
+<span id="L449"><span class="lineNum">     449</span>              :             end</span>
+<span id="L450"><span class="lineNum">     450</span> <span class="tlaGNC">         154 :             previous = back</span></span>
+<span id="L451"><span class="lineNum">     451</span> <span class="tlaGNC">         210 :         end</span></span>
+<span id="L452"><span class="lineNum">     452</span> <span class="tlaGNC">          70 :     end</span></span>
+<span id="L453"><span class="lineNum">     453</span>              : end</span>
+<span id="L454"><span class="lineNum">     454</span>              : </span>
+<span id="L455"><span class="lineNum">     455</span>              : &quot;&quot;&quot;</span>
+<span id="L456"><span class="lineNum">     456</span>              :     surfacescross(prescription; samples = 32) -&gt; Bool</span>
+<span id="L457"><span class="lineNum">     457</span>              : </span>
+<span id="L458"><span class="lineNum">     458</span>              : True if a lens element passes through itself (negative glass thickness at some height) or into the next element, the</span>
+<span id="L459"><span class="lineNum">     459</span>              : stop or the image, or if a surface doesn't exist out to its element's rim. Such a system can't be built, so</span>
+<span id="L460"><span class="lineNum">     460</span>              : `spotmerit` returns NaN for it. Follows how OpticSim builds elements: see [`surfaceseparations`](@ref).</span>
+<span id="L461"><span class="lineNum">     461</span>              : &quot;&quot;&quot;</span>
+<span id="L462"><span class="lineNum">     462</span> <span class="tlaGNC">           2 : function surfacescross(p::DataFrame; samples=32)</span></span>
+<span id="L463"><span class="lineNum">     463</span> <span class="tlaGNC">           2 :     crossed = false</span></span>
+<span id="L464"><span class="lineNum">     464</span> <span class="tlaGNC">           2 :     foreachclearance(p; samples) do _, _, _, separation, _</span></span>
+<span id="L465"><span class="lineNum">     465</span> <span class="tlaGNC">         108 :         (isnan(separation) || separation &lt; 0) &amp;&amp; (crossed = true)</span></span>
+<span id="L466"><span class="lineNum">     466</span>              :     end</span>
+<span id="L467"><span class="lineNum">     467</span> <span class="tlaGNC">           2 :     return crossed</span></span>
+<span id="L468"><span class="lineNum">     468</span>              : end</span>
+<span id="L469"><span class="lineNum">     469</span>              : </span>
+<span id="L470"><span class="lineNum">     470</span>              : &quot;&quot;&quot;</span>
+<span id="L471"><span class="lineNum">     471</span>              :     surfaceseparations(lens::LensOptimizationProblem, x; samples = 200) -&gt; Vector{NamedTuple}</span>
+<span id="L472"><span class="lineNum">     472</span>              : </span>
+<span id="L473"><span class="lineNum">     473</span>              : The clearances of the system of `lens` with variables `x`: the thinnest point of each lens element, and the smallest gap</span>
+<span id="L474"><span class="lineNum">     474</span>              : between each part (lens element or stop) and the part after it, each with the height where it occurs. Negative means</span>
+<span id="L475"><span class="lineNum">     475</span>              : the parts intersect; NaN that a surface doesn't reach its element's rim (its conic and curvature don't allow it).</span>
+<span id="L476"><span class="lineNum">     476</span>              : </span>
+<span id="L477"><span class="lineNum">     477</span>              : The parts are what OpticSim builds: an element's radius is the larger semi-diameter of its two surfaces, a spherical</span>
+<span id="L478"><span class="lineNum">     478</span>              : surface too small to reach it ends in a flat ring, and the stop is opaque outside its hole. The gaps are checked at</span>
+<span id="L479"><span class="lineNum">     479</span>              : every height, against whatever part comes next there: outside a small element, a larger element's rim is checked against</span>
+<span id="L480"><span class="lineNum">     480</span>              : the part beyond it.</span>
+<span id="L481"><span class="lineNum">     481</span>              : </span>
+<span id="L482"><span class="lineNum">     482</span>              : Each entry has `surfaces` (the two surfaces, numbered from 1 for the first lens surface; the stop has a number too),</span>
+<span id="L483"><span class="lineNum">     483</span>              : `medium` (&quot;glass&quot; or &quot;air&quot;), `center` (their distance on the axis), `minimum` and `height`.</span>
+<span id="L484"><span class="lineNum">     484</span>              : &quot;&quot;&quot;</span>
+<span id="L485"><span class="lineNum">     485</span> <span class="tlaUNC tlaBgUNC">           0 : function surfaceseparations(lens::LensOptimizationProblem, x; samples=200)</span></span>
+<span id="L486"><span class="lineNum">     486</span> <span class="tlaUNC">           0 :     p = lens.build(Float64.(x)).prescription</span></span>
+<span id="L487"><span class="lineNum">     487</span> <span class="tlaUNC">           0 :     smallest = Dict{Tuple{String,Int,Int},Tuple{Float64,Float64}}()</span></span>
+<span id="L488"><span class="lineNum">     488</span> <span class="tlaUNC">           0 :     foreachclearance(p; samples) do kind, a, b, separation, h</span></span>
+<span id="L489"><span class="lineNum">     489</span> <span class="tlaUNC">           0 :         key = (kind, a, b)</span></span>
+<span id="L490"><span class="lineNum">     490</span> <span class="tlaUNC">           0 :         s = isnan(separation) ? -Inf : separation</span></span>
+<span id="L491"><span class="lineNum">     491</span> <span class="tlaUNC">           0 :         (!haskey(smallest, key) || s &lt; smallest[key][1]) &amp;&amp; (smallest[key] = (s, h))</span></span>
+<span id="L492"><span class="lineNum">     492</span>              :     end</span>
+<span id="L493"><span class="lineNum">     493</span> <span class="tlaUNC">           0 :     result = NamedTuple[]</span></span>
+<span id="L494"><span class="lineNum">     494</span> <span class="tlaUNC">           0 :     for ((kind, a, b), (s, h)) in sort!(collect(smallest), by=e -&gt; (e[1][2], e[1][3], e[1][1] == &quot;air&quot;))</span></span>
+<span id="L495"><span class="lineNum">     495</span> <span class="tlaUNC">           0 :         center = surfacez(p, b, 0.0) - surfacez(p, a, 0.0)</span></span>
+<span id="L496"><span class="lineNum">     496</span> <span class="tlaUNC">           0 :         push!(result, (surfaces=(a - 1, b - 1), medium=kind, center=center, minimum=s == -Inf ? NaN : s, height=h))</span></span>
+<span id="L497"><span class="lineNum">     497</span> <span class="tlaUNC">           0 :     end</span></span>
+<span id="L498"><span class="lineNum">     498</span> <span class="tlaUNC">           0 :     return result</span></span>
+<span id="L499"><span class="lineNum">     499</span>              : end</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>

@@ -1,0 +1,802 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - Coverage - src/Geometry/Primitives/src/Geometry/Primitives/Qtype.jl</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../../../../../../index.html">top level</a> - <a href="index.html">src/Geometry/Primitives/src/Geometry/Primitives</a> - Qtype.jl<span style="font-size: 80%;"> (source / <a href="Qtype.jl.func-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">Coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryMed">77.5&nbsp;%</td>
+            <td class="headerCovTableEntry">409</td>
+            <td class="headerCovTableEntry">317</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2026-11-11 20:00:33</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryHi">-</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+          </tr>
+                  <tr><td><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : # MIT license</span>
+<span id="L2"><span class="lineNum">       2</span>              : # Copyright (c) Microsoft Corporation. All rights reserved.</span>
+<span id="L3"><span class="lineNum">       3</span>              : # See LICENSE in the project root for full license information.</span>
+<span id="L4"><span class="lineNum">       4</span>              : </span>
+<span id="L5"><span class="lineNum">       5</span>              : &quot;&quot;&quot;</span>
+<span id="L6"><span class="lineNum">       6</span>              : Module to enclose QType polynomial specific functionality. For reference see:</span>
+<span id="L7"><span class="lineNum">       7</span>              : 1. [_Robust, efficient computational methods for axially symmetric optical aspheres_ - G. W. Forbes, 2010](https://www.osapublishing.org/viewmedia.cfm?uri=oe-18-19-19700&amp;seq=0)</span>
+<span id="L8"><span class="lineNum">       8</span>              : 2. [_Characterizing the shape of freeform optics_ - G. W. Forbes, 2012](https://www.osapublishing.org/viewmedia.cfm?uri=oe-20-3-2483&amp;seq=0)</span>
+<span id="L9"><span class="lineNum">       9</span>              : </span>
+<span id="L10"><span class="lineNum">      10</span>              : &quot;&quot;&quot;</span>
+<span id="L11"><span class="lineNum">      11</span>              : module QType</span>
+<span id="L12"><span class="lineNum">      12</span>              : using StaticArrays</span>
+<span id="L13"><span class="lineNum">      13</span>              : using ..OpticSim: QTYPE_PRECOMP</span>
+<span id="L14"><span class="lineNum">      14</span>              : </span>
+<span id="L15"><span class="lineNum">      15</span> <span class="tlaGNC tlaBgGNC">          16 : function F(m::Int, n::Int)::Float64</span></span>
+<span id="L16"><span class="lineNum">      16</span>              :     # 2 eq A.13</span>
+<span id="L17"><span class="lineNum">      17</span> <span class="tlaGNC">          16 :     @assert m &gt; 0</span></span>
+<span id="L18"><span class="lineNum">      18</span> <span class="tlaGNC">          16 :     if n === 0</span></span>
+<span id="L19"><span class="lineNum">      19</span> <span class="tlaGNC">           4 :         return Float64((m^2 * factorial2(big(2m - 3))) / (2^(m + 1) * factorial(big(m - 1))))</span></span>
+<span id="L20"><span class="lineNum">      20</span> <span class="tlaGNC">          12 :     elseif n &gt; 0 &amp;&amp; m === 1</span></span>
+<span id="L21"><span class="lineNum">      21</span> <span class="tlaGNC">           3 :         return Float64((4(n - 1)^2 * n^2 + 1) / (8 * (2n - 1)^2) + 11 * Int(n === 1) / 32)</span></span>
+<span id="L22"><span class="lineNum">      22</span> <span class="tlaGNC">           9 :     elseif n &gt; 0 &amp;&amp; m &gt; 1</span></span>
+<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC">           9 :         χ = m + n - 2</span></span>
+<span id="L24"><span class="lineNum">      24</span> <span class="tlaGNC">           9 :         return Float64((2n * χ * (3 - 5m + 4n * χ) + m^2 * (3 - m + 4n * χ)) / ((m + 2n - 3) * (m + 2n - 2) * (m + 2n - 1) * (2n - 1)) * γ(m, n))</span></span>
+<span id="L25"><span class="lineNum">      25</span>              :     else</span>
+<span id="L26"><span class="lineNum">      26</span> <span class="tlaUNC tlaBgUNC">           0 :         throw(ErrorException(&quot;Invalid n and m&quot;))</span></span>
+<span id="L27"><span class="lineNum">      27</span>              :     end</span>
+<span id="L28"><span class="lineNum">      28</span>              : end</span>
+<span id="L29"><span class="lineNum">      29</span>              : </span>
+<span id="L30"><span class="lineNum">      30</span>              : # 2 eq A.14</span>
+<span id="L31"><span class="lineNum">      31</span> <span class="tlaGNC tlaBgGNC">          15 : γ(a::Int, b::Int) = (factorial(big(b)) * factorial2(big(2a + 2b - 3))) / (2^(a + 1) * factorial(big(a + b - 3)) * factorial2(big(2b - 1)))</span></span>
+<span id="L32"><span class="lineNum">      32</span>              : </span>
+<span id="L33"><span class="lineNum">      33</span> <span class="tlaGNC">          12 : function G(m::Int, n::Int)::Float64</span></span>
+<span id="L34"><span class="lineNum">      34</span>              :     # 2 eq A.15</span>
+<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC">          12 :     @assert m &gt; 0</span></span>
+<span id="L36"><span class="lineNum">      36</span> <span class="tlaGNC">          12 :     if n === 0</span></span>
+<span id="L37"><span class="lineNum">      37</span> <span class="tlaGNC">           4 :         return Float64(factorial2(big(2m - 1)) / (2^(m + 1) * factorial(big(m - 1))))</span></span>
+<span id="L38"><span class="lineNum">      38</span> <span class="tlaGNC">           8 :     elseif n &gt; 0 &amp;&amp; m === 1</span></span>
+<span id="L39"><span class="lineNum">      39</span> <span class="tlaGNC">           2 :         return Float64(-((2 * n^2 - 1) * (n^2 - 1)) / (8 * (4 * n^2 - 1)) - Int(n === 1) / 24)</span></span>
+<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC">           6 :     elseif n &gt; 0 &amp;&amp; m &gt; 0</span></span>
+<span id="L41"><span class="lineNum">      41</span> <span class="tlaGNC">           6 :         return Float64(-((2n * (m + n - 1) - m) * (n + 1) * (2m + 2n - 1)) / ((m + 2n - 2) * (m + 2n - 1) * (m + 2n) * (2n + 1)) * γ(m, n))</span></span>
+<span id="L42"><span class="lineNum">      42</span>              :     else</span>
+<span id="L43"><span class="lineNum">      43</span> <span class="tlaUNC tlaBgUNC">           0 :         throw(ErrorException(&quot;Invalid n and m&quot;))</span></span>
+<span id="L44"><span class="lineNum">      44</span>              :     end</span>
+<span id="L45"><span class="lineNum">      45</span>              : end</span>
+<span id="L46"><span class="lineNum">      46</span>              : </span>
+<span id="L47"><span class="lineNum">      47</span> <span class="tlaGNC tlaBgGNC">         138 : function factorial2(n::I)::I where {I&lt;:Signed}</span></span>
+<span id="L48"><span class="lineNum">      48</span>              :     # Defined in 2 appendix A</span>
+<span id="L49"><span class="lineNum">      49</span> <span class="tlaGNC">         138 :     @assert n &lt;= 21 || n isa BigInt # not sure what number is the limit but this should do it...</span></span>
+<span id="L50"><span class="lineNum">      50</span> <span class="tlaGNC">         138 :     if n &lt;= 0</span></span>
+<span id="L51"><span class="lineNum">      51</span> <span class="tlaGNC">          38 :         return I(1)</span></span>
+<span id="L52"><span class="lineNum">      52</span>              :     else</span>
+<span id="L53"><span class="lineNum">      53</span> <span class="tlaGNC">         100 :         return n * factorial2(n - 2)</span></span>
+<span id="L54"><span class="lineNum">      54</span>              :     end</span>
+<span id="L55"><span class="lineNum">      55</span>              : end</span>
+<span id="L56"><span class="lineNum">      56</span>              : </span>
+<span id="L57"><span class="lineNum">      57</span> <span class="tlaGNC">         498 : function f(m::Int, n::Int, force::Bool=false)::Float64</span></span>
+<span id="L58"><span class="lineNum">      58</span>              :     # 2 eq A.18b</span>
+<span id="L59"><span class="lineNum">      59</span> <span class="tlaGNC">         964 :     @assert m &gt; 0</span></span>
+<span id="L60"><span class="lineNum">      60</span> <span class="tlaGNC">         482 :     if m &lt;= QTYPE_PRECOMP &amp;&amp; n &lt; QTYPE_PRECOMP &amp;&amp; !force</span></span>
+<span id="L61"><span class="lineNum">      61</span> <span class="tlaGNC">         482 :         return @inbounds PRECOMP_f[m, n+1]</span></span>
+<span id="L62"><span class="lineNum">      62</span>              :     else</span>
+<span id="L63"><span class="lineNum">      63</span> <span class="tlaUNC tlaBgUNC">           0 :         if n === 0</span></span>
+<span id="L64"><span class="lineNum">      64</span> <span class="tlaUNC">           0 :             return sqrt(F(m, 0))</span></span>
+<span id="L65"><span class="lineNum">      65</span>              :         else</span>
+<span id="L66"><span class="lineNum">      66</span> <span class="tlaUNC">           0 :             return sqrt(F(m, n) - g(m, n - 1, force)^2)</span></span>
+<span id="L67"><span class="lineNum">      67</span>              :         end</span>
+<span id="L68"><span class="lineNum">      68</span>              :     end</span>
+<span id="L69"><span class="lineNum">      69</span>              : end</span>
+<span id="L70"><span class="lineNum">      70</span>              : </span>
+<span id="L71"><span class="lineNum">      71</span> <span class="tlaGNC tlaBgGNC">          12 : function g(m::Int, n::Int, force::Bool=false)::Float64</span></span>
+<span id="L72"><span class="lineNum">      72</span>              :     # 2 eq A.18a</span>
+<span id="L73"><span class="lineNum">      73</span> <span class="tlaGNC">         550 :     @assert m &gt; 0</span></span>
+<span id="L74"><span class="lineNum">      74</span> <span class="tlaGNC">         275 :     if m &lt;= QTYPE_PRECOMP &amp;&amp; n &lt; QTYPE_PRECOMP &amp;&amp; !force</span></span>
+<span id="L75"><span class="lineNum">      75</span> <span class="tlaGNC">         275 :         return @inbounds PRECOMP_g[m, n+1]</span></span>
+<span id="L76"><span class="lineNum">      76</span>              :     else</span>
+<span id="L77"><span class="lineNum">      77</span> <span class="tlaUNC tlaBgUNC">           0 :         return G(m, n) / f(m, n, force)</span></span>
+<span id="L78"><span class="lineNum">      78</span>              :     end</span>
+<span id="L79"><span class="lineNum">      79</span>              : end</span>
+<span id="L80"><span class="lineNum">      80</span>              : </span>
+<span id="L81"><span class="lineNum">      81</span> <span class="tlaGNC tlaBgGNC">          30 : @inline function A(m::Int, n::Int, force::Bool=false)::Float64</span></span>
+<span id="L82"><span class="lineNum">      82</span>              :     # 2 eq A.3a</span>
+<span id="L83"><span class="lineNum">      83</span> <span class="tlaGNC">     9505716 :     @assert m &gt; 0</span></span>
+<span id="L84"><span class="lineNum">      84</span> <span class="tlaGNC">     4752858 :     if m &lt;= QTYPE_PRECOMP &amp;&amp; n &lt; QTYPE_PRECOMP &amp;&amp; !force</span></span>
+<span id="L85"><span class="lineNum">      85</span> <span class="tlaGNC">     4752858 :         return @inbounds PRECOMP_A[m, n+1]</span></span>
+<span id="L86"><span class="lineNum">      86</span>              :     else</span>
+<span id="L87"><span class="lineNum">      87</span> <span class="tlaUNC tlaBgUNC">           0 :         if m === 1 &amp;&amp; n === 0</span></span>
+<span id="L88"><span class="lineNum">      88</span> <span class="tlaUNC">           0 :             return 2.0</span></span>
+<span id="L89"><span class="lineNum">      89</span> <span class="tlaUNC">           0 :         elseif m === 1 &amp;&amp; n === 1</span></span>
+<span id="L90"><span class="lineNum">      90</span> <span class="tlaUNC">           0 :             return -4.0 / 3.0</span></span>
+<span id="L91"><span class="lineNum">      91</span> <span class="tlaUNC">           0 :         elseif n === 0 &amp;&amp; m &gt; 1</span></span>
+<span id="L92"><span class="lineNum">      92</span> <span class="tlaUNC">           0 :             return 2m - 1.0</span></span>
+<span id="L93"><span class="lineNum">      93</span>              :         else</span>
+<span id="L94"><span class="lineNum">      94</span> <span class="tlaUNC">           0 :             return (2n - 1) * (m + 2n - 2) * (4n * (m + n - 2) + (m - 3) * (2m - 1)) / D(m, n)</span></span>
+<span id="L95"><span class="lineNum">      95</span>              :         end</span>
+<span id="L96"><span class="lineNum">      96</span>              :     end</span>
+<span id="L97"><span class="lineNum">      97</span>              : end</span>
+<span id="L98"><span class="lineNum">      98</span>              : </span>
+<span id="L99"><span class="lineNum">      99</span> <span class="tlaGNC tlaBgGNC">          30 : @inline function B(m::Int, n::Int, force::Bool=false)::Float64</span></span>
+<span id="L100"><span class="lineNum">     100</span>              :     # 2 eq A.3b</span>
+<span id="L101"><span class="lineNum">     101</span> <span class="tlaGNC">     9505716 :     @assert m &gt; 0</span></span>
+<span id="L102"><span class="lineNum">     102</span> <span class="tlaGNC">     4752858 :     if m &lt;= QTYPE_PRECOMP &amp;&amp; n &lt; QTYPE_PRECOMP &amp;&amp; !force</span></span>
+<span id="L103"><span class="lineNum">     103</span> <span class="tlaGNC">     4752858 :         return @inbounds PRECOMP_B[m, n+1]</span></span>
+<span id="L104"><span class="lineNum">     104</span>              :     else</span>
+<span id="L105"><span class="lineNum">     105</span> <span class="tlaUNC tlaBgUNC">           0 :         if n === 1 &amp;&amp; m === 1</span></span>
+<span id="L106"><span class="lineNum">     106</span> <span class="tlaUNC">           0 :             return -8.0 / 3.0</span></span>
+<span id="L107"><span class="lineNum">     107</span> <span class="tlaUNC">           0 :         elseif n === 0</span></span>
+<span id="L108"><span class="lineNum">     108</span> <span class="tlaUNC">           0 :             if m === 1</span></span>
+<span id="L109"><span class="lineNum">     109</span> <span class="tlaUNC">           0 :                 return -1.0</span></span>
+<span id="L110"><span class="lineNum">     110</span>              :             else</span>
+<span id="L111"><span class="lineNum">     111</span> <span class="tlaUNC">           0 :                 return 2.0 * (1.0 - m)</span></span>
+<span id="L112"><span class="lineNum">     112</span>              :             end</span>
+<span id="L113"><span class="lineNum">     113</span>              :         else</span>
+<span id="L114"><span class="lineNum">     114</span> <span class="tlaUNC">           0 :             return -2.0 * (2n - 1) * (m + 2n - 3) * (m + 2n - 2) * (m + 2n - 1) / D(m, n)</span></span>
+<span id="L115"><span class="lineNum">     115</span>              :         end</span>
+<span id="L116"><span class="lineNum">     116</span>              :     end</span>
+<span id="L117"><span class="lineNum">     117</span>              : end</span>
+<span id="L118"><span class="lineNum">     118</span>              : </span>
+<span id="L119"><span class="lineNum">     119</span> <span class="tlaGNC tlaBgGNC">          36 : @inline function C(m::Int, n::Int, force::Bool=false)::Float64</span></span>
+<span id="L120"><span class="lineNum">     120</span>              :     # 2 eq A.3c</span>
+<span id="L121"><span class="lineNum">     121</span> <span class="tlaGNC">    14258556 :     @assert m &gt; 0</span></span>
+<span id="L122"><span class="lineNum">     122</span> <span class="tlaGNC">     4752864 :     if n === 0</span></span>
+<span id="L123"><span class="lineNum">     123</span> <span class="tlaGNC">          12 :         return NaN</span></span>
+<span id="L124"><span class="lineNum">     124</span> <span class="tlaGNC">     4752852 :     elseif m &lt;= QTYPE_PRECOMP &amp;&amp; n &lt; QTYPE_PRECOMP &amp;&amp; !force</span></span>
+<span id="L125"><span class="lineNum">     125</span> <span class="tlaGNC">     4752852 :         return @inbounds PRECOMP_C[m, n+1]</span></span>
+<span id="L126"><span class="lineNum">     126</span>              :     else</span>
+<span id="L127"><span class="lineNum">     127</span> <span class="tlaUNC tlaBgUNC">           0 :         if m === 1 &amp;&amp; n === 1</span></span>
+<span id="L128"><span class="lineNum">     128</span> <span class="tlaUNC">           0 :             return -11.0 / 3.0</span></span>
+<span id="L129"><span class="lineNum">     129</span> <span class="tlaUNC">           0 :         elseif m === 1 &amp;&amp; n === 2</span></span>
+<span id="L130"><span class="lineNum">     130</span> <span class="tlaUNC">           0 :             return 0.0</span></span>
+<span id="L131"><span class="lineNum">     131</span>              :         else</span>
+<span id="L132"><span class="lineNum">     132</span> <span class="tlaUNC">           0 :             return n * (2n - 3) * (m + 2n - 1) * (2m + 2n - 3) / D(m, n)</span></span>
+<span id="L133"><span class="lineNum">     133</span>              :         end</span>
+<span id="L134"><span class="lineNum">     134</span>              :     end</span>
+<span id="L135"><span class="lineNum">     135</span>              : end</span>
+<span id="L136"><span class="lineNum">     136</span>              : </span>
+<span id="L137"><span class="lineNum">     137</span>              : @inline function D(m::Int, n::Int)::Float64</span>
+<span id="L138"><span class="lineNum">     138</span>              :     # 2 eq A.3d</span>
+<span id="L139"><span class="lineNum">     139</span> <span class="tlaUNC">           0 :     @assert m &gt; 0</span></span>
+<span id="L140"><span class="lineNum">     140</span> <span class="tlaUNC">           0 :     return Float64((4n^2 - 1) * (m + n - 2) * (m + 2n - 3))</span></span>
+<span id="L141"><span class="lineNum">     141</span>              : end</span>
+<span id="L142"><span class="lineNum">     142</span>              : </span>
+<span id="L143"><span class="lineNum">     143</span>              : const PRECOMP_g = Matrix{Float64}(reshape(collect(g(m, n, true) for n in 0:(QTYPE_PRECOMP-1) for m in 1:QTYPE_PRECOMP), (QTYPE_PRECOMP, QTYPE_PRECOMP)))</span>
+<span id="L144"><span class="lineNum">     144</span>              : const PRECOMP_f = Matrix{Float64}(reshape(collect(f(m, n, true) for n in 0:(QTYPE_PRECOMP-1) for m in 1:QTYPE_PRECOMP), (QTYPE_PRECOMP, QTYPE_PRECOMP)))</span>
+<span id="L145"><span class="lineNum">     145</span>              : const PRECOMP_A = Matrix{Float64}(reshape(collect(A(m, n, true) for n in 0:(QTYPE_PRECOMP-1) for m in 1:QTYPE_PRECOMP), (QTYPE_PRECOMP, QTYPE_PRECOMP)))</span>
+<span id="L146"><span class="lineNum">     146</span>              : const PRECOMP_B = Matrix{Float64}(reshape(collect(B(m, n, true) for n in 0:(QTYPE_PRECOMP-1) for m in 1:QTYPE_PRECOMP), (QTYPE_PRECOMP, QTYPE_PRECOMP)))</span>
+<span id="L147"><span class="lineNum">     147</span>              : const PRECOMP_C = Matrix{Float64}(reshape(collect(C(m, n, true) for n in 0:(QTYPE_PRECOMP-1) for m in 1:QTYPE_PRECOMP), (QTYPE_PRECOMP, QTYPE_PRECOMP)))</span>
+<span id="L148"><span class="lineNum">     148</span>              : </span>
+<span id="L149"><span class="lineNum">     149</span>              : &quot;&quot;&quot;</span>
+<span id="L150"><span class="lineNum">     150</span>              :     S(coeffs::SVector{NP1,T}, m::Int x::T) -&gt; T</span>
+<span id="L151"><span class="lineNum">     151</span>              : </span>
+<span id="L152"><span class="lineNum">     152</span>              : Evaluates ``\\sum_{n=0}^{N}c_n^mQ_n^m(x)`` where ``c_n^m`` is either an ``\\alpha`` or ``\\beta`` QType coefficient and ``m \\gt 0``.</span>
+<span id="L153"><span class="lineNum">     153</span>              : &quot;&quot;&quot;</span>
+<span id="L154"><span class="lineNum">     154</span> <span class="tlaGNC tlaBgGNC">     2617456 : function S(coeffs::SVector{NP1,T}, m::Int, x::T)::T where {T&lt;:Real,NP1}</span></span>
+<span id="L155"><span class="lineNum">     155</span> <span class="tlaGNC">     2617456 :     @assert m &gt; 0</span></span>
+<span id="L156"><span class="lineNum">     156</span> <span class="tlaGNC">     2617456 :     if all(iszero.(coeffs))</span></span>
+<span id="L157"><span class="lineNum">     157</span> <span class="tlaGNC">     1801594 :         return zero(T)</span></span>
+<span id="L158"><span class="lineNum">     158</span>              :     end</span>
+<span id="L159"><span class="lineNum">     159</span> <span class="tlaGNC">      815862 :     N = NP1 - 1 # offset for indexing</span></span>
+<span id="L160"><span class="lineNum">     160</span> <span class="tlaGNC">      815862 :     if N === 0</span></span>
+<span id="L161"><span class="lineNum">     161</span> <span class="tlaUNC tlaBgUNC">           0 :         return coeffs[1]</span></span>
+<span id="L162"><span class="lineNum">     162</span>              :     end</span>
+<span id="L163"><span class="lineNum">     163</span> <span class="tlaGNC tlaBgGNC">      815862 :     αₙ₊₂ = zero(T)</span></span>
+<span id="L164"><span class="lineNum">     164</span> <span class="tlaGNC">      815862 :     αₙ₊₁ = zero(T)</span></span>
+<span id="L165"><span class="lineNum">     165</span> <span class="tlaGNC">      815862 :     αₙ = zero(T)</span></span>
+<span id="L166"><span class="lineNum">     166</span> <span class="tlaGNC">      815862 :     @inbounds for n in N:-1:0</span></span>
+<span id="L167"><span class="lineNum">     167</span>              :         # 2 eq B.6</span>
+<span id="L168"><span class="lineNum">     168</span> <span class="tlaGNC">     7217424 :         αₙ = coeffs[n+1] + (A(m, n) + B(m, n) * x) * αₙ₊₁ - C(m, n + 1) * αₙ₊₂</span></span>
+<span id="L169"><span class="lineNum">     169</span> <span class="tlaGNC">     3608712 :         if n &gt; 0</span></span>
+<span id="L170"><span class="lineNum">     170</span> <span class="tlaGNC">     2792850 :             αₙ₊₂ = αₙ₊₁</span></span>
+<span id="L171"><span class="lineNum">     171</span> <span class="tlaGNC">     2792850 :             αₙ₊₁ = αₙ</span></span>
+<span id="L172"><span class="lineNum">     172</span>              :         end</span>
+<span id="L173"><span class="lineNum">     173</span> <span class="tlaGNC">     6401562 :     end</span></span>
+<span id="L174"><span class="lineNum">     174</span>              :     # 2 eq B.9</span>
+<span id="L175"><span class="lineNum">     175</span> <span class="tlaGNC">      815862 :     if m === 1 &amp;&amp; N &gt; 2</span></span>
+<span id="L176"><span class="lineNum">     176</span> <span class="tlaUNC tlaBgUNC">           0 :         return αₙ / 2 - 2 / 5 * αₙ₊₂</span></span>
+<span id="L177"><span class="lineNum">     177</span>              :     else</span>
+<span id="L178"><span class="lineNum">     178</span> <span class="tlaGNC tlaBgGNC">      815862 :         return αₙ / 2</span></span>
+<span id="L179"><span class="lineNum">     179</span>              :     end</span>
+<span id="L180"><span class="lineNum">     180</span>              : end</span>
+<span id="L181"><span class="lineNum">     181</span>              : </span>
+<span id="L182"><span class="lineNum">     182</span>              : &quot;&quot;&quot;</span>
+<span id="L183"><span class="lineNum">     183</span>              :     dSdx(coeffs::SVector{NP1,T}, x::T) -&gt; T</span>
+<span id="L184"><span class="lineNum">     184</span>              : </span>
+<span id="L185"><span class="lineNum">     185</span>              : Evaluates ``\\frac{\\partial}{\\partial x}\\sum_{n=0}^{N}c_n^mQ_n^m(x)`` where ``c_n^m`` is either an ``\\alpha`` or ``\\beta`` QType coefficient and ``m \\gt 0``.</span>
+<span id="L186"><span class="lineNum">     186</span>              : &quot;&quot;&quot;</span>
+<span id="L187"><span class="lineNum">     187</span> <span class="tlaGNC">      715658 : function dSdx(coeffs::SVector{NP1,T}, m::Int, x::T)::T where {T&lt;:Real,NP1}</span></span>
+<span id="L188"><span class="lineNum">     188</span> <span class="tlaGNC">      715658 :     @assert m &gt; 0</span></span>
+<span id="L189"><span class="lineNum">     189</span> <span class="tlaGNC">      715658 :     if all(iszero.(coeffs))</span></span>
+<span id="L190"><span class="lineNum">     190</span> <span class="tlaGNC">      571838 :         return zero(T)</span></span>
+<span id="L191"><span class="lineNum">     191</span>              :     end</span>
+<span id="L192"><span class="lineNum">     192</span> <span class="tlaGNC">      143820 :     N = NP1 - 1 # offset for indexing</span></span>
+<span id="L193"><span class="lineNum">     193</span> <span class="tlaGNC">      143820 :     if N === 0</span></span>
+<span id="L194"><span class="lineNum">     194</span> <span class="tlaUNC tlaBgUNC">           0 :         return zero(T)</span></span>
+<span id="L195"><span class="lineNum">     195</span>              :     end</span>
+<span id="L196"><span class="lineNum">     196</span> <span class="tlaGNC tlaBgGNC">      143820 :     αₙ₊₂ = zero(T)</span></span>
+<span id="L197"><span class="lineNum">     197</span> <span class="tlaGNC">      143820 :     αₙ₊₁ = zero(T)</span></span>
+<span id="L198"><span class="lineNum">     198</span> <span class="tlaGNC">      143820 :     dαₙ₊₂ = zero(T)</span></span>
+<span id="L199"><span class="lineNum">     199</span> <span class="tlaGNC">      143820 :     dαₙ₊₁ = zero(T)</span></span>
+<span id="L200"><span class="lineNum">     200</span> <span class="tlaGNC">      143820 :     dαₙ = zero(T)</span></span>
+<span id="L201"><span class="lineNum">     201</span> <span class="tlaGNC">      143820 :     @inbounds for n in N:-1:0</span></span>
+<span id="L202"><span class="lineNum">     202</span>              :         # calculate deriv</span>
+<span id="L203"><span class="lineNum">     203</span> <span class="tlaGNC">     1144116 :         Bmn = B(m, n)</span></span>
+<span id="L204"><span class="lineNum">     204</span> <span class="tlaGNC">     1144116 :         k = (A(m, n) + Bmn * x)</span></span>
+<span id="L205"><span class="lineNum">     205</span> <span class="tlaGNC">     2288232 :         Cmnp1 = C(m, n + 1)</span></span>
+<span id="L206"><span class="lineNum">     206</span> <span class="tlaGNC">     1144116 :         if n &lt; N # derivative calculated from N-1 to 0, so ignore first iteration</span></span>
+<span id="L207"><span class="lineNum">     207</span>              :             # 2 eq B.11</span>
+<span id="L208"><span class="lineNum">     208</span> <span class="tlaGNC">     1000296 :             dαₙ = Bmn * αₙ₊₁ + k * dαₙ₊₁ - Cmnp1 * dαₙ₊₂</span></span>
+<span id="L209"><span class="lineNum">     209</span> <span class="tlaGNC">     1000296 :             if n &gt; 0</span></span>
+<span id="L210"><span class="lineNum">     210</span> <span class="tlaGNC">      856476 :                 dαₙ₊₂ = dαₙ₊₁</span></span>
+<span id="L211"><span class="lineNum">     211</span> <span class="tlaGNC">      856476 :                 dαₙ₊₁ = dαₙ</span></span>
+<span id="L212"><span class="lineNum">     212</span>              :             end</span>
+<span id="L213"><span class="lineNum">     213</span>              :         end</span>
+<span id="L214"><span class="lineNum">     214</span>              :         # calculate height for use in next iter deriv</span>
+<span id="L215"><span class="lineNum">     215</span>              :         # 2 eq B.6</span>
+<span id="L216"><span class="lineNum">     216</span> <span class="tlaGNC">     1144116 :         αₙ = coeffs[n+1] + k * αₙ₊₁ - Cmnp1 * αₙ₊₂</span></span>
+<span id="L217"><span class="lineNum">     217</span> <span class="tlaGNC">     1144116 :         αₙ₊₂ = αₙ₊₁</span></span>
+<span id="L218"><span class="lineNum">     218</span> <span class="tlaGNC">     1144116 :         αₙ₊₁ = αₙ</span></span>
+<span id="L219"><span class="lineNum">     219</span> <span class="tlaGNC">     2144412 :     end</span></span>
+<span id="L220"><span class="lineNum">     220</span>              :     # 2 eq B.10</span>
+<span id="L221"><span class="lineNum">     221</span> <span class="tlaGNC">      143820 :     if m === 1 &amp;&amp; N &gt; 2</span></span>
+<span id="L222"><span class="lineNum">     222</span> <span class="tlaUNC tlaBgUNC">           0 :         return dαₙ / 2 - 2 / 5 * dαₙ₊₂</span></span>
+<span id="L223"><span class="lineNum">     223</span>              :     else</span>
+<span id="L224"><span class="lineNum">     224</span> <span class="tlaGNC tlaBgGNC">      143820 :         return dαₙ / 2</span></span>
+<span id="L225"><span class="lineNum">     225</span>              :     end</span>
+<span id="L226"><span class="lineNum">     226</span>              : end</span>
+<span id="L227"><span class="lineNum">     227</span>              : </span>
+<span id="L228"><span class="lineNum">     228</span>              : # for cases where m == 0 below:</span>
+<span id="L229"><span class="lineNum">     229</span>              : </span>
+<span id="L230"><span class="lineNum">     230</span> <span class="tlaGNC">           6 : function f0(n::Int, force::Bool=false)::Float64</span></span>
+<span id="L231"><span class="lineNum">     231</span> <span class="tlaGNC">         428 :     if n &lt; QTYPE_PRECOMP &amp;&amp; !force</span></span>
+<span id="L232"><span class="lineNum">     232</span> <span class="tlaGNC">         214 :         return @inbounds PRECOMP_f0[n+1]</span></span>
+<span id="L233"><span class="lineNum">     233</span> <span class="tlaUNC tlaBgUNC">           0 :     elseif n === 0</span></span>
+<span id="L234"><span class="lineNum">     234</span> <span class="tlaUNC">           0 :         return 2.0</span></span>
+<span id="L235"><span class="lineNum">     235</span> <span class="tlaUNC">           0 :     elseif n === 1</span></span>
+<span id="L236"><span class="lineNum">     236</span> <span class="tlaUNC">           0 :         return sqrt(19) / 2</span></span>
+<span id="L237"><span class="lineNum">     237</span>              :     else</span>
+<span id="L238"><span class="lineNum">     238</span>              :         # 1 eq A.16</span>
+<span id="L239"><span class="lineNum">     239</span> <span class="tlaUNC">           0 :         return sqrt(n * (n + 1) + 3.0 - g0(n - 1, force)^2 - h0(n - 2, force)^2)</span></span>
+<span id="L240"><span class="lineNum">     240</span>              :     end</span>
+<span id="L241"><span class="lineNum">     241</span>              : end</span>
+<span id="L242"><span class="lineNum">     242</span>              : </span>
+<span id="L243"><span class="lineNum">     243</span> <span class="tlaGNC tlaBgGNC">         120 : function g0(n::Int, force::Bool=false)::Float64</span></span>
+<span id="L244"><span class="lineNum">     244</span> <span class="tlaGNC">         230 :     if n &lt; QTYPE_PRECOMP &amp;&amp; !force</span></span>
+<span id="L245"><span class="lineNum">     245</span> <span class="tlaGNC">         115 :         return @inbounds PRECOMP_g0[n+1]</span></span>
+<span id="L246"><span class="lineNum">     246</span> <span class="tlaUNC tlaBgUNC">           0 :     elseif n === 0</span></span>
+<span id="L247"><span class="lineNum">     247</span> <span class="tlaUNC">           0 :         return -0.5</span></span>
+<span id="L248"><span class="lineNum">     248</span>              :     else</span>
+<span id="L249"><span class="lineNum">     249</span>              :         # 1 eq A.15</span>
+<span id="L250"><span class="lineNum">     250</span> <span class="tlaUNC">           0 :         return -(1 + g0(n - 1, force) * h0(n - 1, force)) / f0(n, force)</span></span>
+<span id="L251"><span class="lineNum">     251</span>              :     end</span>
+<span id="L252"><span class="lineNum">     252</span>              : end</span>
+<span id="L253"><span class="lineNum">     253</span>              : </span>
+<span id="L254"><span class="lineNum">     254</span> <span class="tlaGNC tlaBgGNC">          20 : function h0(n::Int, force::Bool=false)::Float64</span></span>
+<span id="L255"><span class="lineNum">     255</span> <span class="tlaGNC">          32 :     if n &lt; QTYPE_PRECOMP &amp;&amp; !force</span></span>
+<span id="L256"><span class="lineNum">     256</span> <span class="tlaGNC">          16 :         return @inbounds PRECOMP_h0[n+1]</span></span>
+<span id="L257"><span class="lineNum">     257</span>              :     else</span>
+<span id="L258"><span class="lineNum">     258</span>              :         # 1 eq A.14</span>
+<span id="L259"><span class="lineNum">     259</span> <span class="tlaUNC tlaBgUNC">           0 :         return -(n + 2) * (n + 1) / (2 * f0(n, force))</span></span>
+<span id="L260"><span class="lineNum">     260</span>              :     end</span>
+<span id="L261"><span class="lineNum">     261</span>              : end</span>
+<span id="L262"><span class="lineNum">     262</span>              : </span>
+<span id="L263"><span class="lineNum">     263</span>              : const PRECOMP_g0 = Vector{Float64}(collect(g0(n, true) for n in 0:(QTYPE_PRECOMP-1)))</span>
+<span id="L264"><span class="lineNum">     264</span>              : const PRECOMP_f0 = Vector{Float64}(collect(f0(n, true) for n in 0:(QTYPE_PRECOMP-1)))</span>
+<span id="L265"><span class="lineNum">     265</span>              : const PRECOMP_h0 = Vector{Float64}(collect(h0(n, true) for n in 0:(QTYPE_PRECOMP-1)))</span>
+<span id="L266"><span class="lineNum">     266</span>              : </span>
+<span id="L267"><span class="lineNum">     267</span>              : &quot;&quot;&quot;</span>
+<span id="L268"><span class="lineNum">     268</span>              :     S0(coeffs::SVector{NP1,T}, x::T) -&gt; T</span>
+<span id="L269"><span class="lineNum">     269</span>              : </span>
+<span id="L270"><span class="lineNum">     270</span>              : Evaluates ``\\sum_{n=0}^{N}\\alpha_n^0Q_n^0(x)``.</span>
+<span id="L271"><span class="lineNum">     271</span>              : &quot;&quot;&quot;</span>
+<span id="L272"><span class="lineNum">     272</span>              : function S0(coeffs::SVector{NP1,T}, x::T)::T where {T&lt;:Real,NP1}</span>
+<span id="L273"><span class="lineNum">     273</span> <span class="tlaGNC tlaBgGNC">      406550 :     if all(iszero.(coeffs))</span></span>
+<span id="L274"><span class="lineNum">     274</span> <span class="tlaGNC">      241801 :         return zero(T)</span></span>
+<span id="L275"><span class="lineNum">     275</span>              :     end</span>
+<span id="L276"><span class="lineNum">     276</span> <span class="tlaGNC">      164749 :     N = NP1 - 1 # offset for indexing</span></span>
+<span id="L277"><span class="lineNum">     277</span> <span class="tlaGNC">      164749 :     if N === 0</span></span>
+<span id="L278"><span class="lineNum">     278</span> <span class="tlaUNC tlaBgUNC">           0 :         return coeffs[1]</span></span>
+<span id="L279"><span class="lineNum">     279</span>              :     end</span>
+<span id="L280"><span class="lineNum">     280</span> <span class="tlaGNC tlaBgGNC">      164749 :     k = T(2) - 4 * x</span></span>
+<span id="L281"><span class="lineNum">     281</span>              :     # 1 eq 3.7a</span>
+<span id="L282"><span class="lineNum">     282</span> <span class="tlaGNC">      164749 :     αₙ₊₂ = coeffs[N+1]</span></span>
+<span id="L283"><span class="lineNum">     283</span>              :     # 1 eq 3.7b</span>
+<span id="L284"><span class="lineNum">     284</span> <span class="tlaGNC">      164749 :     αₙ₊₁ = coeffs[N] + k * αₙ₊₂</span></span>
+<span id="L285"><span class="lineNum">     285</span> <span class="tlaGNC">      164749 :     for n in (N-2):-1:0</span></span>
+<span id="L286"><span class="lineNum">     286</span>              :         # 1 eq 3.8</span>
+<span id="L287"><span class="lineNum">     287</span> <span class="tlaGNC">      988494 :         αₙ = coeffs[n+1] + k * αₙ₊₁ - αₙ₊₂</span></span>
+<span id="L288"><span class="lineNum">     288</span> <span class="tlaGNC">      988494 :         αₙ₊₂ = αₙ₊₁</span></span>
+<span id="L289"><span class="lineNum">     289</span> <span class="tlaGNC">      988494 :         αₙ₊₁ = αₙ</span></span>
+<span id="L290"><span class="lineNum">     290</span> <span class="tlaGNC">     1812239 :     end</span></span>
+<span id="L291"><span class="lineNum">     291</span>              :     # 1 eq 3.9</span>
+<span id="L292"><span class="lineNum">     292</span> <span class="tlaGNC">      164749 :     return 2 * (αₙ₊₁ + αₙ₊₂) # a0 and a1</span></span>
+<span id="L293"><span class="lineNum">     293</span>              : end</span>
+<span id="L294"><span class="lineNum">     294</span>              : </span>
+<span id="L295"><span class="lineNum">     295</span>              : &quot;&quot;&quot;</span>
+<span id="L296"><span class="lineNum">     296</span>              :     dS0dx(coeffs::SVector{NP1,T}, x::T) -&gt; T</span>
+<span id="L297"><span class="lineNum">     297</span>              : </span>
+<span id="L298"><span class="lineNum">     298</span>              : Evaluates ``\\frac{\\partial}{\\partial x}\\sum_{n=0}^{N}\\alpha_n^0Q_n^0(x)``.</span>
+<span id="L299"><span class="lineNum">     299</span>              : &quot;&quot;&quot;</span>
+<span id="L300"><span class="lineNum">     300</span>              : function dS0dx(coeffs::SVector{NP1,T}, x::T)::T where {T&lt;:Real,NP1}</span>
+<span id="L301"><span class="lineNum">     301</span> <span class="tlaGNC">       71800 :     if all(iszero.(coeffs))</span></span>
+<span id="L302"><span class="lineNum">     302</span> <span class="tlaGNC">         427 :         return zero(T)</span></span>
+<span id="L303"><span class="lineNum">     303</span>              :     end</span>
+<span id="L304"><span class="lineNum">     304</span> <span class="tlaGNC">       71373 :     N = NP1 - 1 # offset for indexing</span></span>
+<span id="L305"><span class="lineNum">     305</span> <span class="tlaGNC">       71373 :     if N == 0</span></span>
+<span id="L306"><span class="lineNum">     306</span> <span class="tlaUNC tlaBgUNC">           0 :         return zero(T)</span></span>
+<span id="L307"><span class="lineNum">     307</span>              :     end</span>
+<span id="L308"><span class="lineNum">     308</span> <span class="tlaGNC tlaBgGNC">       71373 :     k = T(2) - 4 * x</span></span>
+<span id="L309"><span class="lineNum">     309</span> <span class="tlaGNC">       71373 :     αₙ₊₂ = coeffs[N+1]</span></span>
+<span id="L310"><span class="lineNum">     310</span> <span class="tlaGNC">       71373 :     αₙ₊₁ = coeffs[N] + k * αₙ₊₂</span></span>
+<span id="L311"><span class="lineNum">     311</span>              :     # 1 eq 3.10a</span>
+<span id="L312"><span class="lineNum">     312</span> <span class="tlaGNC">       71373 :     dαₙ₊₂ = zero(T)</span></span>
+<span id="L313"><span class="lineNum">     313</span>              :     # 1 eq 3.10b</span>
+<span id="L314"><span class="lineNum">     314</span> <span class="tlaGNC">       71373 :     dαₙ₊₁ = -4 * αₙ₊₂</span></span>
+<span id="L315"><span class="lineNum">     315</span> <span class="tlaGNC">       71373 :     for n in (N-2):-1:0</span></span>
+<span id="L316"><span class="lineNum">     316</span>              :         # 1 eq 3.11</span>
+<span id="L317"><span class="lineNum">     317</span> <span class="tlaGNC">      428238 :         dαₙ = k * dαₙ₊₁ - dαₙ₊₂ - 4 * αₙ₊₁</span></span>
+<span id="L318"><span class="lineNum">     318</span> <span class="tlaGNC">      428238 :         dαₙ₊₂ = dαₙ₊₁</span></span>
+<span id="L319"><span class="lineNum">     319</span> <span class="tlaGNC">      428238 :         dαₙ₊₁ = dαₙ</span></span>
+<span id="L320"><span class="lineNum">     320</span> <span class="tlaGNC">      428238 :         αₙ = coeffs[n+1] + k * αₙ₊₁ - αₙ₊₂</span></span>
+<span id="L321"><span class="lineNum">     321</span> <span class="tlaGNC">      428238 :         αₙ₊₂ = αₙ₊₁</span></span>
+<span id="L322"><span class="lineNum">     322</span> <span class="tlaGNC">      428238 :         αₙ₊₁ = αₙ</span></span>
+<span id="L323"><span class="lineNum">     323</span> <span class="tlaGNC">      785103 :     end</span></span>
+<span id="L324"><span class="lineNum">     324</span>              :     # 1 eq 3.12</span>
+<span id="L325"><span class="lineNum">     325</span> <span class="tlaGNC">       71373 :     return 2 * (dαₙ₊₁ + dαₙ₊₂) # a0 and a1</span></span>
+<span id="L326"><span class="lineNum">     326</span>              : end</span>
+<span id="L327"><span class="lineNum">     327</span>              : </span>
+<span id="L328"><span class="lineNum">     328</span>              : ########################################</span>
+<span id="L329"><span class="lineNum">     329</span>              : # for testing, not used in actual calculation because there is a more efficient method to find the sum directly (as in S and S0)</span>
+<span id="L330"><span class="lineNum">     330</span>              : </span>
+<span id="L331"><span class="lineNum">     331</span> <span class="tlaUNC tlaBgUNC">           0 : function P(m::Int, n::Int, x::T)::T where {T&lt;:Real}</span></span>
+<span id="L332"><span class="lineNum">     332</span> <span class="tlaUNC">           0 :     if m === 0</span></span>
+<span id="L333"><span class="lineNum">     333</span> <span class="tlaUNC">           0 :         if n === 0</span></span>
+<span id="L334"><span class="lineNum">     334</span> <span class="tlaUNC">           0 :             return T(2)</span></span>
+<span id="L335"><span class="lineNum">     335</span> <span class="tlaUNC">           0 :         elseif n === 1</span></span>
+<span id="L336"><span class="lineNum">     336</span> <span class="tlaUNC">           0 :             return T(6) - 8 * x</span></span>
+<span id="L337"><span class="lineNum">     337</span>              :         else</span>
+<span id="L338"><span class="lineNum">     338</span>              :             # 1 eq 2.6</span>
+<span id="L339"><span class="lineNum">     339</span> <span class="tlaUNC">           0 :             return (T(2) - 4 * x) * P(0, n - 1, x) - P(0, n - 2, x)</span></span>
+<span id="L340"><span class="lineNum">     340</span>              :         end</span>
+<span id="L341"><span class="lineNum">     341</span>              :     else</span>
+<span id="L342"><span class="lineNum">     342</span> <span class="tlaUNC">           0 :         if n === 0</span></span>
+<span id="L343"><span class="lineNum">     343</span> <span class="tlaUNC">           0 :             return one(T) / 2</span></span>
+<span id="L344"><span class="lineNum">     344</span> <span class="tlaUNC">           0 :         elseif n === 1</span></span>
+<span id="L345"><span class="lineNum">     345</span> <span class="tlaUNC">           0 :             if m === 1</span></span>
+<span id="L346"><span class="lineNum">     346</span>              :                 # 2 eq A.5a</span>
+<span id="L347"><span class="lineNum">     347</span> <span class="tlaUNC">           0 :                 return one(T) - x / 2</span></span>
+<span id="L348"><span class="lineNum">     348</span>              :             else</span>
+<span id="L349"><span class="lineNum">     349</span>              :                 # 2 eq A.5b</span>
+<span id="L350"><span class="lineNum">     350</span> <span class="tlaUNC">           0 :                 return m - 1 / 2 - (m - 1) * x</span></span>
+<span id="L351"><span class="lineNum">     351</span>              :             end</span>
+<span id="L352"><span class="lineNum">     352</span>              :         else</span>
+<span id="L353"><span class="lineNum">     353</span>              :             # 2 eq A.2</span>
+<span id="L354"><span class="lineNum">     354</span> <span class="tlaUNC">           0 :             return (A(m, n - 1) + B(m, n - 1) * x) * P(m, n - 1, x) - C(m, n - 1) * P(m, n - 2, x)</span></span>
+<span id="L355"><span class="lineNum">     355</span>              :         end</span>
+<span id="L356"><span class="lineNum">     356</span>              :     end</span>
+<span id="L357"><span class="lineNum">     357</span>              : end</span>
+<span id="L358"><span class="lineNum">     358</span>              : </span>
+<span id="L359"><span class="lineNum">     359</span> <span class="tlaUNC">           0 : function Q(m::Int, n::Int, x::T)::T where {T&lt;:Real}</span></span>
+<span id="L360"><span class="lineNum">     360</span> <span class="tlaUNC">           0 :     if m === 0</span></span>
+<span id="L361"><span class="lineNum">     361</span> <span class="tlaUNC">           0 :         if n === 0</span></span>
+<span id="L362"><span class="lineNum">     362</span> <span class="tlaUNC">           0 :             return one(T)</span></span>
+<span id="L363"><span class="lineNum">     363</span> <span class="tlaUNC">           0 :         elseif n === 1</span></span>
+<span id="L364"><span class="lineNum">     364</span> <span class="tlaUNC">           0 :             return (T(13) - 16x) / sqrt(19)</span></span>
+<span id="L365"><span class="lineNum">     365</span>              :         else</span>
+<span id="L366"><span class="lineNum">     366</span>              :             # 1 eq 2.7</span>
+<span id="L367"><span class="lineNum">     367</span> <span class="tlaUNC">           0 :             return (P(0, n, x) - g0(n - 1) * Q(0, n - 1, x) - h0(n - 2) * Q(0, n - 2, x)) / f0(n)</span></span>
+<span id="L368"><span class="lineNum">     368</span>              :         end</span>
+<span id="L369"><span class="lineNum">     369</span>              :     else</span>
+<span id="L370"><span class="lineNum">     370</span> <span class="tlaUNC">           0 :         if n === 0</span></span>
+<span id="L371"><span class="lineNum">     371</span> <span class="tlaUNC">           0 :             return 1 / (2 * f(m, 0))</span></span>
+<span id="L372"><span class="lineNum">     372</span>              :         else</span>
+<span id="L373"><span class="lineNum">     373</span>              :             # 2 eq A.22</span>
+<span id="L374"><span class="lineNum">     374</span> <span class="tlaUNC">           0 :             return (P(m, n, x) - g(m, n - 1) * Q(m, n - 1, x)) / f(m, n)</span></span>
+<span id="L375"><span class="lineNum">     375</span>              :         end</span>
+<span id="L376"><span class="lineNum">     376</span>              :     end</span>
+<span id="L377"><span class="lineNum">     377</span>              : end</span>
+<span id="L378"><span class="lineNum">     378</span>              : </span>
+<span id="L379"><span class="lineNum">     379</span>              : end # module QType</span>
+<span id="L380"><span class="lineNum">     380</span>              : </span>
+<span id="L381"><span class="lineNum">     381</span>              : #########################################################################################################</span>
+<span id="L382"><span class="lineNum">     382</span>              : </span>
+<span id="L383"><span class="lineNum">     383</span>              : &quot;&quot;&quot;</span>
+<span id="L384"><span class="lineNum">     384</span>              :     QTypeSurface{T,D,M,N} &lt;: ParametricSurface{T,D}</span>
+<span id="L385"><span class="lineNum">     385</span>              : </span>
+<span id="L386"><span class="lineNum">     386</span>              : Surface incorporating the QType polynomials - radius and conic are defined relative to absolute semi-diameter, QType terms are normalized according to the `normradius` parameter.</span>
+<span id="L387"><span class="lineNum">     387</span>              : `T` is the datatype, `D` is the dimensionality, `M` and `N` are the maximum QType terms used.</span>
+<span id="L388"><span class="lineNum">     388</span>              : </span>
+<span id="L389"><span class="lineNum">     389</span>              : The surface is centered at the origin and treated as being the cap of an infinite cylinder, thus creating a true half-space.</span>
+<span id="L390"><span class="lineNum">     390</span>              : Outside of 0 &lt;= ρ &lt;= 1 the height of the surface is not necessarily well defined, so NaN may be returned.</span>
+<span id="L391"><span class="lineNum">     391</span>              : </span>
+<span id="L392"><span class="lineNum">     392</span>              : ```julia</span>
+<span id="L393"><span class="lineNum">     393</span>              : QTypeSurface(semidiameter; radius = Inf, conic = 0.0, αcoeffs = nothing, βcoeffs = nothing, normradius = semidiameter)</span>
+<span id="L394"><span class="lineNum">     394</span>              : ```</span>
+<span id="L395"><span class="lineNum">     395</span>              : </span>
+<span id="L396"><span class="lineNum">     396</span>              : `αcoeffs` and `βcoeffs` should be a vector of tuples of the form `(m, n, v)` where `v` is the value of the coefficient ``α_n^m`` or ``β_n^m`` respectively.</span>
+<span id="L397"><span class="lineNum">     397</span>              : </span>
+<span id="L398"><span class="lineNum">     398</span>              : The sag is defined by the equation</span>
+<span id="L399"><span class="lineNum">     399</span>              : </span>
+<span id="L400"><span class="lineNum">     400</span>              : ```math</span>
+<span id="L401"><span class="lineNum">     401</span>              : \\begin{aligned}</span>
+<span id="L402"><span class="lineNum">     402</span>              : z(r,\\phi) = &amp; \\frac{cr^2}{1 + \\sqrt{1 - (1+k)c^2r^2}} + \\frac{\\sqrt{1 + kc^2r^2}}{\\sqrt{1-(1+k)c^2r^2}} \\cdot \\\\</span>
+<span id="L403"><span class="lineNum">     403</span>              :              &amp; \\left\\{ \\rho^2(1-\\rho^2)\\sum_{n=0}^{N}\\alpha_n^0 Q_n^0 (\\rho^2) + \\sum_{m=1}^{M}\\rho^m\\sum_{n=0}^N \\left[ \\alpha_n^m\\cos{m\\phi} +\\beta_n^m\\sin{m\\phi}\\right]Q_n^m(\\rho^2) \\right\\}</span>
+<span id="L404"><span class="lineNum">     404</span>              : \\end{aligned}</span>
+<span id="L405"><span class="lineNum">     405</span>              : ```</span>
+<span id="L406"><span class="lineNum">     406</span>              : </span>
+<span id="L407"><span class="lineNum">     407</span>              : where ``\\rho = \\frac{r}{\\texttt{normradius}}``, ``c = \\frac{1}{\\texttt{radius}}``, ``k = \\texttt{conic}`` and ``Q_n^m`` is the QType polynomial index ``m``, ``n``.</span>
+<span id="L408"><span class="lineNum">     408</span>              : &quot;&quot;&quot;</span>
+<span id="L409"><span class="lineNum">     409</span>              : struct QTypeSurface{T,D,M,N} &lt;: ParametricSurface{T,D}</span>
+<span id="L410"><span class="lineNum">     410</span>              :     semidiameter::T</span>
+<span id="L411"><span class="lineNum">     411</span>              :     curvature::T</span>
+<span id="L412"><span class="lineNum">     412</span>              :     conic::T</span>
+<span id="L413"><span class="lineNum">     413</span>              :     boundingcylinder::Cylinder{T,D}</span>
+<span id="L414"><span class="lineNum">     414</span>              :     b0coeffs::SVector{N,T}</span>
+<span id="L415"><span class="lineNum">     415</span>              :     dαcoeffs::SVector{M,SVector{N,T}} # m goes from 1:M while n goes from 0:N-1</span>
+<span id="L416"><span class="lineNum">     416</span>              :     dβcoeffs::SVector{M,SVector{N,T}}</span>
+<span id="L417"><span class="lineNum">     417</span>              :     normradius::T</span>
+<span id="L418"><span class="lineNum">     418</span>              :     maxheight::T</span>
+<span id="L419"><span class="lineNum">     419</span>              : </span>
+<span id="L420"><span class="lineNum">     420</span> <span class="tlaGNC tlaBgGNC">         200 :     function QTypeSurface(semidiameter::T; radius::T=typemax(T), conic::T=zero(T), αcoeffs::Union{Nothing,Vector{Tuple{Int,Int,T}}}=nothing, βcoeffs::Union{Nothing,Vector{Tuple{Int,Int,T}}}=nothing, normradius::T=semidiameter) where {T&lt;:Real}</span></span>
+<span id="L421"><span class="lineNum">     421</span> <span class="tlaGNC">         101 :         @assert !isnan(semidiameter) &amp;&amp; !isnan(radius) &amp;&amp; !isnan(conic)</span></span>
+<span id="L422"><span class="lineNum">     422</span> <span class="tlaGNC">         102 :         @assert semidiameter &gt; zero(T)</span></span>
+<span id="L423"><span class="lineNum">     423</span> <span class="tlaGNC">         100 :         @assert one(T) - (1 / radius)^2 * (conic + one(T)) * semidiameter^2 &gt; 0 &quot;Invalid surface (conic/radius combination: $radius, $conic)&quot;</span></span>
+<span id="L424"><span class="lineNum">     424</span>              :         # work out maximum coefficient value</span>
+<span id="L425"><span class="lineNum">     425</span> <span class="tlaGNC">         100 :         N = -1</span></span>
+<span id="L426"><span class="lineNum">     426</span> <span class="tlaGNC">         100 :         M = 0</span></span>
+<span id="L427"><span class="lineNum">     427</span> <span class="tlaGNC">         100 :         if αcoeffs !== nothing</span></span>
+<span id="L428"><span class="lineNum">     428</span> <span class="tlaGNC">          98 :             αcoeffs = αcoeffs::Vector{Tuple{Int,Int,T}}</span></span>
+<span id="L429"><span class="lineNum">     429</span> <span class="tlaGNC">          98 :             for α in αcoeffs</span></span>
+<span id="L430"><span class="lineNum">     430</span> <span class="tlaGNC">         196 :                 m, n, v = α</span></span>
+<span id="L431"><span class="lineNum">     431</span> <span class="tlaGNC">         196 :                 if n &gt; N</span></span>
+<span id="L432"><span class="lineNum">     432</span> <span class="tlaGNC">         196 :                     N = n</span></span>
+<span id="L433"><span class="lineNum">     433</span>              :                 end</span>
+<span id="L434"><span class="lineNum">     434</span> <span class="tlaGNC">         196 :                 if m &gt; M</span></span>
+<span id="L435"><span class="lineNum">     435</span> <span class="tlaGNC">         193 :                     M = m</span></span>
+<span id="L436"><span class="lineNum">     436</span>              :                 end</span>
+<span id="L437"><span class="lineNum">     437</span> <span class="tlaGNC">         196 :             end</span></span>
+<span id="L438"><span class="lineNum">     438</span>              :         end</span>
+<span id="L439"><span class="lineNum">     439</span> <span class="tlaGNC">         100 :         if βcoeffs !== nothing</span></span>
+<span id="L440"><span class="lineNum">     440</span> <span class="tlaGNC">           3 :             βcoeffs = βcoeffs::Vector{Tuple{Int,Int,T}}</span></span>
+<span id="L441"><span class="lineNum">     441</span> <span class="tlaGNC">           3 :             for β in βcoeffs</span></span>
+<span id="L442"><span class="lineNum">     442</span> <span class="tlaGNC">           5 :                 m, n, v = β</span></span>
+<span id="L443"><span class="lineNum">     443</span> <span class="tlaGNC">           5 :                 if n &gt; N</span></span>
+<span id="L444"><span class="lineNum">     444</span> <span class="tlaGNC">           2 :                     N = n</span></span>
+<span id="L445"><span class="lineNum">     445</span>              :                 end</span>
+<span id="L446"><span class="lineNum">     446</span> <span class="tlaGNC">           5 :                 if m &gt; M</span></span>
+<span id="L447"><span class="lineNum">     447</span> <span class="tlaGNC">           2 :                     M = m</span></span>
+<span id="L448"><span class="lineNum">     448</span>              :                 end</span>
+<span id="L449"><span class="lineNum">     449</span> <span class="tlaGNC">           5 :             end</span></span>
+<span id="L450"><span class="lineNum">     450</span>              :         end</span>
+<span id="L451"><span class="lineNum">     451</span>              :         # process the inputs to get parameter matrices</span>
+<span id="L452"><span class="lineNum">     452</span> <span class="tlaGNC">         100 :         α0coeffs = zeros(MVector{N + 1,T})</span></span>
+<span id="L453"><span class="lineNum">     453</span> <span class="tlaGNC">         100 :         αcoeffsproc = zeros(MMatrix{M,N + 1,T})</span></span>
+<span id="L454"><span class="lineNum">     454</span> <span class="tlaGNC">         100 :         βcoeffsproc = zeros(MMatrix{M,N + 1,T})</span></span>
+<span id="L455"><span class="lineNum">     455</span> <span class="tlaGNC">         100 :         if αcoeffs !== nothing</span></span>
+<span id="L456"><span class="lineNum">     456</span> <span class="tlaGNC">          98 :             for α in αcoeffs</span></span>
+<span id="L457"><span class="lineNum">     457</span> <span class="tlaGNC">         196 :                 m, n, v = α</span></span>
+<span id="L458"><span class="lineNum">     458</span> <span class="tlaGNC">         196 :                 @assert m &gt;= 0 &amp;&amp; n &gt;= 0</span></span>
+<span id="L459"><span class="lineNum">     459</span> <span class="tlaGNC">         196 :                 if m == 0</span></span>
+<span id="L460"><span class="lineNum">     460</span> <span class="tlaGNC">           2 :                     α0coeffs[n+1] = v</span></span>
+<span id="L461"><span class="lineNum">     461</span>              :                 else</span>
+<span id="L462"><span class="lineNum">     462</span> <span class="tlaGNC">         194 :                     αcoeffsproc[m, n+1] = v</span></span>
+<span id="L463"><span class="lineNum">     463</span>              :                 end</span>
+<span id="L464"><span class="lineNum">     464</span> <span class="tlaGNC">         196 :             end</span></span>
+<span id="L465"><span class="lineNum">     465</span>              :         end</span>
+<span id="L466"><span class="lineNum">     466</span> <span class="tlaGNC">         100 :         if βcoeffs !== nothing</span></span>
+<span id="L467"><span class="lineNum">     467</span> <span class="tlaGNC">           3 :             for β in βcoeffs</span></span>
+<span id="L468"><span class="lineNum">     468</span> <span class="tlaGNC">           5 :                 m, n, v = β</span></span>
+<span id="L469"><span class="lineNum">     469</span> <span class="tlaGNC">           5 :                 @assert m &gt;= 0 &amp;&amp; n &gt;= 0</span></span>
+<span id="L470"><span class="lineNum">     470</span> <span class="tlaGNC">           5 :                 βcoeffsproc[m, n+1] = v</span></span>
+<span id="L471"><span class="lineNum">     471</span> <span class="tlaGNC">           5 :             end</span></span>
+<span id="L472"><span class="lineNum">     472</span>              :         end</span>
+<span id="L473"><span class="lineNum">     473</span>              :         # calculate the α term coefficients for m = 0</span>
+<span id="L474"><span class="lineNum">     474</span> <span class="tlaGNC">         100 :         b0coeffs = zeros(MVector{N + 1,T})</span></span>
+<span id="L475"><span class="lineNum">     475</span> <span class="tlaGNC">         100 :         if N &gt;= 0</span></span>
+<span id="L476"><span class="lineNum">     476</span>              :             # 1 eq 3.4a</span>
+<span id="L477"><span class="lineNum">     477</span> <span class="tlaGNC">          98 :             bₙp2 = α0coeffs[N+1] / QType.f0(N)</span></span>
+<span id="L478"><span class="lineNum">     478</span> <span class="tlaGNC">          98 :             b0coeffs[N+1] = bₙp2</span></span>
+<span id="L479"><span class="lineNum">     479</span> <span class="tlaGNC">          98 :             if N &gt; 0</span></span>
+<span id="L480"><span class="lineNum">     480</span>              :                 #1 eq 3.4b</span>
+<span id="L481"><span class="lineNum">     481</span> <span class="tlaGNC">          98 :                 bₙp1 = (α0coeffs[N] - QType.g0(N - 1) * bₙp2) / QType.f0(N - 1)</span></span>
+<span id="L482"><span class="lineNum">     482</span> <span class="tlaGNC">          98 :                 b0coeffs[N] = bₙp1</span></span>
+<span id="L483"><span class="lineNum">     483</span> <span class="tlaGNC">          98 :                 if N &gt; 1</span></span>
+<span id="L484"><span class="lineNum">     484</span> <span class="tlaGNC">           4 :                     for n in (N-2):-1:0</span></span>
+<span id="L485"><span class="lineNum">     485</span>              :                         # 1 eq 3.5</span>
+<span id="L486"><span class="lineNum">     486</span> <span class="tlaGNC">          12 :                         bₙ = (α0coeffs[n+1] - QType.g0(n) * bₙp1 - QType.h0(n) * bₙp2) / QType.f0(n)</span></span>
+<span id="L487"><span class="lineNum">     487</span> <span class="tlaGNC">          12 :                         b0coeffs[n+1] = bₙ</span></span>
+<span id="L488"><span class="lineNum">     488</span> <span class="tlaGNC">          12 :                         bₙp2 = bₙp1</span></span>
+<span id="L489"><span class="lineNum">     489</span> <span class="tlaGNC">          12 :                         bₙp1 = bₙ</span></span>
+<span id="L490"><span class="lineNum">     490</span> <span class="tlaGNC">          22 :                     end</span></span>
+<span id="L491"><span class="lineNum">     491</span>              :                 end</span>
+<span id="L492"><span class="lineNum">     492</span>              :             end</span>
+<span id="L493"><span class="lineNum">     493</span>              :         end</span>
+<span id="L494"><span class="lineNum">     494</span>              :         # m==0 max value is &lt;0.4 for any n, otherwise max is 1 for any m and n, for simplicity just sum everything though it may not be the tightest</span>
+<span id="L495"><span class="lineNum">     495</span> <span class="tlaGNC">         100 :         maxheight = zero(T)</span></span>
+<span id="L496"><span class="lineNum">     496</span> <span class="tlaGNC">         100 :         maxheight += 0.4 * sum(abs.(α0coeffs))</span></span>
+<span id="L497"><span class="lineNum">     497</span> <span class="tlaGNC">         100 :         maxheight += 0.4 * sum(abs.(b0coeffs))</span></span>
+<span id="L498"><span class="lineNum">     498</span> <span class="tlaGNC">         100 :         @inbounds @simd for m in 1:M</span></span>
+<span id="L499"><span class="lineNum">     499</span> <span class="tlaGNC">         203 :             maxheight += sum(abs.(αcoeffsproc[m, :]))</span></span>
+<span id="L500"><span class="lineNum">     500</span> <span class="tlaGNC">         203 :             maxheight += sum(abs.(βcoeffsproc[m, :]))</span></span>
+<span id="L501"><span class="lineNum">     501</span>              :         end</span>
+<span id="L502"><span class="lineNum">     502</span>              :         # calculate the α and β term coefficients</span>
+<span id="L503"><span class="lineNum">     503</span> <span class="tlaGNC">         100 :         dαcoeffs = zeros(MVector{M,SVector{N + 1,T}})</span></span>
+<span id="L504"><span class="lineNum">     504</span> <span class="tlaGNC">         100 :         dβcoeffs = zeros(MVector{M,SVector{N + 1,T}})</span></span>
+<span id="L505"><span class="lineNum">     505</span> <span class="tlaGNC">         100 :         for m in 1:M</span></span>
+<span id="L506"><span class="lineNum">     506</span> <span class="tlaGNC">         203 :             thisα = zeros(MVector{N + 1,T})</span></span>
+<span id="L507"><span class="lineNum">     507</span> <span class="tlaGNC">         203 :             thisβ = zeros(MVector{N + 1,T})</span></span>
+<span id="L508"><span class="lineNum">     508</span> <span class="tlaGNC">         203 :             if N &gt;= 0</span></span>
+<span id="L509"><span class="lineNum">     509</span> <span class="tlaGNC">         203 :                 fmN = QType.f(m, N)</span></span>
+<span id="L510"><span class="lineNum">     510</span> <span class="tlaGNC">         203 :                 lastdαₙ = αcoeffsproc[m, N+1] / fmN</span></span>
+<span id="L511"><span class="lineNum">     511</span> <span class="tlaGNC">         203 :                 thisα[N+1] = lastdαₙ</span></span>
+<span id="L512"><span class="lineNum">     512</span> <span class="tlaGNC">         203 :                 lastdβₙ = βcoeffsproc[m, N+1] / fmN</span></span>
+<span id="L513"><span class="lineNum">     513</span> <span class="tlaGNC">         203 :                 thisβ[N+1] = lastdβₙ</span></span>
+<span id="L514"><span class="lineNum">     514</span> <span class="tlaGNC">         213 :                 for n in (N-1):-1:0</span></span>
+<span id="L515"><span class="lineNum">     515</span> <span class="tlaGNC">         263 :                     gmn = QType.g(m, n)</span></span>
+<span id="L516"><span class="lineNum">     516</span> <span class="tlaGNC">         263 :                     fmn = QType.f(m, n)</span></span>
+<span id="L517"><span class="lineNum">     517</span>              :                     # 2 eq B.4</span>
+<span id="L518"><span class="lineNum">     518</span> <span class="tlaGNC">         263 :                     dαₙ = (αcoeffsproc[m, n+1] - gmn * lastdαₙ) / fmn</span></span>
+<span id="L519"><span class="lineNum">     519</span> <span class="tlaGNC">         263 :                     dβₙ = (βcoeffsproc[m, n+1] - gmn * lastdβₙ) / fmn</span></span>
+<span id="L520"><span class="lineNum">     520</span> <span class="tlaGNC">         263 :                     lastdαₙ = dαₙ</span></span>
+<span id="L521"><span class="lineNum">     521</span> <span class="tlaGNC">         263 :                     lastdβₙ = dβₙ</span></span>
+<span id="L522"><span class="lineNum">     522</span> <span class="tlaGNC">         263 :                     thisα[n+1] = dαₙ</span></span>
+<span id="L523"><span class="lineNum">     523</span> <span class="tlaGNC">         263 :                     thisβ[n+1] = dβₙ</span></span>
+<span id="L524"><span class="lineNum">     524</span> <span class="tlaGNC">         323 :                 end</span></span>
+<span id="L525"><span class="lineNum">     525</span>              :             end</span>
+<span id="L526"><span class="lineNum">     526</span> <span class="tlaGNC">         203 :             dαcoeffs[m] = SVector{N + 1,T}(thisα)</span></span>
+<span id="L527"><span class="lineNum">     527</span> <span class="tlaGNC">         203 :             dβcoeffs[m] = SVector{N + 1,T}(thisβ)</span></span>
+<span id="L528"><span class="lineNum">     528</span> <span class="tlaGNC">         308 :         end</span></span>
+<span id="L529"><span class="lineNum">     529</span> <span class="tlaGNC">         100 :         NP1 = N + 1</span></span>
+<span id="L530"><span class="lineNum">     530</span> <span class="tlaGNC">         100 :         new{T,3,M,NP1}(semidiameter, 1 / radius, conic, Cylinder(semidiameter, interface=opaqueinterface(T)), SVector{NP1,T}(b0coeffs), SVector{M,SVector{NP1,T}}(dαcoeffs), SVector{M,SVector{NP1,T}}(dβcoeffs), normradius, maxheight) # TODO!! incorrect interface on cylinder</span></span>
+<span id="L531"><span class="lineNum">     531</span>              :     end</span>
+<span id="L532"><span class="lineNum">     532</span>              : end</span>
+<span id="L533"><span class="lineNum">     533</span>              : export QTypeSurface</span>
+<span id="L534"><span class="lineNum">     534</span>              : </span>
+<span id="L535"><span class="lineNum">     535</span> <span class="tlaGNC">       10487 : uvrange(::Type{QTypeSurface{T,D,M,N}}) where {T&lt;:Real,D,M,N} = ((zero(T), one(T)), (-T(π), T(π))) # ρ and θ</span></span>
+<span id="L536"><span class="lineNum">     536</span>              : </span>
+<span id="L537"><span class="lineNum">     537</span> <span class="tlaGNC">        2575 : semidiameter(z::QTypeSurface{T}) where {T&lt;:Real} = z.semidiameter</span></span>
+<span id="L538"><span class="lineNum">     538</span>              : </span>
+<span id="L539"><span class="lineNum">     539</span> <span class="tlaGNC">      336079 : function point(z::QTypeSurface{T,3,M,N}, ρ::T, θ::T)::SVector{3,T} where {T&lt;:Real,M,N}</span></span>
+<span id="L540"><span class="lineNum">     540</span> <span class="tlaGNC">      336079 :     rad = z.semidiameter</span></span>
+<span id="L541"><span class="lineNum">     541</span> <span class="tlaGNC">      336079 :     r = ρ * rad</span></span>
+<span id="L542"><span class="lineNum">     542</span>              :     # ρ is normalised [0, 1]</span>
+<span id="L543"><span class="lineNum">     543</span>              :     # r is absolute</span>
+<span id="L544"><span class="lineNum">     544</span> <span class="tlaGNC">      336079 :     r2 = r^2</span></span>
+<span id="L545"><span class="lineNum">     545</span> <span class="tlaGNC">      336079 :     ρ2 = ρ^2</span></span>
+<span id="L546"><span class="lineNum">     546</span> <span class="tlaGNC">      336079 :     c2 = z.curvature^2</span></span>
+<span id="L547"><span class="lineNum">     547</span> <span class="tlaGNC">      336079 :     q = (one(T) + z.conic) * c2 * r2</span></span>
+<span id="L548"><span class="lineNum">     548</span> <span class="tlaGNC">      336079 :     if q &gt; one(T)</span></span>
+<span id="L549"><span class="lineNum">     549</span> <span class="tlaUNC tlaBgUNC">           0 :         return SVector{3,T}(NaN, NaN, NaN)</span></span>
+<span id="L550"><span class="lineNum">     550</span>              :     end</span>
+<span id="L551"><span class="lineNum">     551</span> <span class="tlaGNC tlaBgGNC">      336079 :     sqrtq = sqrt(one(T) - q)</span></span>
+<span id="L552"><span class="lineNum">     552</span> <span class="tlaGNC">      336079 :     h = z.curvature * r2 / (one(T) + sqrtq)</span></span>
+<span id="L553"><span class="lineNum">     553</span> <span class="tlaGNC">      336079 :     if N &gt; 0</span></span>
+<span id="L554"><span class="lineNum">     554</span>              :         # 2 eq B.1</span>
+<span id="L555"><span class="lineNum">     555</span> <span class="tlaGNC">      334750 :         p = one(T) + z.conic * c2 * r2</span></span>
+<span id="L556"><span class="lineNum">     556</span> <span class="tlaGNC">      334750 :         if p &lt; zero(T)</span></span>
+<span id="L557"><span class="lineNum">     557</span> <span class="tlaUNC tlaBgUNC">           0 :             return SVector{3,T}(NaN, NaN, NaN)</span></span>
+<span id="L558"><span class="lineNum">     558</span>              :         end</span>
+<span id="L559"><span class="lineNum">     559</span> <span class="tlaGNC tlaBgGNC">      334750 :         u = ρ * rad / z.normradius</span></span>
+<span id="L560"><span class="lineNum">     560</span> <span class="tlaGNC">      334750 :         u2 = u^2</span></span>
+<span id="L561"><span class="lineNum">     561</span> <span class="tlaGNC">      428126 :         tot = u2 * (one(T) - u2) * QType.S0(z.b0coeffs, u2)</span></span>
+<span id="L562"><span class="lineNum">     562</span> <span class="tlaGNC">      334750 :         @inbounds @simd for m in 1:M</span></span>
+<span id="L563"><span class="lineNum">     563</span> <span class="tlaGNC">     1901798 :             tot += u^m * (cos(m * θ) * QType.S(z.dαcoeffs[m], m, u2)::T + sin(m * θ) * QType.S(z.dβcoeffs[m], m, u2)::T)</span></span>
+<span id="L564"><span class="lineNum">     564</span>              :         end</span>
+<span id="L565"><span class="lineNum">     565</span> <span class="tlaGNC">      334750 :         h += (sqrt(p) / sqrtq) * tot</span></span>
+<span id="L566"><span class="lineNum">     566</span>              :     end</span>
+<span id="L567"><span class="lineNum">     567</span> <span class="tlaGNC">      336079 :     return SVector{3,T}(r * cos(θ), r * sin(θ), h)</span></span>
+<span id="L568"><span class="lineNum">     568</span>              : end</span>
+<span id="L569"><span class="lineNum">     569</span>              : </span>
+<span id="L570"><span class="lineNum">     570</span> <span class="tlaGNC">       71965 : function partials(z::QTypeSurface{T,3,M,N}, ρ::T, θ::T)::Tuple{SVector{3,T},SVector{3,T}} where {T&lt;:Real,M,N}</span></span>
+<span id="L571"><span class="lineNum">     571</span> <span class="tlaGNC">       71965 :     rad = z.semidiameter</span></span>
+<span id="L572"><span class="lineNum">     572</span> <span class="tlaGNC">       71965 :     r = ρ * rad</span></span>
+<span id="L573"><span class="lineNum">     573</span>              :     # ρ is normalised [0, 1]</span>
+<span id="L574"><span class="lineNum">     574</span>              :     # r is absolute</span>
+<span id="L575"><span class="lineNum">     575</span> <span class="tlaGNC">       71965 :     r2 = r^2</span></span>
+<span id="L576"><span class="lineNum">     576</span> <span class="tlaGNC">       71965 :     ρ2 = ρ^2</span></span>
+<span id="L577"><span class="lineNum">     577</span> <span class="tlaGNC">       71965 :     k = z.conic</span></span>
+<span id="L578"><span class="lineNum">     578</span> <span class="tlaGNC">       71965 :     c = z.curvature</span></span>
+<span id="L579"><span class="lineNum">     579</span> <span class="tlaGNC">       71965 :     c2 = c^2</span></span>
+<span id="L580"><span class="lineNum">     580</span> <span class="tlaGNC">       71965 :     q = (one(T) + k) * c2 * r2</span></span>
+<span id="L581"><span class="lineNum">     581</span> <span class="tlaGNC">       71965 :     if q &gt; one(T)</span></span>
+<span id="L582"><span class="lineNum">     582</span> <span class="tlaUNC tlaBgUNC">           0 :         return SVector{3,T}(NaN, NaN, NaN), SVector{3,T}(NaN, NaN, NaN)</span></span>
+<span id="L583"><span class="lineNum">     583</span>              :     end</span>
+<span id="L584"><span class="lineNum">     584</span> <span class="tlaGNC tlaBgGNC">       71965 :     sqrtq = sqrt(one(T) - q)</span></span>
+<span id="L585"><span class="lineNum">     585</span> <span class="tlaGNC">       71965 :     dhdρ = -((rad * c * r * sqrtq) / (q - one(T)))</span></span>
+<span id="L586"><span class="lineNum">     586</span> <span class="tlaGNC">       71965 :     dhdθ = zero(T)</span></span>
+<span id="L587"><span class="lineNum">     587</span> <span class="tlaGNC">       71965 :     if N &gt; 0</span></span>
+<span id="L588"><span class="lineNum">     588</span> <span class="tlaGNC">       71800 :         p = one(T) + k * c2 * r2</span></span>
+<span id="L589"><span class="lineNum">     589</span> <span class="tlaGNC">       71800 :         if p &lt; zero(T)</span></span>
+<span id="L590"><span class="lineNum">     590</span> <span class="tlaUNC tlaBgUNC">           0 :             return SVector{3,T}(NaN, NaN, NaN), SVector{3,T}(NaN, NaN, NaN)</span></span>
+<span id="L591"><span class="lineNum">     591</span>              :         end</span>
+<span id="L592"><span class="lineNum">     592</span> <span class="tlaGNC tlaBgGNC">       71800 :         sqrtp = sqrt(p)</span></span>
+<span id="L593"><span class="lineNum">     593</span> <span class="tlaGNC">       71800 :         a = sqrtp / sqrtq</span></span>
+<span id="L594"><span class="lineNum">     594</span> <span class="tlaGNC">       71800 :         dadρ = (c2 * (2k + one(T)) * rad * r) / (sqrtp * sqrtq^3)</span></span>
+<span id="L595"><span class="lineNum">     595</span> <span class="tlaGNC">       71800 :         n = rad / z.normradius</span></span>
+<span id="L596"><span class="lineNum">     596</span> <span class="tlaGNC">       71800 :         u = ρ * n</span></span>
+<span id="L597"><span class="lineNum">     597</span> <span class="tlaGNC">       71800 :         u2 = u^2</span></span>
+<span id="L598"><span class="lineNum">     598</span> <span class="tlaGNC">      143173 :         S0v = QType.S0(z.b0coeffs, u2)::T</span></span>
+<span id="L599"><span class="lineNum">     599</span> <span class="tlaGNC">       71800 :         b = u2 * (one(T) - u2) * S0v</span></span>
+<span id="L600"><span class="lineNum">     600</span> <span class="tlaGNC">      143173 :         dbdu = 2 * u * (one(T) - 2 * u2) * S0v + 2 * u^3 * (one(T) - u2) * QType.dS0dx(z.b0coeffs, u2)::T</span></span>
+<span id="L601"><span class="lineNum">     601</span> <span class="tlaGNC">       71800 :         c = zero(T)</span></span>
+<span id="L602"><span class="lineNum">     602</span> <span class="tlaGNC">       71800 :         dcdu = zero(T)</span></span>
+<span id="L603"><span class="lineNum">     603</span> <span class="tlaGNC">       71800 :         if M &gt; 0</span></span>
+<span id="L604"><span class="lineNum">     604</span> <span class="tlaGNC">       71800 :             @inbounds @simd for m in 1:M</span></span>
+<span id="L605"><span class="lineNum">     605</span> <span class="tlaGNC">      357829 :                 Sα = QType.S(z.dαcoeffs[m], m, u2)::T</span></span>
+<span id="L606"><span class="lineNum">     606</span> <span class="tlaGNC">      357829 :                 Sβ = QType.S(z.dβcoeffs[m], m, u2)::T</span></span>
+<span id="L607"><span class="lineNum">     607</span> <span class="tlaGNC">      357829 :                 sinmθ = sin(m * θ)</span></span>
+<span id="L608"><span class="lineNum">     608</span> <span class="tlaGNC">      357829 :                 cosmθ = cos(m * θ)</span></span>
+<span id="L609"><span class="lineNum">     609</span> <span class="tlaGNC">      715658 :                 dhdθ += u^m * m * (-sinmθ * Sα + cosmθ * Sβ)</span></span>
+<span id="L610"><span class="lineNum">     610</span> <span class="tlaGNC">      715658 :                 c += u^m * (cosmθ * Sα + sinmθ * Sβ)</span></span>
+<span id="L611"><span class="lineNum">     611</span> <span class="tlaGNC">      643858 :                 dcdu += u^(m - 1) * (m * (cosmθ * Sα + sinmθ * Sβ) + 2 * u2 * (cosmθ * QType.dSdx(z.dαcoeffs[m], m, u2)::T + sinmθ * QType.dSdx(z.dβcoeffs[m], m, u2)::T))</span></span>
+<span id="L612"><span class="lineNum">     612</span>              :             end</span>
+<span id="L613"><span class="lineNum">     613</span>              :         end</span>
+<span id="L614"><span class="lineNum">     614</span> <span class="tlaGNC">       71800 :         dhdθ *= a</span></span>
+<span id="L615"><span class="lineNum">     615</span> <span class="tlaGNC">       71800 :         dhdρ += dadρ * (b + c) + a * n * (dbdu + dcdu) # want the derivative wrt ρ, not u</span></span>
+<span id="L616"><span class="lineNum">     616</span>              :     end</span>
+<span id="L617"><span class="lineNum">     617</span> <span class="tlaGNC">       71965 :     cosθ = cos(θ)</span></span>
+<span id="L618"><span class="lineNum">     618</span> <span class="tlaGNC">       71965 :     sinθ = sin(θ)</span></span>
+<span id="L619"><span class="lineNum">     619</span> <span class="tlaGNC">       71965 :     pu = SVector{3,T}(rad * cosθ, rad * sinθ, dhdρ)</span></span>
+<span id="L620"><span class="lineNum">     620</span> <span class="tlaGNC">       71965 :     pv = SVector{3,T}(r * -sinθ, r * cosθ, dhdθ)</span></span>
+<span id="L621"><span class="lineNum">     621</span> <span class="tlaGNC">       71965 :     return pu, pv</span></span>
+<span id="L622"><span class="lineNum">     622</span>              : end</span>
+<span id="L623"><span class="lineNum">     623</span>              : </span>
+<span id="L624"><span class="lineNum">     624</span> <span class="tlaGNC">       10246 : function normal(z::QTypeSurface{T,D,M,N}, ρ::T, θ::T)::SVector{3,T} where {T&lt;:Real,D,M,N}</span></span>
+<span id="L625"><span class="lineNum">     625</span> <span class="tlaGNC">       10246 :     du, dv = partials(z, ρ, θ)</span></span>
+<span id="L626"><span class="lineNum">     626</span> <span class="tlaGNC">       10247 :     if ρ == zero(T) &amp;&amp; norm(dv) == zero(T)</span></span>
+<span id="L627"><span class="lineNum">     627</span>              :         # in cases where there is no δθ at ρ = 0 (i.e. anything which is rotationally symmetric)</span>
+<span id="L628"><span class="lineNum">     628</span>              :         # then we get some big problems, hardcoding this case solves the problems</span>
+<span id="L629"><span class="lineNum">     629</span> <span class="tlaGNC">           1 :         return SVector{3,T}(0, 0, 1)</span></span>
+<span id="L630"><span class="lineNum">     630</span>              :     end</span>
+<span id="L631"><span class="lineNum">     631</span> <span class="tlaGNC">       10245 :     return normalize(cross(du, dv))</span></span>
+<span id="L632"><span class="lineNum">     632</span>              : end</span>
+<span id="L633"><span class="lineNum">     633</span>              : </span>
+<span id="L634"><span class="lineNum">     634</span> <span class="tlaGNC">        2575 : function uv(z::QTypeSurface{T,3,M,N}, p::SVector{3,T})::SVector{2,T} where {T&lt;:Real,M,N}</span></span>
+<span id="L635"><span class="lineNum">     635</span>              :     # avoid divide by zero for ForwardDiff</span>
+<span id="L636"><span class="lineNum">     636</span> <span class="tlaGNC">        2575 :     ϕ = NaNsafeatan(p[2], p[1])</span></span>
+<span id="L637"><span class="lineNum">     637</span> <span class="tlaGNC">        2575 :     if p[1] == zero(T) &amp;&amp; p[2] == zero(T)</span></span>
+<span id="L638"><span class="lineNum">     638</span> <span class="tlaUNC tlaBgUNC">           0 :         ρ = zero(T)</span></span>
+<span id="L639"><span class="lineNum">     639</span>              :     else</span>
+<span id="L640"><span class="lineNum">     640</span> <span class="tlaGNC tlaBgGNC">        2575 :         ρ = sqrt(p[1]^2 + p[2]^2) / semidiameter(z)</span></span>
+<span id="L641"><span class="lineNum">     641</span>              :     end</span>
+<span id="L642"><span class="lineNum">     642</span> <span class="tlaGNC">        2575 :     return SVector{2,T}(ρ, ϕ)</span></span>
+<span id="L643"><span class="lineNum">     643</span>              : end</span>
+<span id="L644"><span class="lineNum">     644</span>              : </span>
+<span id="L645"><span class="lineNum">     645</span> <span class="tlaUNC tlaBgUNC">           0 : function onsurface(surf::QTypeSurface{T,3,M,N}, p::SVector{3,T}) where {T&lt;:Real,M,N}</span></span>
+<span id="L646"><span class="lineNum">     646</span> <span class="tlaUNC">           0 :     ρ, θ = uv(surf, p)</span></span>
+<span id="L647"><span class="lineNum">     647</span> <span class="tlaUNC">           0 :     if ρ &gt; one(T)</span></span>
+<span id="L648"><span class="lineNum">     648</span> <span class="tlaUNC">           0 :         return false</span></span>
+<span id="L649"><span class="lineNum">     649</span>              :     else</span>
+<span id="L650"><span class="lineNum">     650</span> <span class="tlaUNC">           0 :         surfpoint = point(surf, ρ, θ)</span></span>
+<span id="L651"><span class="lineNum">     651</span> <span class="tlaUNC">           0 :         return samepoint(p[3], surfpoint[3])</span></span>
+<span id="L652"><span class="lineNum">     652</span>              :     end</span>
+<span id="L653"><span class="lineNum">     653</span>              : end</span>
+<span id="L654"><span class="lineNum">     654</span>              : </span>
+<span id="L655"><span class="lineNum">     655</span>              : function inside(surf::QTypeSurface{T,3,M,N}, p::SVector{3,T}) where {T&lt;:Real,M,N}</span>
+<span id="L656"><span class="lineNum">     656</span> <span class="tlaGNC tlaBgGNC">        2542 :     ρ, θ = uv(surf, p)</span></span>
+<span id="L657"><span class="lineNum">     657</span> <span class="tlaGNC">        2542 :     if ρ &gt; one(T)</span></span>
+<span id="L658"><span class="lineNum">     658</span> <span class="tlaGNC">         266 :         return false</span></span>
+<span id="L659"><span class="lineNum">     659</span>              :     else</span>
+<span id="L660"><span class="lineNum">     660</span> <span class="tlaGNC">        2276 :         surfpoint = point(surf, ρ, θ)</span></span>
+<span id="L661"><span class="lineNum">     661</span> <span class="tlaGNC">        2276 :         return p[3] &lt; surfpoint[3]</span></span>
+<span id="L662"><span class="lineNum">     662</span>              :     end</span>
+<span id="L663"><span class="lineNum">     663</span>              : end</span>
+<span id="L664"><span class="lineNum">     664</span>              : </span>
+<span id="L665"><span class="lineNum">     665</span>              : #########################################################################################################</span>
+<span id="L666"><span class="lineNum">     666</span>              : </span>
+<span id="L667"><span class="lineNum">     667</span>              : # Assumes the ray has been transformed into the canonical coordinate frame which has the vertical axis passing through (0,0,0) and aligned with the z axis.</span>
+<span id="L668"><span class="lineNum">     668</span> <span class="tlaGNC">       10284 : function surfaceintersection(surf::AcceleratedParametricSurface{T,3,QTypeSurface{T,3,M,N}}, r::AbstractRay{T,3}) where {T&lt;:Real,M,N}</span></span>
+<span id="L669"><span class="lineNum">     669</span> <span class="tlaGNC">       10284 :     cylint = surfaceintersection(surf.surface.boundingcylinder, r)</span></span>
+<span id="L670"><span class="lineNum">     670</span> <span class="tlaGNC">       20565 :     if isemptyinterval(cylint)</span></span>
+<span id="L671"><span class="lineNum">     671</span> <span class="tlaGNC">           3 :         return EmptyInterval(T)</span></span>
+<span id="L672"><span class="lineNum">     672</span>              :     else</span>
+<span id="L673"><span class="lineNum">     673</span> <span class="tlaGNC">       10288 :         if doesintersect(surf.triangles_bbox, r) || inside(surf.triangles_bbox, origin(r))</span></span>
+<span id="L674"><span class="lineNum">     674</span> <span class="tlaGNC">       10274 :             surfint = triangulatedintersection(surf, r)</span></span>
+<span id="L675"><span class="lineNum">     675</span> <span class="tlaGNC">       10274 :             if !(surfint isa EmptyInterval{T})</span></span>
+<span id="L676"><span class="lineNum">     676</span> <span class="tlaGNC">       10246 :                 return intervalintersection(cylint, surfint)</span></span>
+<span id="L677"><span class="lineNum">     677</span>              :             end</span>
+<span id="L678"><span class="lineNum">     678</span>              :         end</span>
+<span id="L679"><span class="lineNum">     679</span>              :         # hasn't hit the surface</span>
+<span id="L680"><span class="lineNum">     680</span> <span class="tlaGNC">          35 :         if lower(cylint) isa RayOrigin{T} &amp;&amp; upper(cylint) isa Infinity{T}</span></span>
+<span id="L681"><span class="lineNum">     681</span> <span class="tlaGNC">           4 :             if inside(surf.surface, origin(r))</span></span>
+<span id="L682"><span class="lineNum">     682</span> <span class="tlaGNC">           1 :                 return Interval(RayOrigin(T), Infinity(T))</span></span>
+<span id="L683"><span class="lineNum">     683</span>              :             else</span>
+<span id="L684"><span class="lineNum">     684</span> <span class="tlaGNC">           1 :                 return EmptyInterval(T)</span></span>
+<span id="L685"><span class="lineNum">     685</span>              :             end</span>
+<span id="L686"><span class="lineNum">     686</span>              :             # otherwise check that the intersection is underneath the surface</span>
+<span id="L687"><span class="lineNum">     687</span>              :         else</span>
+<span id="L688"><span class="lineNum">     688</span> <span class="tlaGNC">          33 :             p = point(closestintersection(cylint, false))</span></span>
+<span id="L689"><span class="lineNum">     689</span> <span class="tlaGNC">          33 :             ρ, ϕ = uv(surf, p)</span></span>
+<span id="L690"><span class="lineNum">     690</span> <span class="tlaGNC">          33 :             surfpoint = point(surf.surface, ρ, ϕ)</span></span>
+<span id="L691"><span class="lineNum">     691</span> <span class="tlaGNC">          33 :             if p[3] &lt; surfpoint[3]</span></span>
+<span id="L692"><span class="lineNum">     692</span> <span class="tlaGNC">          24 :                 return cylint # TODO!! UV (and interface) issues?</span></span>
+<span id="L693"><span class="lineNum">     693</span>              :             else</span>
+<span id="L694"><span class="lineNum">     694</span> <span class="tlaGNC">           9 :                 return EmptyInterval(T)</span></span>
+<span id="L695"><span class="lineNum">     695</span>              :             end</span>
+<span id="L696"><span class="lineNum">     696</span>              :         end</span>
+<span id="L697"><span class="lineNum">     697</span>              :     end</span>
+<span id="L698"><span class="lineNum">     698</span>              : end</span>
+<span id="L699"><span class="lineNum">     699</span>              : </span>
+<span id="L700"><span class="lineNum">     700</span> <span class="tlaGNC">         102 : function AcceleratedParametricSurface(surf::S, numsamples::Int=17; interface::NullOrFresnel{T}=NullInterface(T)) where {T&lt;:Real,N,S&lt;:QTypeSurface{T,N}}</span></span>
+<span id="L701"><span class="lineNum">     701</span>              :     # Zernike users ρ, ϕ uv space so need to modify extension of triangulation</span>
+<span id="L702"><span class="lineNum">     702</span> <span class="tlaGNC">          99 :     a = AcceleratedParametricSurface(surf, triangulate(surf, numsamples, true, false, true, false), interface=interface)</span></span>
+<span id="L703"><span class="lineNum">     703</span> <span class="tlaGNC">          99 :     emptytrianglepool!(T)</span></span>
+<span id="L704"><span class="lineNum">     704</span> <span class="tlaGNC">          99 :     return a</span></span>
+<span id="L705"><span class="lineNum">     705</span>              : end</span>
+<span id="L706"><span class="lineNum">     706</span>              : </span>
+<span id="L707"><span class="lineNum">     707</span> <span class="tlaUNC tlaBgUNC">           0 : function BoundingBox(surf::QTypeSurface{T,3}) where {T&lt;:Real}</span></span>
+<span id="L708"><span class="lineNum">     708</span> <span class="tlaUNC">           0 :     xmin = -semidiameter(surf)</span></span>
+<span id="L709"><span class="lineNum">     709</span> <span class="tlaUNC">           0 :     xmax = semidiameter(surf)</span></span>
+<span id="L710"><span class="lineNum">     710</span> <span class="tlaUNC">           0 :     ymin = -semidiameter(surf)</span></span>
+<span id="L711"><span class="lineNum">     711</span> <span class="tlaUNC">           0 :     ymax = semidiameter(surf)</span></span>
+<span id="L712"><span class="lineNum">     712</span>              :     # curvature only goes one way</span>
+<span id="L713"><span class="lineNum">     713</span> <span class="tlaUNC">           0 :     q = one(T) - (one(T) + surf.conic) * surf.curvature^2 * surf.semidiameter^2</span></span>
+<span id="L714"><span class="lineNum">     714</span> <span class="tlaUNC">           0 :     if q &lt; zero(T)</span></span>
+<span id="L715"><span class="lineNum">     715</span> <span class="tlaUNC">           0 :         throw(ErrorException(&quot;The surface is invalid, no bounding box can be constructed&quot;))</span></span>
+<span id="L716"><span class="lineNum">     716</span>              :     end</span>
+<span id="L717"><span class="lineNum">     717</span> <span class="tlaUNC">           0 :     hmax = surf.curvature * surf.semidiameter^2 / (one(T) + sqrt(q))</span></span>
+<span id="L718"><span class="lineNum">     718</span> <span class="tlaUNC">           0 :     if hmax &gt; zero(T)</span></span>
+<span id="L719"><span class="lineNum">     719</span> <span class="tlaUNC">           0 :         zmax = hmax + surf.maxheight</span></span>
+<span id="L720"><span class="lineNum">     720</span> <span class="tlaUNC">           0 :         zmin = -surf.maxheight</span></span>
+<span id="L721"><span class="lineNum">     721</span>              :     else</span>
+<span id="L722"><span class="lineNum">     722</span> <span class="tlaUNC">           0 :         zmax = surf.maxheight</span></span>
+<span id="L723"><span class="lineNum">     723</span> <span class="tlaUNC">           0 :         zmin = hmax - surf.maxheight</span></span>
+<span id="L724"><span class="lineNum">     724</span>              :     end</span>
+<span id="L725"><span class="lineNum">     725</span> <span class="tlaUNC">           0 :     return BoundingBox(xmin, xmax, ymin, ymax, zmin, zmax)</span></span>
+<span id="L726"><span class="lineNum">     726</span>              : end</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>

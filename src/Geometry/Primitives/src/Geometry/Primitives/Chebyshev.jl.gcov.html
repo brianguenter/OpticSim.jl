@@ -1,0 +1,347 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - Coverage - src/Geometry/Primitives/src/Geometry/Primitives/Chebyshev.jl</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../../../../../../index.html">top level</a> - <a href="index.html">src/Geometry/Primitives/src/Geometry/Primitives</a> - Chebyshev.jl<span style="font-size: 80%;"> (source / <a href="Chebyshev.jl.func-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">Coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryMed">78.5&nbsp;%</td>
+            <td class="headerCovTableEntry">130</td>
+            <td class="headerCovTableEntry">102</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2026-11-11 20:00:33</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryHi">-</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+          </tr>
+                  <tr><td><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : # MIT license</span>
+<span id="L2"><span class="lineNum">       2</span>              : # Copyright (c) Microsoft Corporation. All rights reserved.</span>
+<span id="L3"><span class="lineNum">       3</span>              : # See LICENSE in the project root for full license information.</span>
+<span id="L4"><span class="lineNum">       4</span>              : </span>
+<span id="L5"><span class="lineNum">       5</span>              : &quot;&quot;&quot;</span>
+<span id="L6"><span class="lineNum">       6</span>              : Module to enclose [Chebyshev polynomial](https://en.wikipedia.org/wiki/Chebyshev_polynomials) specific functionality.</span>
+<span id="L7"><span class="lineNum">       7</span>              : &quot;&quot;&quot;</span>
+<span id="L8"><span class="lineNum">       8</span>              : module Chebyshev</span>
+<span id="L9"><span class="lineNum">       9</span>              : using OpticSim: NaNsafeacos</span>
+<span id="L10"><span class="lineNum">      10</span>              : </span>
+<span id="L11"><span class="lineNum">      11</span>              : &quot;&quot;&quot;</span>
+<span id="L12"><span class="lineNum">      12</span>              :     T(n::Int, q::R, fast::Bool = true) -&gt; R</span>
+<span id="L13"><span class="lineNum">      13</span>              : </span>
+<span id="L14"><span class="lineNum">      14</span>              : Evaluate Chebyshev polynomial of the first kind ``T_n(q)``.</span>
+<span id="L15"><span class="lineNum">      15</span>              : </span>
+<span id="L16"><span class="lineNum">      16</span>              : `fast` will use trigonometric definition, rather than the recursive definition which is much faster but slightly less precise.</span>
+<span id="L17"><span class="lineNum">      17</span>              : &quot;&quot;&quot;</span>
+<span id="L18"><span class="lineNum">      18</span>              : @inline function T(n::Int, q::R, fast::Bool=true)::R where {R&lt;:Real}</span>
+<span id="L19"><span class="lineNum">      19</span> <span class="tlaGNC tlaBgGNC">     6592767 :     @assert n &gt;= 0</span></span>
+<span id="L20"><span class="lineNum">      20</span> <span class="tlaGNC">     3779716 :     if n === 0</span></span>
+<span id="L21"><span class="lineNum">      21</span> <span class="tlaGNC">     1330185 :         return one(R)</span></span>
+<span id="L22"><span class="lineNum">      22</span> <span class="tlaGNC">     2449531 :     elseif n === 1</span></span>
+<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC">     1575878 :         return q</span></span>
+<span id="L24"><span class="lineNum">      24</span> <span class="tlaGNC">      873653 :     elseif fast &amp;&amp; n &gt; 3</span></span>
+<span id="L25"><span class="lineNum">      25</span> <span class="tlaGNC">      216087 :         if abs(q) &lt; one(R)</span></span>
+<span id="L26"><span class="lineNum">      26</span> <span class="tlaGNC">      213398 :             return cos(n * NaNsafeacos(q))</span></span>
+<span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC">        2689 :         elseif q &gt;= one(R)</span></span>
+<span id="L28"><span class="lineNum">      28</span> <span class="tlaGNC">        1084 :             return cosh(n * acosh(q))</span></span>
+<span id="L29"><span class="lineNum">      29</span>              :         else</span>
+<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">        1605 :             return (-1)^n * cosh(n * acosh(-q))</span></span>
+<span id="L31"><span class="lineNum">      31</span>              :         end</span>
+<span id="L32"><span class="lineNum">      32</span>              :     else</span>
+<span id="L33"><span class="lineNum">      33</span> <span class="tlaGNC">      657566 :         return 2q * T(n - 1, q, fast) - T(n - 2, q, fast)</span></span>
+<span id="L34"><span class="lineNum">      34</span>              :     end</span>
+<span id="L35"><span class="lineNum">      35</span>              : end</span>
+<span id="L36"><span class="lineNum">      36</span>              : </span>
+<span id="L37"><span class="lineNum">      37</span>              : &quot;&quot;&quot;</span>
+<span id="L38"><span class="lineNum">      38</span>              :     U(n::Int, q::R, fast::Bool = true) -&gt; R</span>
+<span id="L39"><span class="lineNum">      39</span>              : </span>
+<span id="L40"><span class="lineNum">      40</span>              : Evaluate Chebyshev polynomial of the second kind ``U_n(q)``.</span>
+<span id="L41"><span class="lineNum">      41</span>              : </span>
+<span id="L42"><span class="lineNum">      42</span>              : `fast` will use trigonometric definition, rather than the recursive definition which is much faster but slightly less precise.</span>
+<span id="L43"><span class="lineNum">      43</span>              : &quot;&quot;&quot;</span>
+<span id="L44"><span class="lineNum">      44</span>              : @inline function U(n::Int, q::R, fast::Bool=true)::R where {R&lt;:Real}</span>
+<span id="L45"><span class="lineNum">      45</span> <span class="tlaGNC">      500521 :     @assert n &gt;= 0</span></span>
+<span id="L46"><span class="lineNum">      46</span> <span class="tlaGNC">      500521 :     if n === 0</span></span>
+<span id="L47"><span class="lineNum">      47</span> <span class="tlaGNC">       62447 :         return one(R)</span></span>
+<span id="L48"><span class="lineNum">      48</span> <span class="tlaGNC">      438074 :     elseif n === 1</span></span>
+<span id="L49"><span class="lineNum">      49</span> <span class="tlaGNC">      313180 :         return 2q</span></span>
+<span id="L50"><span class="lineNum">      50</span> <span class="tlaGNC">      124894 :     elseif abs(q) &lt; one(R) &amp;&amp; fast &amp;&amp; q &gt; 3</span></span>
+<span id="L51"><span class="lineNum">      51</span>              :         # much faster but not stable at |q| = 1</span>
+<span id="L52"><span class="lineNum">      52</span> <span class="tlaUNC tlaBgUNC">           0 :         aq = NaNsafeacos(q)</span></span>
+<span id="L53"><span class="lineNum">      53</span> <span class="tlaUNC">           0 :         return sin((n + 1) * aq) / sin(aq)</span></span>
+<span id="L54"><span class="lineNum">      54</span>              :     else</span>
+<span id="L55"><span class="lineNum">      55</span> <span class="tlaGNC tlaBgGNC">      124894 :         return 2q * U(n - 1, q, fast) - U(n - 2, q, fast)</span></span>
+<span id="L56"><span class="lineNum">      56</span>              :     end</span>
+<span id="L57"><span class="lineNum">      57</span>              : end</span>
+<span id="L58"><span class="lineNum">      58</span>              : </span>
+<span id="L59"><span class="lineNum">      59</span>              : &quot;&quot;&quot;</span>
+<span id="L60"><span class="lineNum">      60</span>              :     dTdq(n::Int, q::R, fast::Bool = true) -&gt; R</span>
+<span id="L61"><span class="lineNum">      61</span>              : </span>
+<span id="L62"><span class="lineNum">      62</span>              : Evaluate derivative of Chebyshev polynomial of the first kind ``\\frac{dT_n}{dq}(q)``.</span>
+<span id="L63"><span class="lineNum">      63</span>              : </span>
+<span id="L64"><span class="lineNum">      64</span>              : `fast` will use trigonometric definition, rather than the recursive definition which is much faster but slightly less precise.</span>
+<span id="L65"><span class="lineNum">      65</span>              : &quot;&quot;&quot;</span>
+<span id="L66"><span class="lineNum">      66</span>              : @inline function dTdq(n::Int, q::R, fast::Bool=true)::R where {R&lt;:Real}</span>
+<span id="L67"><span class="lineNum">      67</span> <span class="tlaGNC">     1768769 :     @assert n &gt;= 0</span></span>
+<span id="L68"><span class="lineNum">      68</span> <span class="tlaGNC">      631738 :     if n === 0</span></span>
+<span id="L69"><span class="lineNum">      69</span> <span class="tlaGNC">      126445 :         return zero(R)</span></span>
+<span id="L70"><span class="lineNum">      70</span> <span class="tlaGNC">      505293 :     elseif n === 1</span></span>
+<span id="L71"><span class="lineNum">      71</span> <span class="tlaGNC">      253180 :         return one(R)</span></span>
+<span id="L72"><span class="lineNum">      72</span> <span class="tlaGNC">      252113 :     elseif fast &amp;&amp; n &gt; 4</span></span>
+<span id="L73"><span class="lineNum">      73</span> <span class="tlaGNC">        1380 :         if abs(q) == one(R)</span></span>
+<span id="L74"><span class="lineNum">      74</span> <span class="tlaUNC tlaBgUNC">           0 :             return q^(n + 1) * n^2</span></span>
+<span id="L75"><span class="lineNum">      75</span> <span class="tlaGNC tlaBgGNC">        1380 :         elseif abs(q) &lt; one(R)</span></span>
+<span id="L76"><span class="lineNum">      76</span> <span class="tlaGNC">        1360 :             return n * sin(n * acos(q)) / sqrt(1 - q^2)</span></span>
+<span id="L77"><span class="lineNum">      77</span> <span class="tlaGNC">          20 :         elseif q &gt; one(R)</span></span>
+<span id="L78"><span class="lineNum">      78</span> <span class="tlaGNC">          20 :             return n * sinh(n * acosh(q)) / sqrt(q^2 - 1)</span></span>
+<span id="L79"><span class="lineNum">      79</span>              :         else</span>
+<span id="L80"><span class="lineNum">      80</span> <span class="tlaUNC tlaBgUNC">           0 :             return -n * (-1)^n * sinh(n * acosh(-q)) / sqrt(q^2 - 1)</span></span>
+<span id="L81"><span class="lineNum">      81</span>              :         end</span>
+<span id="L82"><span class="lineNum">      82</span>              :     else</span>
+<span id="L83"><span class="lineNum">      83</span> <span class="tlaGNC tlaBgGNC">      250733 :         return n * U(n - 1, q, fast)</span></span>
+<span id="L84"><span class="lineNum">      84</span>              :     end</span>
+<span id="L85"><span class="lineNum">      85</span>              : end</span>
+<span id="L86"><span class="lineNum">      86</span>              : </span>
+<span id="L87"><span class="lineNum">      87</span>              : # dUdq(n::Int, q::R)::R where {R&lt;:Real} = ((n + 1) * T(n + 1, q) - q * U(n, q)) / (q^2 - one(T))</span>
+<span id="L88"><span class="lineNum">      88</span>              : # d2Tq2(n::Int, q::R)::R where {R&lt;:Real} = n * ((n + 1) * T(n, q) - U(n, q)) / (q^2 - 1)</span>
+<span id="L89"><span class="lineNum">      89</span>              : </span>
+<span id="L90"><span class="lineNum">      90</span>              : end # module Chebyshev</span>
+<span id="L91"><span class="lineNum">      91</span>              : </span>
+<span id="L92"><span class="lineNum">      92</span>              : &quot;&quot;&quot;</span>
+<span id="L93"><span class="lineNum">      93</span>              :     ChebyshevSurface{T,N,P,Q} &lt;: ParametricSurface{T,N}</span>
+<span id="L94"><span class="lineNum">      94</span>              : </span>
+<span id="L95"><span class="lineNum">      95</span>              : Rectangular surface incorporating Chebyshev polynomials as well as radius and conic terms.</span>
+<span id="L96"><span class="lineNum">      96</span>              : `T` is the datatype, `N` is the dimensionality, `P` is the number of Chebyshev terms in u and `Q` is the number of Chebyshev terms in v.</span>
+<span id="L97"><span class="lineNum">      97</span>              : </span>
+<span id="L98"><span class="lineNum">      98</span>              : The surface is centered at the origin and treated as being the cap of an infinite rectangular prism, thus creating a true half-space.</span>
+<span id="L99"><span class="lineNum">      99</span>              : **Note that the surface is vertically offset so that the center (i.e., `(u,v) == (0,0)`) lies at 0 on the z-axis.**</span>
+<span id="L100"><span class="lineNum">     100</span>              : </span>
+<span id="L101"><span class="lineNum">     101</span>              : ```julia</span>
+<span id="L102"><span class="lineNum">     102</span>              : ChebyshevSurface(halfsizeu, halfsizev, chebycoeff; radius = Inf, conic = 0)</span>
+<span id="L103"><span class="lineNum">     103</span>              : ```</span>
+<span id="L104"><span class="lineNum">     104</span>              : </span>
+<span id="L105"><span class="lineNum">     105</span>              : `chebycoeff` is a vector containing tuples of the form `(i, j, v)` where `v` is the value of the coefficient ``c_{ij}``.</span>
+<span id="L106"><span class="lineNum">     106</span>              : </span>
+<span id="L107"><span class="lineNum">     107</span>              : The sag is defined by the equation</span>
+<span id="L108"><span class="lineNum">     108</span>              : </span>
+<span id="L109"><span class="lineNum">     109</span>              : ```math</span>
+<span id="L110"><span class="lineNum">     110</span>              : z(u,v) = \\frac{c(u^2 + v^2)^2}{1 + \\sqrt{1 - (1+k)c^2(u^2 + v^2)}} + \\sum_{i}^{P}\\sum_{j}^{Q}c_{ij}T_i(u)T_j(v)</span>
+<span id="L111"><span class="lineNum">     111</span>              : ```</span>
+<span id="L112"><span class="lineNum">     112</span>              : </span>
+<span id="L113"><span class="lineNum">     113</span>              : where ``c = \\frac{1}{\\texttt{radius}}``, ``k = \\texttt{conic}`` and ``T_n`` is the nᵗʰ Chebyshev polynomial of the first kind.</span>
+<span id="L114"><span class="lineNum">     114</span>              : &quot;&quot;&quot;</span>
+<span id="L115"><span class="lineNum">     115</span>              : struct ChebyshevSurface{T,N,P} &lt;: ParametricSurface{T,N}</span>
+<span id="L116"><span class="lineNum">     116</span>              :     halfsizeu::T</span>
+<span id="L117"><span class="lineNum">     117</span>              :     halfsizev::T</span>
+<span id="L118"><span class="lineNum">     118</span>              :     curvature::T</span>
+<span id="L119"><span class="lineNum">     119</span>              :     conic::T</span>
+<span id="L120"><span class="lineNum">     120</span>              :     boundingprism::BoundingBox{T}</span>
+<span id="L121"><span class="lineNum">     121</span>              :     chebycoeff::SVector{P,Tuple{Int,Int,T}}</span>
+<span id="L122"><span class="lineNum">     122</span>              :     offset::T</span>
+<span id="L123"><span class="lineNum">     123</span>              : </span>
+<span id="L124"><span class="lineNum">     124</span> <span class="tlaGNC">         140 :     function ChebyshevSurface(halfsizeu::T, halfsizev::T, chebycoeff::Union{Nothing,Vector{Tuple{Int,Int,T}}}; radius::T=typemax(T), conic::T=zero(T)) where {T&lt;:Real}</span></span>
+<span id="L125"><span class="lineNum">     125</span> <span class="tlaGNC">          70 :         @assert !isnan(halfsizeu) &amp;&amp; !isnan(halfsizev) &amp;&amp; !isnan(radius) &amp;&amp; !isnan(conic)</span></span>
+<span id="L126"><span class="lineNum">     126</span> <span class="tlaGNC">          72 :         @assert halfsizeu &gt; zero(T) &amp;&amp; halfsizev &gt; zero(T)</span></span>
+<span id="L127"><span class="lineNum">     127</span> <span class="tlaGNC">          68 :         @assert one(T) - (1 / radius)^2 * (conic + one(T)) * (halfsizeu^2 + halfsizev^2) &gt; 0 &quot;Invalid surface (conic/radius combination: $radius, $conic)&quot;</span></span>
+<span id="L128"><span class="lineNum">     128</span> <span class="tlaGNC">          68 :         offset = zero(T)</span></span>
+<span id="L129"><span class="lineNum">     129</span> <span class="tlaGNC">          68 :         if chebycoeff === nothing</span></span>
+<span id="L130"><span class="lineNum">     130</span> <span class="tlaGNC">           1 :             P = 0</span></span>
+<span id="L131"><span class="lineNum">     131</span>              :         else</span>
+<span id="L132"><span class="lineNum">     132</span> <span class="tlaGNC">          67 :             for (i, j, c) in chebycoeff</span></span>
+<span id="L133"><span class="lineNum">     133</span> <span class="tlaGNC">         145 :                 @assert i &gt;= 0 &amp;&amp; j &gt;= 0 &quot;i and j must be non-negative&quot;</span></span>
+<span id="L134"><span class="lineNum">     134</span> <span class="tlaGNC">         145 :                 if i % 2 == 0 &amp;&amp; j % 2 == 0</span></span>
+<span id="L135"><span class="lineNum">     135</span> <span class="tlaGNC">          66 :                     offset += c * (-1)^(i ÷ 2) * (-1)^(j ÷ 2)</span></span>
+<span id="L136"><span class="lineNum">     136</span>              :                 end</span>
+<span id="L137"><span class="lineNum">     137</span> <span class="tlaGNC">         145 :             end</span></span>
+<span id="L138"><span class="lineNum">     138</span> <span class="tlaGNC">         212 :             chebycoeff = filter(k -&gt; abs(k[3]) &gt; zero(T), chebycoeff)</span></span>
+<span id="L139"><span class="lineNum">     139</span> <span class="tlaGNC">          67 :             P = length(chebycoeff)</span></span>
+<span id="L140"><span class="lineNum">     140</span>              :         end</span>
+<span id="L141"><span class="lineNum">     141</span> <span class="tlaGNC">          68 :         bounding_prism = BoundingBox(-halfsizeu, halfsizeu, -halfsizev, halfsizev, typemin(T), typemax(T))</span></span>
+<span id="L142"><span class="lineNum">     142</span> <span class="tlaGNC">          68 :         return new{T,3,P}(halfsizeu, halfsizev, 1 / radius, conic, bounding_prism, SVector{P,Tuple{Int,Int,T}}(P === 0 ? [] : chebycoeff), offset)</span></span>
+<span id="L143"><span class="lineNum">     143</span>              :     end</span>
+<span id="L144"><span class="lineNum">     144</span>              : end</span>
+<span id="L145"><span class="lineNum">     145</span>              : export ChebyshevSurface</span>
+<span id="L146"><span class="lineNum">     146</span>              : </span>
+<span id="L147"><span class="lineNum">     147</span> <span class="tlaGNC">       20949 : uvrange(::Type{ChebyshevSurface{T,N,P}}) where {T&lt;:Real,N,P} = ((-one(T), one(T)), (-one(T), one(T)))</span></span>
+<span id="L148"><span class="lineNum">     148</span>              : </span>
+<span id="L149"><span class="lineNum">     149</span> <span class="tlaGNC">       10215 : boundingobj(z::ChebyshevSurface{T}) where {T&lt;:Real} = z.boundingprism</span></span>
+<span id="L150"><span class="lineNum">     150</span> <span class="tlaGNC">           6 : halfsizeu(z::ChebyshevSurface{T}) where {T&lt;:Real} = z.halfsizeu</span></span>
+<span id="L151"><span class="lineNum">     151</span> <span class="tlaGNC">           6 : halfsizev(z::ChebyshevSurface{T}) where {T&lt;:Real} = z.halfsizev</span></span>
+<span id="L152"><span class="lineNum">     152</span>              : </span>
+<span id="L153"><span class="lineNum">     153</span> <span class="tlaGNC">      407430 : function point(s::ChebyshevSurface{T,3,P}, u::T, v::T)::SVector{3,T} where {T&lt;:Real,P}</span></span>
+<span id="L154"><span class="lineNum">     154</span> <span class="tlaGNC">      408636 :     x = u * s.halfsizeu</span></span>
+<span id="L155"><span class="lineNum">     155</span> <span class="tlaGNC">      408636 :     y = v * s.halfsizev</span></span>
+<span id="L156"><span class="lineNum">     156</span> <span class="tlaGNC">      408636 :     r2 = (x^2 + y^2)</span></span>
+<span id="L157"><span class="lineNum">     157</span> <span class="tlaGNC">      408636 :     q = (one(T) + s.conic) * s.curvature^2 * r2</span></span>
+<span id="L158"><span class="lineNum">     158</span> <span class="tlaGNC">      408636 :     if q &gt; one(T)</span></span>
+<span id="L159"><span class="lineNum">     159</span> <span class="tlaUNC tlaBgUNC">           0 :         return SVector{3,T}(NaN, NaN, NaN)</span></span>
+<span id="L160"><span class="lineNum">     160</span>              :     end</span>
+<span id="L161"><span class="lineNum">     161</span> <span class="tlaGNC tlaBgGNC">      408636 :     z = s.curvature * r2 / (one(T) + sqrt(one(T) - q))</span></span>
+<span id="L162"><span class="lineNum">     162</span> <span class="tlaGNC">      408636 :     @inbounds @simd for ci in 1:P</span></span>
+<span id="L163"><span class="lineNum">     163</span> <span class="tlaGNC">      916423 :         i, j, c = s.chebycoeff[ci]</span></span>
+<span id="L164"><span class="lineNum">     164</span> <span class="tlaGNC">     1676020 :         z += c * Chebyshev.T(i, u) * Chebyshev.T(j, v)</span></span>
+<span id="L165"><span class="lineNum">     165</span>              :     end</span>
+<span id="L166"><span class="lineNum">     166</span> <span class="tlaGNC">      408636 :     return SVector{3,T}(x, y, z - s.offset)</span></span>
+<span id="L167"><span class="lineNum">     167</span>              : end</span>
+<span id="L168"><span class="lineNum">     168</span>              : </span>
+<span id="L169"><span class="lineNum">     169</span> <span class="tlaGNC">      126685 : function partials(s::ChebyshevSurface{T,3,P}, u::T, v::T)::Tuple{SVector{3,T},SVector{3,T}} where {T&lt;:Real,P}</span></span>
+<span id="L170"><span class="lineNum">     170</span> <span class="tlaGNC">      126685 :     x = u * s.halfsizeu</span></span>
+<span id="L171"><span class="lineNum">     171</span> <span class="tlaGNC">      126685 :     y = v * s.halfsizev</span></span>
+<span id="L172"><span class="lineNum">     172</span> <span class="tlaGNC">      126685 :     r2 = x^2 + y^2</span></span>
+<span id="L173"><span class="lineNum">     173</span> <span class="tlaGNC">      126685 :     t = one(T) - s.curvature^2 * (1 + s.conic) * r2</span></span>
+<span id="L174"><span class="lineNum">     174</span> <span class="tlaGNC">      126685 :     if t &lt; zero(T)</span></span>
+<span id="L175"><span class="lineNum">     175</span> <span class="tlaUNC tlaBgUNC">           0 :         return SVector{3,T}(NaN, NaN, NaN), SVector{3,T}(NaN, NaN, NaN)</span></span>
+<span id="L176"><span class="lineNum">     176</span>              :     end</span>
+<span id="L177"><span class="lineNum">     177</span> <span class="tlaGNC tlaBgGNC">      126685 :     q = s.curvature * sqrt(t) / t</span></span>
+<span id="L178"><span class="lineNum">     178</span> <span class="tlaGNC">      126685 :     dhdu = x * q * s.halfsizeu</span></span>
+<span id="L179"><span class="lineNum">     179</span> <span class="tlaGNC">      126685 :     dhdv = y * q * s.halfsizev</span></span>
+<span id="L180"><span class="lineNum">     180</span> <span class="tlaGNC">      126685 :     @inbounds @simd for k in s.chebycoeff</span></span>
+<span id="L181"><span class="lineNum">     181</span> <span class="tlaGNC">      315869 :         i, j, c = k</span></span>
+<span id="L182"><span class="lineNum">     182</span> <span class="tlaGNC">      631496 :         dhdu += c * Chebyshev.dTdq(i, u) * Chebyshev.T(j, v)</span></span>
+<span id="L183"><span class="lineNum">     183</span> <span class="tlaGNC">      631496 :         dhdv += c * Chebyshev.T(i, u) * Chebyshev.dTdq(j, v)</span></span>
+<span id="L184"><span class="lineNum">     184</span>              :     end</span>
+<span id="L185"><span class="lineNum">     185</span> <span class="tlaGNC">      126685 :     return SVector{3,T}(s.halfsizeu, 0.0, dhdu), SVector{3,T}(0.0, s.halfsizev, dhdv)</span></span>
+<span id="L186"><span class="lineNum">     186</span>              : end</span>
+<span id="L187"><span class="lineNum">     187</span>              : </span>
+<span id="L188"><span class="lineNum">     188</span> <span class="tlaGNC">       10228 : function normal(s::ChebyshevSurface{T,3,P}, u::T, v::T)::SVector{3,T} where {T&lt;:Real,P}</span></span>
+<span id="L189"><span class="lineNum">     189</span> <span class="tlaGNC">       10228 :     du, dv = partials(s, u, v)</span></span>
+<span id="L190"><span class="lineNum">     190</span> <span class="tlaGNC">       10228 :     return normalize(cross(du, dv))</span></span>
+<span id="L191"><span class="lineNum">     191</span>              : end</span>
+<span id="L192"><span class="lineNum">     192</span>              : </span>
+<span id="L193"><span class="lineNum">     193</span>              : function uv(s::ChebyshevSurface{T,3,P}, p::SVector{3,T}) where {T&lt;:Real,P}</span>
+<span id="L194"><span class="lineNum">     194</span> <span class="tlaGNC">        1812 :     return SVector{2,T}(p[1] / s.halfsizeu, p[2] / s.halfsizev)</span></span>
+<span id="L195"><span class="lineNum">     195</span>              : end</span>
+<span id="L196"><span class="lineNum">     196</span>              : </span>
+<span id="L197"><span class="lineNum">     197</span> <span class="tlaUNC tlaBgUNC">           0 : function onsurface(surf::ChebyshevSurface{T,3,P}, p::SVector{3,T}) where {T&lt;:Real,P}</span></span>
+<span id="L198"><span class="lineNum">     198</span> <span class="tlaUNC">           0 :     u, v = uv(surf, p)</span></span>
+<span id="L199"><span class="lineNum">     199</span> <span class="tlaUNC">           0 :     if abs(u) &gt; one(T) || abs(v) &gt; one(T)</span></span>
+<span id="L200"><span class="lineNum">     200</span> <span class="tlaUNC">           0 :         return false</span></span>
+<span id="L201"><span class="lineNum">     201</span>              :     else</span>
+<span id="L202"><span class="lineNum">     202</span> <span class="tlaUNC">           0 :         surfpoint = point(surf, u, v)</span></span>
+<span id="L203"><span class="lineNum">     203</span> <span class="tlaUNC">           0 :         return samepoint(p[3], surfpoint[3])</span></span>
+<span id="L204"><span class="lineNum">     204</span>              :     end</span>
+<span id="L205"><span class="lineNum">     205</span>              : end</span>
+<span id="L206"><span class="lineNum">     206</span>              : </span>
+<span id="L207"><span class="lineNum">     207</span>              : function inside(surf::ChebyshevSurface{T,3,P}, p::SVector{3,T}) where {T&lt;:Real,P}</span>
+<span id="L208"><span class="lineNum">     208</span> <span class="tlaGNC tlaBgGNC">        1758 :     u, v = uv(surf, p)</span></span>
+<span id="L209"><span class="lineNum">     209</span> <span class="tlaGNC">        3516 :     if abs(u) &gt; one(T) || abs(v) &gt; one(T)</span></span>
+<span id="L210"><span class="lineNum">     210</span> <span class="tlaUNC tlaBgUNC">           0 :         return false</span></span>
+<span id="L211"><span class="lineNum">     211</span>              :     else</span>
+<span id="L212"><span class="lineNum">     212</span> <span class="tlaGNC tlaBgGNC">        1758 :         surfpoint = point(surf, u, v)</span></span>
+<span id="L213"><span class="lineNum">     213</span> <span class="tlaGNC">        1758 :         return p[3] &lt; surfpoint[3]</span></span>
+<span id="L214"><span class="lineNum">     214</span>              :     end</span>
+<span id="L215"><span class="lineNum">     215</span>              : end</span>
+<span id="L216"><span class="lineNum">     216</span>              : </span>
+<span id="L217"><span class="lineNum">     217</span>              : #########################################################################################################</span>
+<span id="L218"><span class="lineNum">     218</span>              : </span>
+<span id="L219"><span class="lineNum">     219</span>              : # Assumes the ray has been transformed into the canonical coordinate frame which has the vertical axis passing through (0,0,0) and aligned with the z axis.</span>
+<span id="L220"><span class="lineNum">     220</span> <span class="tlaGNC">       10264 : function surfaceintersection(surf::AcceleratedParametricSurface{T,3,ChebyshevSurface{T,3,P}}, r::AbstractRay{T,3}) where {T&lt;:Real,P}</span></span>
+<span id="L221"><span class="lineNum">     221</span> <span class="tlaGNC">       10264 :     bboxint = surfaceintersection(surf.surface.boundingprism, r)</span></span>
+<span id="L222"><span class="lineNum">     222</span> <span class="tlaGNC">       20526 :     if isemptyinterval(bboxint)</span></span>
+<span id="L223"><span class="lineNum">     223</span> <span class="tlaGNC">           2 :         return EmptyInterval(T)</span></span>
+<span id="L224"><span class="lineNum">     224</span>              :     else</span>
+<span id="L225"><span class="lineNum">     225</span> <span class="tlaGNC">       10270 :         if doesintersect(surf.triangles_bbox, r) || inside(surf.triangles_bbox, origin(r))</span></span>
+<span id="L226"><span class="lineNum">     226</span> <span class="tlaGNC">       10254 :             surfint = triangulatedintersection(surf, r)</span></span>
+<span id="L227"><span class="lineNum">     227</span> <span class="tlaGNC">       10254 :             if !(surfint isa EmptyInterval{T})</span></span>
+<span id="L228"><span class="lineNum">     228</span> <span class="tlaGNC">       10225 :                 return intervalintersection(bboxint, surfint)</span></span>
+<span id="L229"><span class="lineNum">     229</span>              :             end</span>
+<span id="L230"><span class="lineNum">     230</span>              :         end</span>
+<span id="L231"><span class="lineNum">     231</span>              :         # hasn't hit the surface</span>
+<span id="L232"><span class="lineNum">     232</span> <span class="tlaGNC">          37 :         if lower(bboxint) isa RayOrigin{T} &amp;&amp; upper(bboxint) isa Infinity{T}</span></span>
+<span id="L233"><span class="lineNum">     233</span> <span class="tlaGNC">           4 :             if inside(surf.surface, origin(r))</span></span>
+<span id="L234"><span class="lineNum">     234</span> <span class="tlaGNC">           1 :                 return Interval(RayOrigin(T), Infinity(T))</span></span>
+<span id="L235"><span class="lineNum">     235</span>              :             else</span>
+<span id="L236"><span class="lineNum">     236</span> <span class="tlaGNC">           1 :                 return EmptyInterval(T)</span></span>
+<span id="L237"><span class="lineNum">     237</span>              :             end</span>
+<span id="L238"><span class="lineNum">     238</span>              :             # otherwise check that the intersection is underneath the surface</span>
+<span id="L239"><span class="lineNum">     239</span>              :         else</span>
+<span id="L240"><span class="lineNum">     240</span> <span class="tlaGNC">          35 :             p = point(closestintersection(bboxint, false))</span></span>
+<span id="L241"><span class="lineNum">     241</span> <span class="tlaGNC">          35 :             ρ, ϕ = uv(surf, p)</span></span>
+<span id="L242"><span class="lineNum">     242</span> <span class="tlaGNC">          35 :             surfpoint = point(surf.surface, ρ, ϕ)</span></span>
+<span id="L243"><span class="lineNum">     243</span> <span class="tlaGNC">          35 :             if p[3] &lt; surfpoint[3]</span></span>
+<span id="L244"><span class="lineNum">     244</span> <span class="tlaGNC">          30 :                 return bboxint # TODO!! UV (and interface) issues?</span></span>
+<span id="L245"><span class="lineNum">     245</span>              :             else</span>
+<span id="L246"><span class="lineNum">     246</span> <span class="tlaGNC">           5 :                 return EmptyInterval(T)</span></span>
+<span id="L247"><span class="lineNum">     247</span>              :             end</span>
+<span id="L248"><span class="lineNum">     248</span>              :         end</span>
+<span id="L249"><span class="lineNum">     249</span>              :     end</span>
+<span id="L250"><span class="lineNum">     250</span>              : end</span>
+<span id="L251"><span class="lineNum">     251</span>              : </span>
+<span id="L252"><span class="lineNum">     252</span> <span class="tlaUNC tlaBgUNC">           0 : function BoundingBox(surf::ChebyshevSurface{T,3,P}) where {T&lt;:Real,P}</span></span>
+<span id="L253"><span class="lineNum">     253</span> <span class="tlaUNC">           0 :     xmin = -surf.halfsizeu</span></span>
+<span id="L254"><span class="lineNum">     254</span> <span class="tlaUNC">           0 :     xmax = surf.halfsizeu</span></span>
+<span id="L255"><span class="lineNum">     255</span> <span class="tlaUNC">           0 :     ymin = -surf.halfsizev</span></span>
+<span id="L256"><span class="lineNum">     256</span> <span class="tlaUNC">           0 :     ymax = surf.halfsizev</span></span>
+<span id="L257"><span class="lineNum">     257</span>              :     # polynomials range between -1 and 1 so we have to sum the absolute value of every coefficient to get the theoretical max</span>
+<span id="L258"><span class="lineNum">     258</span> <span class="tlaUNC">           0 :     zmax = P &gt; 0 ? sum(abs(c) for (_, _, c) in surf.chebycoeff) : zero(T)</span></span>
+<span id="L259"><span class="lineNum">     259</span> <span class="tlaUNC">           0 :     zmin = -zmax</span></span>
+<span id="L260"><span class="lineNum">     260</span> <span class="tlaUNC">           0 :     q = one(T) - (one(T) + surf.conic) * surf.curvature^2 * (surf.halfsizeu^2 + surf.halfsizev^2)</span></span>
+<span id="L261"><span class="lineNum">     261</span> <span class="tlaUNC">           0 :     if q &lt; zero(T)</span></span>
+<span id="L262"><span class="lineNum">     262</span> <span class="tlaUNC">           0 :         throw(ErrorException(&quot;The surface is invalid, no bounding box can be constructed&quot;))</span></span>
+<span id="L263"><span class="lineNum">     263</span>              :     end</span>
+<span id="L264"><span class="lineNum">     264</span> <span class="tlaUNC">           0 :     hmax = surf.curvature * (surf.halfsizeu^2 + surf.halfsizev^2) / (one(T) + sqrt(q))</span></span>
+<span id="L265"><span class="lineNum">     265</span> <span class="tlaUNC">           0 :     if hmax &gt; zero(T)</span></span>
+<span id="L266"><span class="lineNum">     266</span> <span class="tlaUNC">           0 :         zmax += hmax</span></span>
+<span id="L267"><span class="lineNum">     267</span>              :     else</span>
+<span id="L268"><span class="lineNum">     268</span> <span class="tlaUNC">           0 :         zmin += hmax</span></span>
+<span id="L269"><span class="lineNum">     269</span>              :     end</span>
+<span id="L270"><span class="lineNum">     270</span> <span class="tlaUNC">           0 :     return BoundingBox(xmin, xmax, ymin, ymax, zmin, zmax)</span></span>
+<span id="L271"><span class="lineNum">     271</span>              : end</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>

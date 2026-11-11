@@ -1,0 +1,237 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - Coverage - src/Geometry/Primitives/NonCSG/src/Geometry/Primitives/NonCSG/Triangle.jl</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../../../../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../../../../../../../../index.html">top level</a> - <a href="index.html">src/Geometry/Primitives/NonCSG/src/Geometry/Primitives/NonCSG</a> - Triangle.jl<span style="font-size: 80%;"> (source / <a href="Triangle.jl.func-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">Coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryLo">71.2&nbsp;%</td>
+            <td class="headerCovTableEntry">73</td>
+            <td class="headerCovTableEntry">52</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2026-11-11 20:00:33</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryHi">-</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+          </tr>
+                  <tr><td><img src="../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : # MIT license</span>
+<span id="L2"><span class="lineNum">       2</span>              : # Copyright (c) Microsoft Corporation. All rights reserved.</span>
+<span id="L3"><span class="lineNum">       3</span>              : # See LICENSE in the project root for full license information.</span>
+<span id="L4"><span class="lineNum">       4</span>              : </span>
+<span id="L5"><span class="lineNum">       5</span>              : &quot;&quot;&quot;</span>
+<span id="L6"><span class="lineNum">       6</span>              :     Triangle{T} &lt;: Surface{T}</span>
+<span id="L7"><span class="lineNum">       7</span>              : </span>
+<span id="L8"><span class="lineNum">       8</span>              : Triangular surface, not a valid CSG object.</span>
+<span id="L9"><span class="lineNum">       9</span>              : Primarily used as a component part of [`TriangleMesh`](@ref) or to enable intersection of [`AcceleratedParametricSurface`](@ref)s.</span>
+<span id="L10"><span class="lineNum">      10</span>              : Can never be used directly as an optical surface as it doesn't have an [`OpticalInterface`](@ref).</span>
+<span id="L11"><span class="lineNum">      11</span>              : </span>
+<span id="L12"><span class="lineNum">      12</span>              : ```julia</span>
+<span id="L13"><span class="lineNum">      13</span>              : Triangle(v1::SVector{3,T}, v2::SVector{3,T}, v3::SVector{3,T}, [uv1::SVector{2,T}, uv2::SVector{2,T}, uv3::SVector{2,T}])</span>
+<span id="L14"><span class="lineNum">      14</span>              : ```</span>
+<span id="L15"><span class="lineNum">      15</span>              : &quot;&quot;&quot;</span>
+<span id="L16"><span class="lineNum">      16</span>              : struct Triangle{T} &lt;: Surface{T}</span>
+<span id="L17"><span class="lineNum">      17</span>              :     A::SVector{3,T}</span>
+<span id="L18"><span class="lineNum">      18</span>              :     B::SVector{3,T}</span>
+<span id="L19"><span class="lineNum">      19</span>              :     C::SVector{3,T}</span>
+<span id="L20"><span class="lineNum">      20</span>              :     uv1::SVector{2,T}</span>
+<span id="L21"><span class="lineNum">      21</span>              :     uv2::SVector{2,T}</span>
+<span id="L22"><span class="lineNum">      22</span>              :     uv3::SVector{2,T}</span>
+<span id="L23"><span class="lineNum">      23</span>              :     BA::SVector{3,T}</span>
+<span id="L24"><span class="lineNum">      24</span>              :     CA::SVector{3,T}</span>
+<span id="L25"><span class="lineNum">      25</span>              :     normal::SVector{3,T}</span>
+<span id="L26"><span class="lineNum">      26</span>              : </span>
+<span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC tlaBgGNC">      595591 :     function Triangle(A::SVector{3,T}, B::SVector{3,T}, C::SVector{3,T}, uv1::SVector{2,T}, uv2::SVector{2,T}, uv3::SVector{2,T}) where {T&lt;:Real}</span></span>
+<span id="L28"><span class="lineNum">      28</span> <span class="tlaGNC">      595591 :         BA = B - A</span></span>
+<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC">      595591 :         CA = C - A</span></span>
+<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">      595591 :         crs = cross(BA, CA)</span></span>
+<span id="L31"><span class="lineNum">      31</span> <span class="tlaGNC">      595591 :         lcrs = norm(crs)</span></span>
+<span id="L32"><span class="lineNum">      32</span>              :         # make sure the triangle is valid</span>
+<span id="L33"><span class="lineNum">      33</span> <span class="tlaGNC">      595591 :         @assert !samepoint(lcrs, zero(T))</span></span>
+<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">      595591 :         n̂ = crs / lcrs</span></span>
+<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC">      595591 :         return new{T}(A, B, C, uv1, uv2, uv3, BA, CA, n̂)</span></span>
+<span id="L36"><span class="lineNum">      36</span>              :     end</span>
+<span id="L37"><span class="lineNum">      37</span>              : </span>
+<span id="L38"><span class="lineNum">      38</span> <span class="tlaUNC tlaBgUNC">           0 :     function Triangle(v1::AbstractArray{T,1}, v2::AbstractArray{T,1}, v3::AbstractArray{T,1}, uv1::AbstractArray{T,1}, uv2::AbstractArray{T,1}, uv3::AbstractArray{T,1}) where {T&lt;:Real}</span></span>
+<span id="L39"><span class="lineNum">      39</span> <span class="tlaUNC">           0 :         @assert length(v1) == length(v2) == length(v3) == 3</span></span>
+<span id="L40"><span class="lineNum">      40</span> <span class="tlaUNC">           0 :         @assert length(uv1) == length(uv2) == length(uv3) == 2</span></span>
+<span id="L41"><span class="lineNum">      41</span> <span class="tlaUNC">           0 :         return Triangle(SVector{3}(v1), SVector{3}(v2), SVector{3}(v3), SVector{2}(uv1), SVector{2}(uv2), SVector{2}(uv3))</span></span>
+<span id="L42"><span class="lineNum">      42</span>              :     end</span>
+<span id="L43"><span class="lineNum">      43</span>              : </span>
+<span id="L44"><span class="lineNum">      44</span>              : end</span>
+<span id="L45"><span class="lineNum">      45</span>              : export Triangle</span>
+<span id="L46"><span class="lineNum">      46</span>              : </span>
+<span id="L47"><span class="lineNum">      47</span> <span class="tlaUNC">           0 : Base.show(io::IO, a::Triangle{T}) where {T&lt;:Real} = print(io, &quot;Triangle{$T}($(a.A), $(a.B), $(a.C))&quot;)</span></span>
+<span id="L48"><span class="lineNum">      48</span>              : </span>
+<span id="L49"><span class="lineNum">      49</span> <span class="tlaUNC">           0 : function Triangle(v1::AbstractArray{T,1}, v2::AbstractArray{T,1}, v3::AbstractArray{T,1}) where {T&lt;:Real}</span></span>
+<span id="L50"><span class="lineNum">      50</span> <span class="tlaUNC">           0 :     return Triangle(v1, v2, v3, zeros(T, 2), zeros(T, 2), zeros(T, 2))</span></span>
+<span id="L51"><span class="lineNum">      51</span>              : end</span>
+<span id="L52"><span class="lineNum">      52</span>              : </span>
+<span id="L53"><span class="lineNum">      53</span> <span class="tlaUNC">           0 : function Triangle(v1::SVector{3,T}, v2::SVector{3,T}, v3::SVector{3,T}) where {T&lt;:Real}</span></span>
+<span id="L54"><span class="lineNum">      54</span> <span class="tlaUNC">           0 :     return Triangle(v1, v2, v3, zeros(SVector{2,T}), zeros(SVector{2,T}), zeros(SVector{2,T}))</span></span>
+<span id="L55"><span class="lineNum">      55</span>              : end</span>
+<span id="L56"><span class="lineNum">      56</span>              : </span>
+<span id="L57"><span class="lineNum">      57</span> <span class="tlaGNC tlaBgGNC">    37004334 : centroid(tri::Triangle{T}) where {T&lt;:Real} = (vertex(tri, 1) + vertex(tri, 2) + vertex(tri, 3)) / 3</span></span>
+<span id="L58"><span class="lineNum">      58</span> <span class="tlaGNC">      608206 : validtri(v1::SVector{3,T}, v2::SVector{3,T}, v3::SVector{3,T}) where {T&lt;:Real} = !any(isnan.(v1)) &amp;&amp; !any(isnan.(v2)) &amp;&amp; !any(isnan.(v3)) &amp;&amp; !samepoint(norm(cross(v2 - v1, v3 - v1)), zero(T))</span></span>
+<span id="L59"><span class="lineNum">      59</span> <span class="tlaGNC">   113076625 : vertex(tri::Triangle{T}, i::Int) where {T&lt;:Real} = i == 1 ? tri.A : i == 2 ? tri.B : i == 3 ? tri.C : throw(ErrorException(&quot;Invalid index: $i&quot;))</span></span>
+<span id="L60"><span class="lineNum">      60</span> <span class="tlaGNC">     1191162 : vertices(tri::Triangle{T}) where {T&lt;:Real} = (tri.A, tri.B, tri.C)</span></span>
+<span id="L61"><span class="lineNum">      61</span> <span class="tlaGNC">      193446 : uvvertex(tri::Triangle{T}, i::Int) where {T&lt;:Real} = i == 1 ? tri.uv1 : i == 2 ? tri.uv2 : i == 3 ? tri.uv3 : throw(ErrorException(&quot;Invalid index: $i&quot;))</span></span>
+<span id="L62"><span class="lineNum">      62</span> <span class="tlaGNC">        1000 : point(tri::Triangle{T}, a1::T, a2::T, a3::T) where {T&lt;:Real} = vertex(tri, 1) * a1 + vertex(tri, 2) * a2 + vertex(tri, 3) * a3</span></span>
+<span id="L63"><span class="lineNum">      63</span> <span class="tlaUNC tlaBgUNC">           0 : uv(tri::Triangle{T}, a1::T, a2::T, a3::T) where {T&lt;:Real} = uvvertex(tri, 1) * a1 + uvvertex(tri, 2) * a2 + uvvertex(tri, 3) * a3</span></span>
+<span id="L64"><span class="lineNum">      64</span> <span class="tlaGNC tlaBgGNC">       64482 : normal(tri::Triangle{T}) where {T&lt;:Real} = tri.normal</span></span>
+<span id="L65"><span class="lineNum">      65</span>              : </span>
+<span id="L66"><span class="lineNum">      66</span>              : # returns an Interval representing a half-space. If the ray and normal are pointing in opposite directions then the ray is entering the surface and the half-space will be Interval(surface intersection, +inf). If the ray and normal are pointing in the same directions then the ray is leaving the surface and the half-space will be Interval(-inf,surface intersection)</span>
+<span id="L67"><span class="lineNum">      67</span> <span class="tlaGNC">     1042569 : function surfaceintersection(tri::Triangle{T}, r::AbstractRay{T,3}) where {T&lt;:Real}</span></span>
+<span id="L68"><span class="lineNum">      68</span>              :     # Möller–Trumbore ray-triangle intersection algorithm</span>
+<span id="L69"><span class="lineNum">      69</span> <span class="tlaGNC">     1042569 :     D = direction(r)</span></span>
+<span id="L70"><span class="lineNum">      70</span> <span class="tlaGNC">     1042569 :     BA = tri.BA</span></span>
+<span id="L71"><span class="lineNum">      71</span> <span class="tlaGNC">     1042569 :     CA = tri.CA</span></span>
+<span id="L72"><span class="lineNum">      72</span> <span class="tlaGNC">     1042569 :     h = cross(D, CA)</span></span>
+<span id="L73"><span class="lineNum">      73</span> <span class="tlaGNC">     1042569 :     a = dot(BA, h)</span></span>
+<span id="L74"><span class="lineNum">      74</span> <span class="tlaGNC">     2084550 :     if samepoint(a, zero(T))</span></span>
+<span id="L75"><span class="lineNum">      75</span> <span class="tlaUNC tlaBgUNC">           0 :         return EmptyInterval(T) # This ray is parallel to this triangle</span></span>
+<span id="L76"><span class="lineNum">      76</span>              :     end</span>
+<span id="L77"><span class="lineNum">      77</span> <span class="tlaGNC tlaBgGNC">     1042569 :     f = one(T) / a</span></span>
+<span id="L78"><span class="lineNum">      78</span> <span class="tlaGNC">     1042569 :     s = origin(r) - tri.A</span></span>
+<span id="L79"><span class="lineNum">      79</span> <span class="tlaGNC">     1042569 :     δ = f * dot(s, h)</span></span>
+<span id="L80"><span class="lineNum">      80</span> <span class="tlaGNC">     1519643 :     if (δ &lt; zero(T) || δ &gt; one(T))</span></span>
+<span id="L81"><span class="lineNum">      81</span> <span class="tlaGNC">      801954 :         return EmptyInterval(T) # outside tri</span></span>
+<span id="L82"><span class="lineNum">      82</span>              :     end</span>
+<span id="L83"><span class="lineNum">      83</span> <span class="tlaGNC">      240615 :     q = cross(s, BA)</span></span>
+<span id="L84"><span class="lineNum">      84</span> <span class="tlaGNC">      240615 :     β = f * dot(D, q)</span></span>
+<span id="L85"><span class="lineNum">      85</span> <span class="tlaGNC">      342948 :     if (β &lt; zero(T) || δ + β &gt; one(T))</span></span>
+<span id="L86"><span class="lineNum">      86</span> <span class="tlaGNC">      176107 :         return EmptyInterval(T) # outside tri</span></span>
+<span id="L87"><span class="lineNum">      87</span>              :     end</span>
+<span id="L88"><span class="lineNum">      88</span>              :     # At this stage we can compute t to find out where the intersection point is on the line.</span>
+<span id="L89"><span class="lineNum">      89</span> <span class="tlaGNC">       64508 :     t = f * dot(CA, q)</span></span>
+<span id="L90"><span class="lineNum">      90</span> <span class="tlaGNC">       64508 :     if (t &gt; zero(T))</span></span>
+<span id="L91"><span class="lineNum">      91</span> <span class="tlaGNC">       64482 :         u, v = δ * uvvertex(tri, 2) + β * uvvertex(tri, 3) + (1 - δ - β) * uvvertex(tri, 1)</span></span>
+<span id="L92"><span class="lineNum">      92</span>              :         # these are the uvcoords want to use as starting point for newton iteration. Don't want the u,v which has already computed for the basis vecors BA,CA.</span>
+<span id="L93"><span class="lineNum">      93</span> <span class="tlaGNC">       64482 :         n̂ = normal(tri)</span></span>
+<span id="L94"><span class="lineNum">      94</span> <span class="tlaGNC">       64482 :         int = Intersection(t, point(r, t), n̂, u, v, NullInterface(T))</span></span>
+<span id="L95"><span class="lineNum">      95</span> <span class="tlaGNC">       64482 :         if dot(n̂, D) &lt; zero(T)</span></span>
+<span id="L96"><span class="lineNum">      96</span> <span class="tlaGNC">       64100 :             return positivehalfspace(int)</span></span>
+<span id="L97"><span class="lineNum">      97</span>              :         else</span>
+<span id="L98"><span class="lineNum">      98</span> <span class="tlaGNC">         382 :             return rayorigininterval(int)</span></span>
+<span id="L99"><span class="lineNum">      99</span>              :         end</span>
+<span id="L100"><span class="lineNum">     100</span>              :     else</span>
+<span id="L101"><span class="lineNum">     101</span> <span class="tlaGNC">          26 :         return EmptyInterval(T) # wrong side of ray origin</span></span>
+<span id="L102"><span class="lineNum">     102</span>              :     end</span>
+<span id="L103"><span class="lineNum">     103</span>              : end</span>
+<span id="L104"><span class="lineNum">     104</span>              : </span>
+<span id="L105"><span class="lineNum">     105</span> <span class="tlaUNC tlaBgUNC">           0 : function makemesh(t::Triangle{T}, ::Int = 0) where {T&lt;:Real}</span></span>
+<span id="L106"><span class="lineNum">     106</span> <span class="tlaUNC">           0 :     return TriangleMesh([t])</span></span>
+<span id="L107"><span class="lineNum">     107</span>              : end</span>
+<span id="L108"><span class="lineNum">     108</span>              : </span>
+<span id="L109"><span class="lineNum">     109</span>              : ##########################################################################################################</span>
+<span id="L110"><span class="lineNum">     110</span>              : </span>
+<span id="L111"><span class="lineNum">     111</span>              : &quot;&quot;&quot;</span>
+<span id="L112"><span class="lineNum">     112</span>              :     TriangleMesh{T} &lt;: Surface{T}</span>
+<span id="L113"><span class="lineNum">     113</span>              : </span>
+<span id="L114"><span class="lineNum">     114</span>              : An array of [`Triangle`](@ref)s forming a mesh.</span>
+<span id="L115"><span class="lineNum">     115</span>              : Used for visualization purposes only.</span>
+<span id="L116"><span class="lineNum">     116</span>              : </span>
+<span id="L117"><span class="lineNum">     117</span>              : ```julia</span>
+<span id="L118"><span class="lineNum">     118</span>              : TriangleMesh(tris::Vector{Triangle{T}})</span>
+<span id="L119"><span class="lineNum">     119</span>              : ```</span>
+<span id="L120"><span class="lineNum">     120</span>              : &quot;&quot;&quot;</span>
+<span id="L121"><span class="lineNum">     121</span>              : struct TriangleMesh{T} &lt;: Surface{T}</span>
+<span id="L122"><span class="lineNum">     122</span>              :     # TODO - make this more efficient, e.g. store unique vertices and indices</span>
+<span id="L123"><span class="lineNum">     123</span>              :     triangles::Vector{Triangle{T}}</span>
+<span id="L124"><span class="lineNum">     124</span>              : </span>
+<span id="L125"><span class="lineNum">     125</span> <span class="tlaGNC tlaBgGNC">           1 :     function TriangleMesh(tris::Vector{Triangle{T}}) where {T&lt;:Real}</span></span>
+<span id="L126"><span class="lineNum">     126</span> <span class="tlaGNC">           1 :         return new{T}(tris)</span></span>
+<span id="L127"><span class="lineNum">     127</span>              :     end</span>
+<span id="L128"><span class="lineNum">     128</span>              : end</span>
+<span id="L129"><span class="lineNum">     129</span>              : export TriangleMesh</span>
+<span id="L130"><span class="lineNum">     130</span> <span class="tlaUNC tlaBgUNC">           0 : Base.eltype(::TriangleMesh{T}) where {T&lt;:Real} = Triangle{T}</span></span>
+<span id="L131"><span class="lineNum">     131</span>              : </span>
+<span id="L132"><span class="lineNum">     132</span> <span class="tlaGNC tlaBgGNC">           1 : function makiemesh(tmesh::TriangleMesh{T}) where {T&lt;:Real}</span></span>
+<span id="L133"><span class="lineNum">     133</span>              :     # TODO probably should unify shared verts at this point or already have this stored in the trimesh</span>
+<span id="L134"><span class="lineNum">     134</span> <span class="tlaGNC">           1 :     points = Vector{SVector{3,T}}(undef, length(tmesh.triangles) * 3)</span></span>
+<span id="L135"><span class="lineNum">     135</span> <span class="tlaGNC">           1 :     indices = Array{UInt32,2}(undef, length(tmesh.triangles), 3)</span></span>
+<span id="L136"><span class="lineNum">     136</span> <span class="tlaGNC">           1 :     @inbounds @simd for i in 0:(length(tmesh.triangles) - 1)</span></span>
+<span id="L137"><span class="lineNum">     137</span> <span class="tlaGNC">           8 :         t = tmesh.triangles[i + 1]</span></span>
+<span id="L138"><span class="lineNum">     138</span> <span class="tlaGNC">           8 :         points[i * 3 + 1] = vertex(t, 1)</span></span>
+<span id="L139"><span class="lineNum">     139</span> <span class="tlaGNC">           8 :         points[i * 3 + 2] = vertex(t, 2)</span></span>
+<span id="L140"><span class="lineNum">     140</span> <span class="tlaGNC">           8 :         points[i * 3 + 3] = vertex(t, 3)</span></span>
+<span id="L141"><span class="lineNum">     141</span> <span class="tlaGNC">           8 :         indices[i + 1, :] = [i * 3 + 1, i * 3 + 2, i * 3 + 3]</span></span>
+<span id="L142"><span class="lineNum">     142</span>              :     end</span>
+<span id="L143"><span class="lineNum">     143</span> <span class="tlaGNC">           1 :     return (points, indices)</span></span>
+<span id="L144"><span class="lineNum">     144</span>              : end</span>
+<span id="L145"><span class="lineNum">     145</span>              : </span>
+<span id="L146"><span class="lineNum">     146</span>              : </span>
+<span id="L147"><span class="lineNum">     147</span>              : &quot;&quot;&quot;</span>
+<span id="L148"><span class="lineNum">     148</span>              : Apply a Transform to a TriangleMesh object</span>
+<span id="L149"><span class="lineNum">     149</span>              : &quot;&quot;&quot;</span>
+<span id="L150"><span class="lineNum">     150</span> <span class="tlaUNC tlaBgUNC">           0 : function Base.:*(a::Transform{T}, tmesh::TriangleMesh{T})::TriangleMesh{T} where {T&lt;:Real}</span></span>
+<span id="L151"><span class="lineNum">     151</span> <span class="tlaUNC">           0 :     newT = Vector{Triangle{T}}(undef, length(tmesh.triangles))</span></span>
+<span id="L152"><span class="lineNum">     152</span> <span class="tlaUNC">           0 :     @inbounds @simd for i in 1:length(tmesh.triangles)</span></span>
+<span id="L153"><span class="lineNum">     153</span> <span class="tlaUNC">           0 :         newT[i] = a * tmesh.triangles[i]</span></span>
+<span id="L154"><span class="lineNum">     154</span> <span class="tlaUNC">           0 :     end</span></span>
+<span id="L155"><span class="lineNum">     155</span> <span class="tlaUNC">           0 :     return TriangleMesh(newT)</span></span>
+<span id="L156"><span class="lineNum">     156</span>              : end</span>
+<span id="L157"><span class="lineNum">     157</span>              : </span>
+<span id="L158"><span class="lineNum">     158</span>              : &quot;&quot;&quot;</span>
+<span id="L159"><span class="lineNum">     159</span>              : Apply a Transform to a Triangle object</span>
+<span id="L160"><span class="lineNum">     160</span>              : &quot;&quot;&quot;</span>
+<span id="L161"><span class="lineNum">     161</span> <span class="tlaUNC">           0 : Base.:*(a::Transform{T}, t::Triangle{T}) where {T&lt;:Real} = Triangle(a * vertex(t, 1), a * vertex(t, 2), a * vertex(t, 3))</span></span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>

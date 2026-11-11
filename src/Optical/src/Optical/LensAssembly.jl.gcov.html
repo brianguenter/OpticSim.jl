@@ -1,0 +1,330 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - Coverage - src/Optical/src/Optical/LensAssembly.jl</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">src/Optical/src/Optical</a> - LensAssembly.jl<span style="font-size: 80%;"> (source / <a href="LensAssembly.jl.func-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">Coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryMed">78.9&nbsp;%</td>
+            <td class="headerCovTableEntry">95</td>
+            <td class="headerCovTableEntry">75</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2026-11-11 20:00:33</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryHi">-</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+          </tr>
+                  <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : # MIT license</span>
+<span id="L2"><span class="lineNum">       2</span>              : # Copyright (c) Microsoft Corporation. All rights reserved.</span>
+<span id="L3"><span class="lineNum">       3</span>              : # See LICENSE in the project root for full license information.</span>
+<span id="L4"><span class="lineNum">       4</span>              : </span>
+<span id="L5"><span class="lineNum">       5</span>              : &quot;&quot;&quot;</span>
+<span id="L6"><span class="lineNum">       6</span>              :     LensAssembly{T&lt;:Real}</span>
+<span id="L7"><span class="lineNum">       7</span>              : </span>
+<span id="L8"><span class="lineNum">       8</span>              : Structure which contains the elements of the optical system, these can be [`CSGTree`](@ref) or [`Surface`](@ref) objects.</span>
+<span id="L9"><span class="lineNum">       9</span>              : </span>
+<span id="L10"><span class="lineNum">      10</span>              : Create one with:</span>
+<span id="L11"><span class="lineNum">      11</span>              : ```julia</span>
+<span id="L12"><span class="lineNum">      12</span>              : LensAssembly(elements::Union{Surface{T},CSGTree{T},LensAssembly{T}}...; axis = SVector(0.0, 0.0, 1.0)) where {T&lt;:Real}</span>
+<span id="L13"><span class="lineNum">      13</span>              : ```</span>
+<span id="L14"><span class="lineNum">      14</span>              : At least one element is required. Elements which are themselves `LensAssembly`s are unpacked into the new assembly.</span>
+<span id="L15"><span class="lineNum">      15</span>              : </span>
+<span id="L16"><span class="lineNum">      16</span>              : The result is a [`TupleLensAssembly`](@ref).</span>
+<span id="L17"><span class="lineNum">      17</span>              : &quot;&quot;&quot;</span>
+<span id="L18"><span class="lineNum">      18</span>              : abstract type LensAssembly{T&lt;:Real} end</span>
+<span id="L19"><span class="lineNum">      19</span>              : export LensAssembly</span>
+<span id="L20"><span class="lineNum">      20</span>              : </span>
+<span id="L21"><span class="lineNum">      21</span> <span class="tlaUNC tlaBgUNC">           0 : Base.show(io::IO, ::Type{&lt;:LensAssembly}) = print(io, &quot;LensAssembly&quot;)</span></span>
+<span id="L22"><span class="lineNum">      22</span> <span class="tlaUNC">           0 : Base.show(io::IO, a::LensAssembly{T}) where {T&lt;:Real} = print(io, &quot;LensAssembly{$T}($(length(elements(a))) elements)&quot;)</span></span>
+<span id="L23"><span class="lineNum">      23</span>              : </span>
+<span id="L24"><span class="lineNum">      24</span>              : &quot;&quot;&quot;</span>
+<span id="L25"><span class="lineNum">      25</span>              :     TupleLensAssembly{T&lt;:Real,G&lt;:Tuple} &lt;: LensAssembly{T}</span>
+<span id="L26"><span class="lineNum">      26</span>              : </span>
+<span id="L27"><span class="lineNum">      27</span>              : The [`LensAssembly`](@ref) created by `LensAssembly(elements...)`.</span>
+<span id="L28"><span class="lineNum">      28</span>              : </span>
+<span id="L29"><span class="lineNum">      29</span>              : ```julia</span>
+<span id="L30"><span class="lineNum">      30</span>              : struct TupleLensAssembly{T,G&lt;:Tuple} &lt;: LensAssembly{T}</span>
+<span id="L31"><span class="lineNum">      31</span>              :     axis::SVector{3,T}</span>
+<span id="L32"><span class="lineNum">      32</span>              :     groups::G # Tuple{Vector{E1}, Vector{E2}, ...}: one Vector per distinct element type</span>
+<span id="L33"><span class="lineNum">      33</span>              : end</span>
+<span id="L34"><span class="lineNum">      34</span>              : ```</span>
+<span id="L35"><span class="lineNum">      35</span>              : </span>
+<span id="L36"><span class="lineNum">      36</span>              : Elements are grouped by type, with one `Vector` per distinct element type. Intersection code loops over each `Vector`</span>
+<span id="L37"><span class="lineNum">      37</span>              : knowing the concrete element type, so there is no dynamic dispatch. The size of the type depends only on the number of</span>
+<span id="L38"><span class="lineNum">      38</span>              : distinct element types, not the number of elements, so it stays small (and fast to compile) for assemblies with many</span>
+<span id="L39"><span class="lineNum">      39</span>              : elements.</span>
+<span id="L40"><span class="lineNum">      40</span>              : &quot;&quot;&quot;</span>
+<span id="L41"><span class="lineNum">      41</span>              : struct TupleLensAssembly{T&lt;:Real,G&lt;:Tuple} &lt;: LensAssembly{T}</span>
+<span id="L42"><span class="lineNum">      42</span> <span class="tlaGNC tlaBgGNC">          93 :     axis::SVector{3,T}</span></span>
+<span id="L43"><span class="lineNum">      43</span>              :     groups::G</span>
+<span id="L44"><span class="lineNum">      44</span>              : end</span>
+<span id="L45"><span class="lineNum">      45</span>              : export TupleLensAssembly</span>
+<span id="L46"><span class="lineNum">      46</span>              : </span>
+<span id="L47"><span class="lineNum">      47</span>              : # first element is a separate argument so T is always bound (at least one element is required)</span>
+<span id="L48"><span class="lineNum">      48</span> <span class="tlaGNC">         186 : function LensAssembly(first::Union{Surface{T},CSGTree{T},LensAssembly{T}}, rest::Vararg{Union{Surface{T},CSGTree{T},LensAssembly{T}}}; axis::SVector{3,T}=SVector{3,T}(0.0, 0.0, 1.0)) where {T&lt;:Real}</span></span>
+<span id="L49"><span class="lineNum">      49</span>              :     # unpack any nested lens assemblies</span>
+<span id="L50"><span class="lineNum">      50</span> <span class="tlaGNC">          93 :     flat = Any[]</span></span>
+<span id="L51"><span class="lineNum">      51</span> <span class="tlaGNC">          93 :     for e in (first, rest...)</span></span>
+<span id="L52"><span class="lineNum">      52</span> <span class="tlaGNC">         130 :         if e isa LensAssembly</span></span>
+<span id="L53"><span class="lineNum">      53</span> <span class="tlaGNC">           1 :             append!(flat, elements(e))</span></span>
+<span id="L54"><span class="lineNum">      54</span>              :         else</span>
+<span id="L55"><span class="lineNum">      55</span> <span class="tlaGNC">         141 :             push!(flat, e)</span></span>
+<span id="L56"><span class="lineNum">      56</span>              :         end</span>
+<span id="L57"><span class="lineNum">      57</span> <span class="tlaGNC">         153 :     end</span></span>
+<span id="L58"><span class="lineNum">      58</span>              : </span>
+<span id="L59"><span class="lineNum">      59</span>              :     # group by type, in order of first appearance</span>
+<span id="L60"><span class="lineNum">      60</span> <span class="tlaGNC">          93 :     types = DataType[]</span></span>
+<span id="L61"><span class="lineNum">      61</span> <span class="tlaGNC">          93 :     groups = Vector[]</span></span>
+<span id="L62"><span class="lineNum">      62</span> <span class="tlaGNC">          93 :     for e in flat</span></span>
+<span id="L63"><span class="lineNum">      63</span> <span class="tlaGNC">         130 :         i = findfirst(==(typeof(e)), types)</span></span>
+<span id="L64"><span class="lineNum">      64</span> <span class="tlaGNC">         130 :         if i === nothing</span></span>
+<span id="L65"><span class="lineNum">      65</span> <span class="tlaGNC">         122 :             push!(types, typeof(e))</span></span>
+<span id="L66"><span class="lineNum">      66</span> <span class="tlaGNC">         122 :             push!(groups, typeof(e)[]) # Vector with the concrete element type</span></span>
+<span id="L67"><span class="lineNum">      67</span> <span class="tlaGNC">         122 :             i = length(groups)</span></span>
+<span id="L68"><span class="lineNum">      68</span>              :         end</span>
+<span id="L69"><span class="lineNum">      69</span> <span class="tlaGNC">         260 :         push!(groups[i], e)</span></span>
+<span id="L70"><span class="lineNum">      70</span> <span class="tlaGNC">         130 :     end</span></span>
+<span id="L71"><span class="lineNum">      71</span>              : </span>
+<span id="L72"><span class="lineNum">      72</span>              :     # Tuple(groups) has type Tuple{Vector{E1}, Vector{E2}, ...}, which becomes part of the assembly's type</span>
+<span id="L73"><span class="lineNum">      73</span> <span class="tlaGNC">          93 :     return TupleLensAssembly(normalize(axis), Tuple(groups))</span></span>
+<span id="L74"><span class="lineNum">      74</span>              : end</span>
+<span id="L75"><span class="lineNum">      75</span>              : </span>
+<span id="L76"><span class="lineNum">      76</span>              : &quot;&quot;&quot;</span>
+<span id="L77"><span class="lineNum">      77</span>              :     elements(ass::LensAssembly)</span>
+<span id="L78"><span class="lineNum">      78</span>              : </span>
+<span id="L79"><span class="lineNum">      79</span>              : All elements of `ass`, as a `Tuple`.</span>
+<span id="L80"><span class="lineNum">      80</span>              : &quot;&quot;&quot;</span>
+<span id="L81"><span class="lineNum">      81</span> <span class="tlaGNC">           1 : elements(ass::TupleLensAssembly) = Tuple(Iterators.flatten(ass.groups))</span></span>
+<span id="L82"><span class="lineNum">      82</span>              : export elements</span>
+<span id="L83"><span class="lineNum">      83</span>              : </span>
+<span id="L84"><span class="lineNum">      84</span>              : # closest intersection of r with a single element, or nothing if it misses</span>
+<span id="L85"><span class="lineNum">      85</span> <span class="tlaGNC">       22857 : function elementintersection(element, r::AbstractRay{T,N})::Union{Nothing,Intersection{T,N}} where {T&lt;:Real,N}</span></span>
+<span id="L86"><span class="lineNum">      86</span> <span class="tlaGNC">       27743 :     intvl = surfaceintersection(element, r)</span></span>
+<span id="L87"><span class="lineNum">      87</span> <span class="tlaGNC">       27743 :     if intvl isa EmptyInterval</span></span>
+<span id="L88"><span class="lineNum">      88</span> <span class="tlaGNC">       15842 :         return nothing</span></span>
+<span id="L89"><span class="lineNum">      89</span>              :     end</span>
+<span id="L90"><span class="lineNum">      90</span> <span class="tlaGNC">       11901 :     return closestintersection(intvl::Union{Interval{T},DisjointUnion{T}})</span></span>
+<span id="L91"><span class="lineNum">      91</span>              : end</span>
+<span id="L92"><span class="lineNum">      92</span>              : </span>
+<span id="L93"><span class="lineNum">      93</span>              : # whichever of two intersections is closer along the ray; the first one wins ties</span>
+<span id="L94"><span class="lineNum">      94</span>              : function closer(a::Union{Nothing,Intersection}, b::Union{Nothing,Intersection})</span>
+<span id="L95"><span class="lineNum">      95</span> <span class="tlaGNC">       27743 :     if a === nothing</span></span>
+<span id="L96"><span class="lineNum">      96</span> <span class="tlaGNC">       27512 :         return b</span></span>
+<span id="L97"><span class="lineNum">      97</span> <span class="tlaGNC">         231 :     elseif b === nothing || α(a) &lt;= α(b)</span></span>
+<span id="L98"><span class="lineNum">      98</span> <span class="tlaGNC">         206 :         return a</span></span>
+<span id="L99"><span class="lineNum">      99</span>              :     else</span>
+<span id="L100"><span class="lineNum">     100</span> <span class="tlaGNC">          25 :         return b</span></span>
+<span id="L101"><span class="lineNum">     101</span>              :     end</span>
+<span id="L102"><span class="lineNum">     102</span>              : end</span>
+<span id="L103"><span class="lineNum">     103</span>              : </span>
+<span id="L104"><span class="lineNum">     104</span>              : function closestintersection(ass::TupleLensAssembly{T}, r::AbstractRay{T,N})::Union{Nothing,Intersection{T,N}} where {T&lt;:Real,N}</span>
+<span id="L105"><span class="lineNum">     105</span> <span class="tlaGNC">       22501 :     closest::Union{Nothing,Intersection{T,N}} = nothing</span></span>
+<span id="L106"><span class="lineNum">     106</span> <span class="tlaGNC">       22668 :     return closestingroups(closest, ass.groups, r)</span></span>
+<span id="L107"><span class="lineNum">     107</span>              : end</span>
+<span id="L108"><span class="lineNum">     108</span>              : </span>
+<span id="L109"><span class="lineNum">     109</span>              : # Visits each group in turn, one statement per group, so each group's loop is compiled for its own concrete element</span>
+<span id="L110"><span class="lineNum">     110</span>              : # type. (Recursing on the tail of the Tuple instead stops being specialized for assemblies with several groups, and then</span>
+<span id="L111"><span class="lineNum">     111</span>              : # allocates a new tail Tuple at every step.)</span>
+<span id="L112"><span class="lineNum">     112</span> <span class="tlaGNC">       22668 : @generated function closestingroups(closest, groups::G, r::AbstractRay) where {G&lt;:Tuple}</span></span>
+<span id="L113"><span class="lineNum">     113</span> <span class="tlaGNC">          48 :     visits = [:(closest = closestingroup(closest, groups[$i], r)) for i in 1:fieldcount(G)]</span></span>
+<span id="L114"><span class="lineNum">     114</span> <span class="tlaGNC">          48 :     return quote</span></span>
+<span id="L115"><span class="lineNum">     115</span> <span class="tlaGNC">       23065 :         $(visits...)</span></span>
+<span id="L116"><span class="lineNum">     116</span> <span class="tlaGNC">       22501 :         return closest</span></span>
+<span id="L117"><span class="lineNum">     117</span>              :     end</span>
+<span id="L118"><span class="lineNum">     118</span>              : end</span>
+<span id="L119"><span class="lineNum">     119</span>              : </span>
+<span id="L120"><span class="lineNum">     120</span>              : # The closest of `closest` and the intersections with the elements of one group. The Vector's element type is concrete,</span>
+<span id="L121"><span class="lineNum">     121</span>              : # so surfaceintersection needs no dynamic dispatch.</span>
+<span id="L122"><span class="lineNum">     122</span> <span class="tlaGNC">       26629 : function closestingroup(closest::Union{Nothing,Intersection{T,N}}, group::AbstractVector, r::AbstractRay{T,N})::Union{Nothing,Intersection{T,N}} where {T&lt;:Real,N}</span></span>
+<span id="L123"><span class="lineNum">     123</span> <span class="tlaGNC">       27064 :     for element in group</span></span>
+<span id="L124"><span class="lineNum">     124</span>              :         # nothing in an element can be hit before the ray enters its bounding box, so once an intersection has been found,</span>
+<span id="L125"><span class="lineNum">     125</span>              :         # elements whose box starts beyond it can be skipped with a cheap box test instead of a full CSG evaluation</span>
+<span id="L126"><span class="lineNum">     126</span> <span class="tlaGNC">       28410 :         if element isa CSGTree &amp;&amp; closest !== nothing &amp;&amp; entrydistance(BoundingBox(element), r) &gt; α(closest)</span></span>
+<span id="L127"><span class="lineNum">     127</span> <span class="tlaGNC">         568 :             continue</span></span>
+<span id="L128"><span class="lineNum">     128</span>              :         end</span>
+<span id="L129"><span class="lineNum">     129</span> <span class="tlaGNC">       27743 :         closest = closer(closest, elementintersection(element, r))</span></span>
+<span id="L130"><span class="lineNum">     130</span> <span class="tlaGNC">       28311 :     end</span></span>
+<span id="L131"><span class="lineNum">     131</span> <span class="tlaGNC">       27064 :     return closest</span></span>
+<span id="L132"><span class="lineNum">     132</span>              : end</span>
+<span id="L133"><span class="lineNum">     133</span>              : </span>
+<span id="L134"><span class="lineNum">     134</span> <span class="tlaUNC tlaBgUNC">           0 : function BoundingBox(la::LensAssembly{T}) where {T&lt;:Real}</span></span>
+<span id="L135"><span class="lineNum">     135</span> <span class="tlaUNC">           0 :     es = elements(la)</span></span>
+<span id="L136"><span class="lineNum">     136</span> <span class="tlaUNC">           0 :     bbox = BoundingBox(es[1])</span></span>
+<span id="L137"><span class="lineNum">     137</span> <span class="tlaUNC">           0 :     for b in es[2:end]</span></span>
+<span id="L138"><span class="lineNum">     138</span> <span class="tlaUNC">           0 :         if b isa ParametricSurface{T} || b isa CSGTree{T}</span></span>
+<span id="L139"><span class="lineNum">     139</span> <span class="tlaUNC">           0 :             bbox = union(bbox, b)</span></span>
+<span id="L140"><span class="lineNum">     140</span>              :         end</span>
+<span id="L141"><span class="lineNum">     141</span> <span class="tlaUNC">           0 :     end</span></span>
+<span id="L142"><span class="lineNum">     142</span> <span class="tlaUNC">           0 :     return bbox</span></span>
+<span id="L143"><span class="lineNum">     143</span>              : end</span>
+<span id="L144"><span class="lineNum">     144</span>              : </span>
+<span id="L145"><span class="lineNum">     145</span> <span class="tlaUNC">           0 : axis(a::LensAssembly{T}) where {T&lt;:Real} = a.axis</span></span>
+<span id="L146"><span class="lineNum">     146</span>              : export axis</span>
+<span id="L147"><span class="lineNum">     147</span>              : </span>
+<span id="L148"><span class="lineNum">     148</span>              : #############################################################################</span>
+<span id="L149"><span class="lineNum">     149</span>              : </span>
+<span id="L150"><span class="lineNum">     150</span>              : &quot;&quot;&quot;</span>
+<span id="L151"><span class="lineNum">     151</span>              :     LensTrace{T&lt;:Real,N}</span>
+<span id="L152"><span class="lineNum">     152</span>              : </span>
+<span id="L153"><span class="lineNum">     153</span>              : Contains an intersection point and the ray segment leading to it from within an optical trace.</span>
+<span id="L154"><span class="lineNum">     154</span>              : The ray carries the path length, power, wavelength, number of intersections and source number, all of which are accessible directly on this class too.</span>
+<span id="L155"><span class="lineNum">     155</span>              : </span>
+<span id="L156"><span class="lineNum">     156</span>              : </span>
+<span id="L157"><span class="lineNum">     157</span>              : Has the following accessor methods:</span>
+<span id="L158"><span class="lineNum">     158</span>              : ```julia</span>
+<span id="L159"><span class="lineNum">     159</span>              : ray(a::LensTrace{T,N}) -&gt; OpticalRay{T,N}</span>
+<span id="L160"><span class="lineNum">     160</span>              : intersection(a::LensTrace{T,N}) -&gt; Intersection{T,N}</span>
+<span id="L161"><span class="lineNum">     161</span>              : power(a::LensTrace{T,N}) -&gt; T</span>
+<span id="L162"><span class="lineNum">     162</span>              : wavelength(a::LensTrace{T,N}) -&gt; T</span>
+<span id="L163"><span class="lineNum">     163</span>              : pathlength(a::LensTrace{T,N}) -&gt; T</span>
+<span id="L164"><span class="lineNum">     164</span>              : point(a::LensTrace{T,N}) -&gt; SVector{N,T}</span>
+<span id="L165"><span class="lineNum">     165</span>              : uv(a::LensTrace{T,N}) -&gt; SVector{2,T}</span>
+<span id="L166"><span class="lineNum">     166</span>              : sourcenum(a::LensTrace{T,N}) -&gt; Int</span>
+<span id="L167"><span class="lineNum">     167</span>              : nhits(a::LensTrace{T,N}) -&gt; Int</span>
+<span id="L168"><span class="lineNum">     168</span>              : ```</span>
+<span id="L169"><span class="lineNum">     169</span>              : &quot;&quot;&quot;</span>
+<span id="L170"><span class="lineNum">     170</span>              : struct LensTrace{T&lt;:Real,N}</span>
+<span id="L171"><span class="lineNum">     171</span> <span class="tlaGNC tlaBgGNC">       10327 :     ray::OpticalRay{T,N}</span></span>
+<span id="L172"><span class="lineNum">     172</span>              :     intersection::Intersection{T,N}</span>
+<span id="L173"><span class="lineNum">     173</span>              : end</span>
+<span id="L174"><span class="lineNum">     174</span>              : export LensTrace</span>
+<span id="L175"><span class="lineNum">     175</span>              : </span>
+<span id="L176"><span class="lineNum">     176</span> <span class="tlaGNC">       36575 : ray(a::LensTrace{T,N}) where {T&lt;:Real,N} = a.ray</span></span>
+<span id="L177"><span class="lineNum">     177</span> <span class="tlaGNC">         805 : intersection(a::LensTrace{T,N}) where {T&lt;:Real,N} = a.intersection</span></span>
+<span id="L178"><span class="lineNum">     178</span> <span class="tlaGNC">        5416 : power(a::LensTrace{T,N}) where {T&lt;:Real,N} = power(ray(a))</span></span>
+<span id="L179"><span class="lineNum">     179</span> <span class="tlaGNC">        5127 : wavelength(a::LensTrace{T,N}) where {T&lt;:Real,N} = wavelength(ray(a))</span></span>
+<span id="L180"><span class="lineNum">     180</span> <span class="tlaGNC">        5478 : pathlength(a::LensTrace{T,N}) where {T&lt;:Real,N} = pathlength(ray(a))</span></span>
+<span id="L181"><span class="lineNum">     181</span> <span class="tlaGNC">         514 : point(a::LensTrace{T,N}) where {T&lt;:Real,N} = point(intersection(a))</span></span>
+<span id="L182"><span class="lineNum">     182</span> <span class="tlaUNC tlaBgUNC">           0 : uv(a::LensTrace{T,N}) where {T&lt;:Real,N} = uv(intersection(a))</span></span>
+<span id="L183"><span class="lineNum">     183</span> <span class="tlaUNC">           0 : sourcenum(a::LensTrace{T,N}) where {T&lt;:Real,N} = sourcenum(ray(a))</span></span>
+<span id="L184"><span class="lineNum">     184</span> <span class="tlaGNC tlaBgGNC">        5127 : nhits(a::LensTrace{T,N}) where {T&lt;:Real,N} = nhits(ray(a))</span></span>
+<span id="L185"><span class="lineNum">     185</span>              : export intersection</span>
+<span id="L186"><span class="lineNum">     186</span>              : </span>
+<span id="L187"><span class="lineNum">     187</span> <span class="tlaUNC tlaBgUNC">           0 : function Base.print(io::IO, a::LensTrace{T,N}) where {T,N}</span></span>
+<span id="L188"><span class="lineNum">     188</span> <span class="tlaUNC">           0 :     println(io, &quot;Ray\n$(ray(a))&quot;)</span></span>
+<span id="L189"><span class="lineNum">     189</span> <span class="tlaUNC">           0 :     println(io, &quot;Lensintersection\n$(intersection(a))&quot;)</span></span>
+<span id="L190"><span class="lineNum">     190</span>              : end</span>
+<span id="L191"><span class="lineNum">     191</span>              : </span>
+<span id="L192"><span class="lineNum">     192</span>              : struct NoPower end</span>
+<span id="L193"><span class="lineNum">     193</span>              : const nopower = NoPower()</span>
+<span id="L194"><span class="lineNum">     194</span>              : </span>
+<span id="L195"><span class="lineNum">     195</span>              : # isnopower(::NoPower) = true</span>
+<span id="L196"><span class="lineNum">     196</span>              : # isnopower(::Any) = false</span>
+<span id="L197"><span class="lineNum">     197</span>              : </span>
+<span id="L198"><span class="lineNum">     198</span>              : #############################################################################</span>
+<span id="L199"><span class="lineNum">     199</span>              : </span>
+<span id="L200"><span class="lineNum">     200</span>              : &quot;&quot;&quot;</span>
+<span id="L201"><span class="lineNum">     201</span>              :     trace(assembly::LensAssembly{T}, r::OpticalRay{T}, temperature::T = 20.0, pressure::T = 1.0; trackrays = nothing, test = false)</span>
+<span id="L202"><span class="lineNum">     202</span>              : </span>
+<span id="L203"><span class="lineNum">     203</span>              : Returns the ray as it exits the assembly in the form of a [`LensTrace`](@ref) object if it hits any element in the assembly, otherwise `nothing`.</span>
+<span id="L204"><span class="lineNum">     204</span>              : Recursive rays are offset by a small amount (`RAY_OFFSET`) to prevent it from immediately reintersecting the same lens element.</span>
+<span id="L205"><span class="lineNum">     205</span>              : </span>
+<span id="L206"><span class="lineNum">     206</span>              : `trackrays` can be passed an empty vector to accumulate the `LensTrace` objects at each intersection of `ray` with a surface in the assembly.</span>
+<span id="L207"><span class="lineNum">     207</span>              : &quot;&quot;&quot;</span>
+<span id="L208"><span class="lineNum">     208</span> <span class="tlaGNC tlaBgGNC">       45014 : function trace(assembly::LensAssembly{T}, r::OpticalRay{T,N}, temperature::T=T(AGFFileReader.TEMP_REF), pressure::T=T(AGFFileReader.PRESSURE_REF); trackrays::Union{Nothing,Vector{LensTrace{T,N}}}=nothing, test::Bool=false, recursion::Int=0)::Union{Nothing,NoPower,LensTrace{T,N}} where {T&lt;:Real,N}</span></span>
+<span id="L209"><span class="lineNum">     209</span> <span class="tlaGNC">       45161 :     if power(r) &lt; POWER_THRESHOLD || recursion &gt; TRACE_RECURSION_LIMIT</span></span>
+<span id="L210"><span class="lineNum">     210</span> <span class="tlaUNC tlaBgUNC">           0 :         return nopower</span></span>
+<span id="L211"><span class="lineNum">     211</span>              :     end</span>
+<span id="L212"><span class="lineNum">     212</span>              : </span>
+<span id="L213"><span class="lineNum">     213</span> <span class="tlaGNC tlaBgGNC">       22668 :     intsct = closestintersection(assembly, r)</span></span>
+<span id="L214"><span class="lineNum">     214</span> <span class="tlaGNC">       22501 :     if intsct === nothing</span></span>
+<span id="L215"><span class="lineNum">     215</span> <span class="tlaGNC">       10714 :         return nothing</span></span>
+<span id="L216"><span class="lineNum">     216</span>              :     else</span>
+<span id="L217"><span class="lineNum">     217</span> <span class="tlaGNC">       11787 :         surfintsct = point(intsct)</span></span>
+<span id="L218"><span class="lineNum">     218</span> <span class="tlaGNC">       11787 :         nml = normal(intsct)</span></span>
+<span id="L219"><span class="lineNum">     219</span> <span class="tlaGNC">       11787 :         opticalinterface = interface(intsct)</span></span>
+<span id="L220"><span class="lineNum">     220</span> <span class="tlaGNC">       11787 :         λ = wavelength(r)</span></span>
+<span id="L221"><span class="lineNum">     221</span>              : </span>
+<span id="L222"><span class="lineNum">     222</span>              :         # The interface is one of five concrete types. Julia only splits unions of up to four types automatically, so test</span>
+<span id="L223"><span class="lineNum">     223</span>              :         # for the common ones explicitly and each call compiles to a direct call.</span>
+<span id="L224"><span class="lineNum">     224</span> <span class="tlaGNC">       11787 :         firstray = recursion == 0</span></span>
+<span id="L225"><span class="lineNum">     225</span> <span class="tlaGNC">       11787 :         temp = if opticalinterface isa FresnelInterface{T}</span></span>
+<span id="L226"><span class="lineNum">     226</span> <span class="tlaGNC">       11787 :             processintersection(opticalinterface, surfintsct, nml, r, temperature, pressure, test, firstray)</span></span>
+<span id="L227"><span class="lineNum">     227</span> <span class="tlaUNC tlaBgUNC">           0 :         elseif opticalinterface isa ParaxialInterface{T}</span></span>
+<span id="L228"><span class="lineNum">     228</span> <span class="tlaUNC">           0 :             processintersection(opticalinterface, surfintsct, nml, r, temperature, pressure, test, firstray)</span></span>
+<span id="L229"><span class="lineNum">     229</span>              :         else</span>
+<span id="L230"><span class="lineNum">     230</span> <span class="tlaGNC tlaBgGNC">       11787 :             processintersection(opticalinterface, surfintsct, nml, r, temperature, pressure, test, firstray)</span></span>
+<span id="L231"><span class="lineNum">     231</span>              :         end</span>
+<span id="L232"><span class="lineNum">     232</span>              : </span>
+<span id="L233"><span class="lineNum">     233</span> <span class="tlaGNC">       11787 :         if temp === nothing</span></span>
+<span id="L234"><span class="lineNum">     234</span> <span class="tlaGNC">         623 :             return nopower</span></span>
+<span id="L235"><span class="lineNum">     235</span>              :         else</span>
+<span id="L236"><span class="lineNum">     236</span> <span class="tlaGNC">       11164 :             raydirection, raypower, raypathlength = temp</span></span>
+<span id="L237"><span class="lineNum">     237</span> <span class="tlaGNC">       11164 :             if trackrays !== nothing</span></span>
+<span id="L238"><span class="lineNum">     238</span>              :                 # we want the power that is hitting the surface, i.e. power on incident ray, but the path length at this intersection</span>
+<span id="L239"><span class="lineNum">     239</span>              :                 # i.e. with the path length for this intersection added and power modulated by absorption only</span>
+<span id="L240"><span class="lineNum">     240</span> <span class="tlaGNC">          33 :                 push!(trackrays, LensTrace(OpticalRay(ray(r), raypower, λ, opl=raypathlength, nhits=nhits(r), sourcenum=sourcenum(r), sourcepower=sourcepower(r)), intsct))</span></span>
+<span id="L241"><span class="lineNum">     241</span>              :             end</span>
+<span id="L242"><span class="lineNum">     242</span> <span class="tlaGNC">       11164 :             offsetray = OpticalRay(surfintsct + RAY_OFFSET * raydirection, raydirection, raypower, λ, opl=raypathlength, nhits=nhits(r) + 1, sourcenum=sourcenum(r), sourcepower=sourcepower(r))</span></span>
+<span id="L243"><span class="lineNum">     243</span> <span class="tlaGNC">       11164 :             res = trace(assembly, offsetray, temperature, pressure, trackrays=trackrays, test=test, recursion=recursion + 1)</span></span>
+<span id="L244"><span class="lineNum">     244</span> <span class="tlaGNC">       11164 :             if res === nothing</span></span>
+<span id="L245"><span class="lineNum">     245</span> <span class="tlaGNC">        5167 :                 return LensTrace(OpticalRay(surfintsct, raydirection, raypower, λ, opl=raypathlength, nhits=nhits(r), sourcenum=sourcenum(r), sourcepower=sourcepower(r)), intsct)</span></span>
+<span id="L246"><span class="lineNum">     246</span>              :             else</span>
+<span id="L247"><span class="lineNum">     247</span> <span class="tlaGNC">        5997 :                 return res</span></span>
+<span id="L248"><span class="lineNum">     248</span>              :             end</span>
+<span id="L249"><span class="lineNum">     249</span>              :         end</span>
+<span id="L250"><span class="lineNum">     250</span>              :     end</span>
+<span id="L251"><span class="lineNum">     251</span>              : end</span>
+<span id="L252"><span class="lineNum">     252</span>              : </span>
+<span id="L253"><span class="lineNum">     253</span>              : # &quot;&quot;&quot;approximate focal length of simple double convex lens. For plano convex set one of the radii to Inf&quot;&quot;&quot;</span>
+<span id="L254"><span class="lineNum">     254</span> <span class="tlaUNC tlaBgUNC">           0 : focallength(index::Float64, rf::Float64, rb::Float64) = 1 / ((index - 1) * (1 / rf - 1 / rb))</span></span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>

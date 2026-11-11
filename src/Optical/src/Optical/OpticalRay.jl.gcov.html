@@ -1,0 +1,160 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - Coverage - src/Optical/src/Optical/OpticalRay.jl</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">src/Optical/src/Optical</a> - OpticalRay.jl<span style="font-size: 80%;"> (source / <a href="OpticalRay.jl.func-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">Coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryLo">62.1&nbsp;%</td>
+            <td class="headerCovTableEntry">29</td>
+            <td class="headerCovTableEntry">18</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2026-11-11 20:00:33</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryHi">-</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+          </tr>
+                  <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : # MIT license</span>
+<span id="L2"><span class="lineNum">       2</span>              : # Copyright (c) Microsoft Corporation. All rights reserved.</span>
+<span id="L3"><span class="lineNum">       3</span>              : # See LICENSE in the project root for full license information.</span>
+<span id="L4"><span class="lineNum">       4</span>              : </span>
+<span id="L5"><span class="lineNum">       5</span>              : &quot;&quot;&quot;</span>
+<span id="L6"><span class="lineNum">       6</span>              :     OpticalRay{T,N} &lt;: AbstractRay{T,N}</span>
+<span id="L7"><span class="lineNum">       7</span>              : </span>
+<span id="L8"><span class="lineNum">       8</span>              : Ray with power, wavelength and optical path length.</span>
+<span id="L9"><span class="lineNum">       9</span>              : </span>
+<span id="L10"><span class="lineNum">      10</span>              : **NOTE**: we use monte carlo integration to get accurate results on the detector, this means that all rays essentially hit the detector with power = 1 and some rays are thrown away at any interface to correctly match the reflection/transmission at that interface. For inspection purposes we also track the 'instantaneous' power of the ray in the `power` field of the `OpticalRay`.</span>
+<span id="L11"><span class="lineNum">      11</span>              : </span>
+<span id="L12"><span class="lineNum">      12</span>              : ```julia</span>
+<span id="L13"><span class="lineNum">      13</span>              : OpticalRay(ray::Ray{T,N}, power::T, wavelength::T, opl=zero(T))</span>
+<span id="L14"><span class="lineNum">      14</span>              : OpticalRay(origin::SVector{N,T}, direction::SVector{N,T}, power::T, wavelength::T, opl=zero(T))</span>
+<span id="L15"><span class="lineNum">      15</span>              : ```</span>
+<span id="L16"><span class="lineNum">      16</span>              : </span>
+<span id="L17"><span class="lineNum">      17</span>              : Has the following accessor methods:</span>
+<span id="L18"><span class="lineNum">      18</span>              : ```julia</span>
+<span id="L19"><span class="lineNum">      19</span>              : ray(r::OpticalRay{T,N}) -&gt; Ray{T,N}</span>
+<span id="L20"><span class="lineNum">      20</span>              : direction(r::OpticalRay{T,N}) -&gt; SVector{N,T}</span>
+<span id="L21"><span class="lineNum">      21</span>              : origin(r::OpticalRay{T,N}) -&gt; SVector{N,T}</span>
+<span id="L22"><span class="lineNum">      22</span>              : power(r::OpticalRay{T,N}) -&gt; T</span>
+<span id="L23"><span class="lineNum">      23</span>              : wavelength(r::OpticalRay{T,N}) -&gt; T</span>
+<span id="L24"><span class="lineNum">      24</span>              : pathlength(r::OpticalRay{T,N}) -&gt; T</span>
+<span id="L25"><span class="lineNum">      25</span>              : sourcepower(r::OpticalRay{T,N}) -&gt; T</span>
+<span id="L26"><span class="lineNum">      26</span>              : nhits(r::OpticalRay{T,N}) -&gt; Int</span>
+<span id="L27"><span class="lineNum">      27</span>              : sourcenum(r::OpticalRay{T,N}) -&gt; Int</span>
+<span id="L28"><span class="lineNum">      28</span>              : ```</span>
+<span id="L29"><span class="lineNum">      29</span>              : &quot;&quot;&quot;</span>
+<span id="L30"><span class="lineNum">      30</span>              : struct OpticalRay{T,N} &lt;: AbstractRay{T,N}</span>
+<span id="L31"><span class="lineNum">      31</span>              :     ray::Ray{T,N}</span>
+<span id="L32"><span class="lineNum">      32</span>              :     power::T</span>
+<span id="L33"><span class="lineNum">      33</span>              :     wavelength::T</span>
+<span id="L34"><span class="lineNum">      34</span>              :     opl::T</span>
+<span id="L35"><span class="lineNum">      35</span>              :     nhits::Int</span>
+<span id="L36"><span class="lineNum">      36</span>              :     sourcepower::T</span>
+<span id="L37"><span class="lineNum">      37</span>              :     sourcenum::Int</span>
+<span id="L38"><span class="lineNum">      38</span>              : </span>
+<span id="L39"><span class="lineNum">      39</span> <span class="tlaGNC tlaBgGNC">       79230 :     function OpticalRay(ray::Ray{T,N}, power::T, wavelength::T; opl::T=zero(T), nhits::Int=0, sourcenum::Int=0, sourcepower::T=power) where {T&lt;:Real,N}</span></span>
+<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC">       79230 :         return new{T,N}(ray, power, wavelength, opl, nhits, sourcepower, sourcenum)</span></span>
+<span id="L41"><span class="lineNum">      41</span>              :     end</span>
+<span id="L42"><span class="lineNum">      42</span>              : </span>
+<span id="L43"><span class="lineNum">      43</span> <span class="tlaGNC">       22792 :     function OpticalRay(origin::SVector{N,T}, direction::SVector{N,T}, power::T, wavelength::T; opl::T=zero(T), nhits::Int=0, sourcenum::Int=0, sourcepower::T=power) where {T&lt;:Real,N}</span></span>
+<span id="L44"><span class="lineNum">      44</span> <span class="tlaGNC">       22792 :         return new{T,N}(Ray(origin, direction), power, wavelength, opl, nhits, sourcepower, sourcenum) # Ray normalizes the direction</span></span>
+<span id="L45"><span class="lineNum">      45</span>              :     end</span>
+<span id="L46"><span class="lineNum">      46</span>              : </span>
+<span id="L47"><span class="lineNum">      47</span> <span class="tlaGNC">          60 :     function OpticalRay(origin::AbstractArray{T,1}, direction::AbstractArray{T,1}, power::T, wavelength::T; opl::T=zero(T), nhits::Int=0, sourcenum::Int=0, sourcepower::T=power) where {T&lt;:Real}</span></span>
+<span id="L48"><span class="lineNum">      48</span> <span class="tlaGNC">          30 :         @assert length(origin) == length(direction) &quot;origin (dimension $(length(origin))) and direction (dimension $(length(direction))) vectors do not have the same dimension&quot;</span></span>
+<span id="L49"><span class="lineNum">      49</span> <span class="tlaGNC">          30 :         N = length(origin)</span></span>
+<span id="L50"><span class="lineNum">      50</span> <span class="tlaGNC">          30 :         return new{T,N}(Ray(SVector{N,T}(origin), SVector{N,T}(direction)), power, wavelength, opl, nhits, sourcepower, sourcenum)</span></span>
+<span id="L51"><span class="lineNum">      51</span>              :     end</span>
+<span id="L52"><span class="lineNum">      52</span>              : </span>
+<span id="L53"><span class="lineNum">      53</span>              :     # Convenience constructor. Not as much typing</span>
+<span id="L54"><span class="lineNum">      54</span> <span class="tlaUNC tlaBgUNC">           0 :     OpticalRay(ox::T, oy::T, oz::T, dx::T, dy::T, dz::T; wavelength=0.55) where {T&lt;:Real} = OpticalRay(SVector{3,T}(ox, oy, oz), SVector{3,T}(dx, dy, dz), one(T), T(wavelength)) #doesn't have to be inside struct definition but if it is then VSCode displays hover information. If it's outside the struct definition it doesn't.</span></span>
+<span id="L55"><span class="lineNum">      55</span>              : end</span>
+<span id="L56"><span class="lineNum">      56</span>              : export OpticalRay</span>
+<span id="L57"><span class="lineNum">      57</span>              : </span>
+<span id="L58"><span class="lineNum">      58</span> <span class="tlaGNC tlaBgGNC">      826622 : ray(r::OpticalRay) = r.ray</span></span>
+<span id="L59"><span class="lineNum">      59</span> <span class="tlaGNC">      323361 : direction(r::OpticalRay{T,N}) where {T&lt;:Real,N} = direction(ray(r))</span></span>
+<span id="L60"><span class="lineNum">      60</span> <span class="tlaGNC">      428885 : origin(r::OpticalRay{T,N}) where {T&lt;:Real,N} = origin(ray(r))</span></span>
+<span id="L61"><span class="lineNum">      61</span> <span class="tlaGNC">      120696 : power(r::OpticalRay{T,N}) where {T&lt;:Real,N} = r.power</span></span>
+<span id="L62"><span class="lineNum">      62</span> <span class="tlaGNC">      103479 : wavelength(r::OpticalRay{T,N}) where {T&lt;:Real,N} = r.wavelength</span></span>
+<span id="L63"><span class="lineNum">      63</span> <span class="tlaGNC">       86593 : pathlength(r::OpticalRay{T,N}) where {T&lt;:Real,N} = r.opl</span></span>
+<span id="L64"><span class="lineNum">      64</span> <span class="tlaGNC">       90707 : nhits(r::OpticalRay{T,N}) where {T&lt;:Real,N} = r.nhits</span></span>
+<span id="L65"><span class="lineNum">      65</span> <span class="tlaGNC">       95834 : sourcepower(r::OpticalRay{T,N}) where {T&lt;:Real,N} = r.sourcepower</span></span>
+<span id="L66"><span class="lineNum">      66</span> <span class="tlaGNC">       90707 : sourcenum(r::OpticalRay{T,N}) where {T&lt;:Real,N} = r.sourcenum</span></span>
+<span id="L67"><span class="lineNum">      67</span>              : export ray, power, wavelength, pathlength, nhits, sourcepower, sourcenum</span>
+<span id="L68"><span class="lineNum">      68</span>              : </span>
+<span id="L69"><span class="lineNum">      69</span> <span class="tlaUNC tlaBgUNC">           0 : function Base.print(io::IO, a::OpticalRay{T,N}) where {T,N}</span></span>
+<span id="L70"><span class="lineNum">      70</span> <span class="tlaUNC">           0 :     println(io, &quot;$(rpad(&quot;Origin:&quot;, 25)) $(origin(a))&quot;)</span></span>
+<span id="L71"><span class="lineNum">      71</span> <span class="tlaUNC">           0 :     println(io, &quot;$(rpad(&quot;Direction:&quot;, 25)) $(direction(a))&quot;)</span></span>
+<span id="L72"><span class="lineNum">      72</span> <span class="tlaUNC">           0 :     println(io, &quot;$(rpad(&quot;Power:&quot;, 25)) $(power(a))&quot;)</span></span>
+<span id="L73"><span class="lineNum">      73</span> <span class="tlaUNC">           0 :     println(io, &quot;$(rpad(&quot;Source Power:&quot;, 25)) $(sourcepower(a))&quot;)</span></span>
+<span id="L74"><span class="lineNum">      74</span> <span class="tlaUNC">           0 :     println(io, &quot;$(rpad(&quot;Wavelength (in air):&quot;, 25)) $(wavelength(a))&quot;)</span></span>
+<span id="L75"><span class="lineNum">      75</span> <span class="tlaUNC">           0 :     println(io, &quot;$(rpad(&quot;Optical Path Length:&quot;, 25)) $(pathlength(a))&quot;)</span></span>
+<span id="L76"><span class="lineNum">      76</span> <span class="tlaUNC">           0 :     println(io, &quot;$(rpad(&quot;Hits:&quot;, 25)) $(nhits(a))&quot;)</span></span>
+<span id="L77"><span class="lineNum">      77</span> <span class="tlaUNC">           0 :     if sourcenum(a) != 0</span></span>
+<span id="L78"><span class="lineNum">      78</span> <span class="tlaUNC">           0 :         println(io, &quot;$(rpad(&quot;Source Number:&quot;, 25)) $(sourcenum(a))&quot;)</span></span>
+<span id="L79"><span class="lineNum">      79</span>              :     end</span>
+<span id="L80"><span class="lineNum">      80</span>              : end</span>
+<span id="L81"><span class="lineNum">      81</span>              : </span>
+<span id="L82"><span class="lineNum">      82</span>              : function Base.:*(a::Transform{T}, r::OpticalRay{T,N}) where {T,N}</span>
+<span id="L83"><span class="lineNum">      83</span> <span class="tlaGNC tlaBgGNC">       69216 :     return OpticalRay(a * ray(r), power(r), wavelength(r), opl=pathlength(r), nhits=nhits(r), sourcenum=sourcenum(r), sourcepower=sourcepower(r))</span></span>
+<span id="L84"><span class="lineNum">      84</span>              : end</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>

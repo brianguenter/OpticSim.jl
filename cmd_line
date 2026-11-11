@@ -1,0 +1,1 @@
+genhtml lcov.info --output-directory site --title Coverage --ignore-errors source,inconsistent,unmapped
