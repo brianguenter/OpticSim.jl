@@ -22,23 +22,23 @@ jobs:
     timeout-minutes: 60
     env:
       # Only one job measures and reports coverage; the others just run the tests.
-      COVERAGE_JOB: ${{ matrix.os == 'ubuntu-latest' && matrix.version == '1' }}
+      COVERAGE_JOB: ${{ matrix.os == 'ubuntu-latest' && matrix.version == '1.13' }}
     strategy:
       fail-fast: false
       matrix:
         version:
-          - 'lts'   # current long-term-support release
-          - '1'     # latest stable 1.x
+          - '1.12'  # the oldest Julia OpticSim supports (Project.toml: julia = "1.12")
+          - '1.13'
         os: [ubuntu-latest, windows-latest]
         arch: [x64]
         include:
           # Apple Silicon (macos-latest runners are ARM)
           - os: macos-latest
             arch: aarch64
-            version: 'lts'
+            version: '1.12'
           - os: macos-latest
             arch: aarch64
-            version: '1'
+            version: '1.13'
     steps:
       - uses: actions/checkout@v6
       - uses: julia-actions/setup-julia@v2
