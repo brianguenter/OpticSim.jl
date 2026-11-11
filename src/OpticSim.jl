@@ -31,6 +31,9 @@ include("Optical/Optical.jl")
 
 include("Data/Data.jl")
 
+# lens optimization: problem description, merit function and paraxial helpers
+include("optimization.jl")
+
 # drawing functions; implemented in ext/OpticSimMakieExt when a Makie backend is loaded
 include("Vis.jl")
 

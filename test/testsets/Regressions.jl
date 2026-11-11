@@ -207,3 +207,38 @@ end
     @test OpticSim.reflectance(i) == 0 && OpticSim.transmission(i) == 0
     OpticSim.emptyintervalpool!()
 end
+
+@testitem "Regression: a surface smaller than its lens ends in a flat step" begin
+    using StaticArrays
+    using OpticSim: AGFFileReader
+    # The back surface's semidiameter, 4, is smaller than the lens's, 6. It ends at 4, with a flat absorbing ring from there
+    # to the rim, as on a real lens; it used to continue its sphere out to the rim. Back radius 10 (concave): its sag at
+    # height 4 is 10 - √84, so the ring is that far behind the back vertex at z = -8.
+    lens = SphericalLens(AGFFileReader.Examples_N_BK7, 0.0, 30.0, 10.0, 8.0, 6.0; backsemidiameter=4.0)()
+    ringz = -8.0 - (10.0 - sqrt(84.0))
+    # a ray coming back from behind the lens at height 5 hits the ring, not the sphere (which would be at z ≈ -9.34)
+    hit = closestintersection(surfaceintersection(lens, Ray([5.0, 0.0, -20.0], [0.0, 0.0, 1.0])), false)
+    @test point(hit)[3] ≈ ringz
+    i = interface(hit)
+    @test OpticSim.reflectance(i) == 0 && OpticSim.transmission(i) == 0
+    # inside the back surface's semidiameter the ray meets the sphere, an ordinary optical surface
+    hit = closestintersection(surfaceintersection(lens, Ray([3.0, 0.0, -20.0], [0.0, 0.0, 1.0])), false)
+    @test point(hit)[3] ≈ -8.0 - (10.0 - sqrt(91.0))
+    @test OpticSim.transmission(interface(hit)) == 1
+    OpticSim.emptyintervalpool!()
+end
+
+@testitem "Regression: optimization geometry check includes element rims and the stop" begin
+    using DataFrames
+    using OpticSim: AGFFileReader, surfacescross
+    glass = AGFFileReader.Examples_N_BK7
+    air = AGFFileReader.Air
+    # one lens, then the stop: the lens's back surface (semidiameter 4) is smaller than its front (6). Its back surface is
+    # concave, so the flat ring at its edge is 10 - √84 ≈ 0.83 behind the back vertex. A stop 2 behind the vertex clears
+    # it; one 0.5 behind is cut by the rim of the back surface and the ring, outside the stop's hole.
+    lens(gap) = DataFrame(SurfaceType=["Object", "Standard", "Standard", "Stop", "Image"],
+        Radius=[Inf, 30.0, 10.0, Inf, Inf], Thickness=[Inf, 8.0, gap, 50.0, missing],
+        Material=[air, glass, air, air, missing], SemiDiameter=[Inf, 6.0, 4.0, 3.0, 20.0])
+    @test !surfacescross(lens(2.0))
+    @test surfacescross(lens(0.5))
+end

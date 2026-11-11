@@ -113,7 +113,7 @@ function biotarprescription(radii::AbstractVector{T}, thicknesses::AbstractVecto
 end
 
 """
-    biotar(T = Float64, detpix = 1000; image = 65.59)
+    biotar(T = Float64, detpix = 1000; image = 65.54)
 
 Zeiss's f/1.4 Biotar, the first double Gauss lens: Example 2 of Willy Merté's 1927 patent DE 485,798 (US 1,786,916),
 normalized to a 100mm focal length. Six elements in four groups: a singlet, a cemented doublet, the stop, a cemented
@@ -123,7 +123,7 @@ the 5 fields and 3 wavelengths of [`biotar_optimization`](@ref).
 The prescription is read from a scan of the patent, with one radius corrected (see `BIOTAR_RADII`); the clear
 apertures and the exact stop position are not in the patent and are chosen here.
 """
-biotar(::Type{T}=Float64, detpix::Int=1000; image=65.59) where {T<:Real} =
+biotar(::Type{T}=Float64, detpix::Int=1000; image=65.54) where {T<:Real} =
     AxisymmetricOpticalSystem{T}(biotarprescription(T.(BIOTAR_RADII), T.(BIOTAR_THICKNESSES), T(image)), detpix, detpix)
 
 function cooketripletfirstelement(::Type{T}=Float64) where {T<:Real}

@@ -21,10 +21,13 @@ Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 [weakdeps]
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
+Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
+OptimizationOptimJL = "36348300-93cb-4f02-beb5-3c3902f8871e"
 
 [extensions]
 OpticSimForwardDiffExt = "ForwardDiff"
 OpticSimMakieExt = "Makie"
+OpticSimOptimizationExt = ["Optimization", "OptimizationOptimJL", "ForwardDiff"]
 
 [compat]
 AGFFileReader = "1.2"
@@ -33,6 +36,8 @@ Distributions = "0.25"
 ForwardDiff = "0.10, 1"
 LinearAlgebra = "1.11"
 Makie = "0.24"
+Optimization = "5"
+OptimizationOptimJL = "0.4"
 Random = "1.11"
 StaticArrays = "1.9"
 Statistics = "1.11"

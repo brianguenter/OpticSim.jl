@@ -4,11 +4,11 @@
 
 # Lens optimization problems, recreated from published Zemax examples where one with a complete specification exists.
 #
-# Each problem is an OptimizationExample: the free variables with starting values and bounds, a function that builds
+# Each problem is a LensOptimizationProblem: the free variables with starting values and bounds, a function that builds
 # the optical system from the variables, and a merit function to minimize. The merit function accepts any number type,
 # so ForwardDiff can differentiate it. The problems do not depend on any optimization package; see the Optimization
 # page of the documentation for solving them with Optimization.jl.
-# The OptimizationExample type and the shared helpers are in optimization_helpers.jl. Runnable examples that solve
+# The LensOptimizationProblem type and the shared helpers are in OpticSim's src/optimization.jl. Runnable examples that solve
 # these problems and print the results are in run_optimization_examples.jl.
 
 export singlet_optimization, aspheric_singlet_optimization, cooke40_optimization, cooke_triplet_optimization
@@ -47,7 +47,7 @@ const SINGLET_SEMIDIAMETER = 14.0
 singletrays(rings) = [pupilrays(θ, 25.0, 0.0, [0.6328], [1.0]; rings) for θ in SINGLET_FIELDS] # stop at the front surface
 
 """
-    singlet_optimization(; rings = 6) -> OptimizationExample
+    singlet_optimization(; rings = 6) -> LensOptimizationProblem
 
 Zemax's singlet tutorial: an F/4 N-BK7 singlet with 100mm focal length, entrance pupil 25mm, fields 0, 3.5 and 5
 degrees, at 632.8nm. The front curvature, center thickness and distance to the image are free; the back radius is set
@@ -63,7 +63,7 @@ function singlet_optimization(; rings=6)
     presc(x) = singletprescription(x[1], x[2], x[3])
     build(x::AbstractVector{T}) where {T} = AxisymmetricOpticalSystem{T}(presc(x), 1, 1)
     merit(x::AbstractVector{T}) where {T} = spotmerit(presc(x), rays, T)
-    OptimizationExample(
+    LensOptimizationProblem(
         "Singlet lens (Zemax tutorial)", SINGLET_SOURCE,
         ["front curvature (1/mm)", "center thickness (mm)", "back surface to image (mm)"],
         [0.001, 4.0, 100.0], [(0.001, 0.05), (2.0, 12.0), (50.0, 150.0)],
@@ -71,7 +71,7 @@ function singlet_optimization(; rings=6)
 end
 
 """
-    aspheric_singlet_optimization(; rings = 6) -> OptimizationExample
+    aspheric_singlet_optimization(; rings = 6) -> LensOptimizationProblem
 
 The singlet of [`singlet_optimization`](@ref) with an even aspheric front surface: its conic and 4th and 6th order
 terms are free as well. The aspheric variables are the sag each term adds at the lens edge (semi-diameter 14mm), in mm,
@@ -85,7 +85,7 @@ function aspheric_singlet_optimization(; rings=6)
     presc(x) = singletprescription(x[1], x[2], x[3]; conic=x[4], aspherics=(x[5] / SINGLET_SEMIDIAMETER^4, x[6] / SINGLET_SEMIDIAMETER^6))
     build(x::AbstractVector{T}) where {T} = AxisymmetricOpticalSystem{T}(presc(x), 1, 1)
     merit(x::AbstractVector{T}) where {T} = spotmerit(presc(x), rays, T)
-    OptimizationExample(
+    LensOptimizationProblem(
         "Aspheric singlet lens (derived from the Zemax tutorial)", SINGLET_SOURCE * "; front surface made an even asphere",
         ["front curvature (1/mm)", "center thickness (mm)", "back surface to image (mm)", "front conic",
             "front 4th order term (sag at edge, mm)", "front 6th order term (sag at edge, mm)"],
@@ -120,7 +120,7 @@ function cooke40prescription(x::AbstractVector{T}) where {T}
 end
 
 """
-    cooke40_optimization(; rings = 6) -> OptimizationExample
+    cooke40_optimization(; rings = 6) -> LensOptimizationProblem
 
 The Cooke triplet of Zemax's sample file "Cooke 40 degree field.zmx": entrance pupil 10mm, fields 0, 14 and 20
 degrees, wavelengths 0.48, 0.55 and 0.65μm weighted 0.8, 1 and 0.8, glasses SK16, F2 and SK16 (SK16 is modelled with
@@ -144,7 +144,7 @@ function cooke40_optimization(; rings=6)
     presc(x) = cooke40prescription(x)
     build(x::AbstractVector{T}) where {T} = AxisymmetricOpticalSystem{T}(presc(x), 1, 1)
     merit(x::AbstractVector{T}) where {T} = spotmerit(presc(x), rays, T)
-    OptimizationExample(
+    LensOptimizationProblem(
         "Cooke triplet, 40 degree field (Zemax sample)", COOKE40_SOURCE,
         vcat(["curvature surface $i (1/mm)" for i in 1:5], ["air gap lens 1 to 2 (mm)", "air gap lens 2 to 3 (mm)", "last surface to image (mm)"]),
         x0, [[(-c, c) for c in cmax]; [(1.0, 15.0), (1.0, 15.0), (30.0, 60.0)]],
@@ -155,7 +155,7 @@ end
 # Cooke triplet: OpticSim's cooketriplet()
 
 """
-    cooke_triplet_optimization(; rings = 6) -> OptimizationExample
+    cooke_triplet_optimization(; rings = 6) -> LensOptimizationProblem
 
 OpticSim's [`cooketriplet`](@ref) as an optimization problem: the five lens radii (the stop surface excluded, as
 curvatures), the two air gaps between the lenses and the distance to the image are free. Radii may change by 25% and stay
@@ -188,7 +188,7 @@ function cooke_triplet_optimization(; rings=6)
     presc(x) = prescription(x)
     build(x::AbstractVector{T}) where {T} = AxisymmetricOpticalSystem{T}(presc(x), 1, 1)
     merit(x::AbstractVector{T}) where {T} = spotmerit(presc(x), rays, T)
-    OptimizationExample(
+    LensOptimizationProblem(
         "Cooke triplet (OpticSim cooketriplet)", "OpticSim's cooketriplet(); field, aperture and bounds chosen for this example",
         vcat(["curvature surface $i (1/mm)" for i in (1, 2, 3, 5, 6)], ["air gap lens 1 to 2 (mm)", "air gap lens 2 to 3 (mm)", "last surface to image (mm)"]),
         x0, bounds, build, merit, [0.0, 5.0], rays)
@@ -229,13 +229,14 @@ function biotaroptimizationprescription(x::AbstractVector{T}) where {T}
     t1, t3, t4, t6, t7, t9 = x[15:20]
     d = [t1, gap12, t3, t4, gap2stop + gapstop3, t6, t7, gap34, t9]
     c10 = lastcurvature(T(biotarfocallength()), c, d, T.(biotarindices(0.5876)))
-    biotarprescription(1 ./ [c; c10], d, image; stop=gap2stop)
+    # the clear apertures follow the design: each passes the f/1.4 axial beam, so only the stop limits it
+    passaxialbeam(biotarprescription(1 ./ [c; c10], d, image; stop=gap2stop), 100 / 1.4 / 2, BIOTAR_WAVELENGTHS)
 end
 
 const BIOTAR_GLASS_THICKNESSES = (1, 3, 4, 6, 7, 9) # BIOTAR_THICKNESSES entries that are glass
 
 """
-    biotar_optimization(; rings = 8, image = 65.5) -> OptimizationExample
+    biotar_optimization(; rings = 8, image = 65.5) -> LensOptimizationProblem
 
 Zeiss's f/1.4 Biotar ([`biotar`](@ref)) as an optimization problem: 5 field points over a 17.3° half field, the
 silent-era 35mm cine full aperture (24.89 x 18.67mm) of the first f/1.4 Biotar (relative field heights 0, 0.3, 0.5, 0.7
@@ -248,9 +249,13 @@ Free (20 variables):
   to group 3, group 3 to group 4, and the last surface to the image;
 - the six glass thicknesses, each within 10% of the patent's.
 
-Glasses and clear apertures are fixed, the cemented doublets stay cemented, and the last curvature is set by a paraxial
+Glasses are fixed, the cemented doublets stay cemented, and the last curvature is set by a paraxial
 solve that keeps the focal length at the patent lens's, 99.9mm. The merit function returns NaN for a system whose
 surfaces cross, including a stop that a deep surface would reach through.
+
+The clear apertures follow the design ([`OpticSim.passaxialbeam`](@ref)): each surface is at least large enough for the
+f/1.4 axial beam, so only the stop limits it and the optimizer can't stop the lens down with another surface. They never
+shrink below the patent lens's, so the rims still vignette the off-axis beams.
 
 The rays come from one emitter per field and wavelength, aimed at the paraxial entrance pupil of each design and filling
 it at f/1.4, so the beams follow the stop as it and the groups in front of it move. The stop, as large as fits between
@@ -274,7 +279,7 @@ function biotar_optimization(; rings=8, image=65.5)
     presc(x) = biotaroptimizationprescription(x)
     build(x::AbstractVector{T}) where {T} = AxisymmetricOpticalSystem{T}(presc(x), 1, 1)
     merit(x::AbstractVector{T}) where {T} = spotmerit(presc(x), aimed(x), T)
-    OptimizationExample("Zeiss Biotar f/1.4 (Merté 1927)", BIOTAR_SOURCE,
+    LensOptimizationProblem("Zeiss Biotar f/1.4 (Merté 1927)", BIOTAR_SOURCE,
         vcat(["curvature surface $i (1/mm)" for i in 1:9],
             ["group 1 to group 2 (mm)", "group 2 to the stop (mm)", "the stop to group 3 (mm)", "group 3 to group 4 (mm)",
                 "last surface to image (mm)"],
@@ -283,7 +288,7 @@ function biotar_optimization(; rings=8, image=65.5)
 end
 
 """
-    biotar_refocus_optimization(; rings = 8) -> OptimizationExample
+    biotar_refocus_optimization(; rings = 8) -> LensOptimizationProblem
 
 The patent's Biotar with only the image distance free, for the same fields, wavelengths and merit function as
 [`biotar_optimization`](@ref): the fair baseline to compare the optimized lens with, because the patent gives no image
@@ -291,10 +296,10 @@ distance.
 """
 function biotar_refocus_optimization(; rings=8)
     rays = biotarrays(rings)
-    presc(x) = biotarprescription(BIOTAR_RADII .* one(eltype(x)), BIOTAR_THICKNESSES .* one(eltype(x)), x[1])
+    presc(x) = passaxialbeam(biotarprescription(BIOTAR_RADII .* one(eltype(x)), BIOTAR_THICKNESSES .* one(eltype(x)), x[1]), 100 / 1.4 / 2, BIOTAR_WAVELENGTHS)
     build(x::AbstractVector{T}) where {T} = AxisymmetricOpticalSystem{T}(presc(x), 1, 1)
     merit(x::AbstractVector{T}) where {T} = spotmerit(presc(x), rays, T)
-    OptimizationExample("Zeiss Biotar f/1.4 (Merté 1927), refocused only", BIOTAR_SOURCE,
+    LensOptimizationProblem("Zeiss Biotar f/1.4 (Merté 1927), refocused only", BIOTAR_SOURCE,
         ["last surface to image (mm)"], [65.5], [(55.0, 75.0)], build, merit, BIOTAR_FIELDS, rays)
 end
 

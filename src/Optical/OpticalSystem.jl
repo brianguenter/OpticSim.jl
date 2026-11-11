@@ -356,7 +356,10 @@ struct AxisymmetricOpticalSystem{T,C<:CSGOpticalSystem{T}} <: AbstractOpticalSys
                 prescription, i, "Parameters", Vector{Pair{String,T}}()
             )
 
-            semidiameter::T = max(get_front_back_property(prescription, i, "SemiDiameter", zero(T))...)
+            # the element is as large as its larger surface; the smaller surface ends at its own semidiameter, with a flat
+            # step from there to the element rim
+            frontsemidiameter::T, backsemidiameter::T = get_front_back_property(prescription, i, "SemiDiameter", zero(T))
+            semidiameter::T = max(frontsemidiameter, backsemidiameter)
 
             if surface_type == "Stop"
                 semidiameter = prescription[i, "SemiDiameter"]
@@ -365,11 +368,12 @@ struct AxisymmetricOpticalSystem{T,C<:CSGOpticalSystem{T}} <: AbstractOpticalSys
                 if frontconic != zero(T) || backconic != zero(T)
                     newelement = ConicLens(
                         material, vertices[i-1], frontradius, frontconic, backradius, backconic, thickness,
-                        semidiameter; lastmaterial, nextmaterial, frontsurfacereflectance, backsurfacereflectance
+                        semidiameter; lastmaterial, nextmaterial, frontsurfacereflectance, backsurfacereflectance,
+                        frontsemidiameter, backsemidiameter
                     )()
                 else
                     newelement = SphericalLens(
-                        material, vertices[i-1], frontradius, backradius, thickness, semidiameter;
+                        material, vertices[i-1], frontradius, backradius, thickness, semidiameter; frontsemidiameter, backsemidiameter,
                         lastmaterial, nextmaterial, frontsurfacereflectance, backsurfacereflectance
                     )()
                 end
@@ -383,13 +387,14 @@ struct AxisymmetricOpticalSystem{T,C<:CSGOpticalSystem{T}} <: AbstractOpticalSys
                 if fa === nothing && ba === nothing  #it should be a CONIC. Note: if aspheric terms are present but all zero then an AshpericLens will be created
                     newelement = ConicLens(
                         material, vertices[i-1], frontradius, frontconic, backradius, backconic, thickness,
-                        semidiameter; lastmaterial, nextmaterial, frontsurfacereflectance, backsurfacereflectance
+                        semidiameter; lastmaterial, nextmaterial, frontsurfacereflectance, backsurfacereflectance,
+                        frontsemidiameter, backsemidiameter
                     )()
                 else
                     newelement = AsphericLens(
                         material, vertices[i-1], frontradius, frontconic, fa, backradius, backconic,
                         ba, thickness, semidiameter; lastmaterial, nextmaterial, frontsurfacereflectance,
-                        backsurfacereflectance
+                        backsurfacereflectance, frontsemidiameter, backsemidiameter
                     )()
                 end
             else

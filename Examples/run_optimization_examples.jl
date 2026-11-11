@@ -3,7 +3,8 @@
 # See LICENSE in the project root for full license information.
 
 # Complete, runnable lens optimization examples: each creates an optimization problem from one of the
-# OptimizationExamples in optimization_examples.jl, solves it with a bounded optimizer and prints the results.
+# LensOptimizationProblems in optimization_examples.jl, solves it with optimizelens (a bounded optimizer, with the variables
+# scaled to their bounds) and prints the results.
 #
 # Run all of them from the repository root with:
 #   julia --project=Examples Examples/run_optimization_examples.jl
@@ -17,33 +18,12 @@
 # drawresult(example, solution).
 
 using OpticSim
-using Optimization, OptimizationOptimJL # Optimization.jl and its wrapper for Optim.jl's bounded solvers
-import ForwardDiff                      # gradients for Optimization.AutoForwardDiff()
+using Optimization, OptimizationOptimJL # Optimization.jl and its wrapper for Optim.jl's bounded solvers; with ForwardDiff
+                                        # they make OpticSim.optimizelens available
+import ForwardDiff                      # gradients
 using Printf
 
 include(joinpath(@__DIR__, "Examples.jl"))
-
-"""
-    solveexample(example; solver = Optim.Fminbox(Optim.LBFGS()), maxiters = 300) -> (u, retcode, solution)
-
-Create the optimization problem for `example`, with its starting values, bounds and merit function, and solve it.
-The solver enforces the bounds. Gradients come from ForwardDiff. Returns the optimized variables `u`, the solver's
-return code and its full solution.
-
-The solver works with each variable scaled to run from 0 to 1 across its bounds. Lens variables have very different
-scales: a curvature change of 0.001/mm affects the image about as much as a spacing change of millimeters, so without
-scaling the gradient is thousands of times larger for curvatures, and gradient based solvers barely move spacings.
-"""
-function solveexample(example; solver=Optim.Fminbox(Optim.LBFGS()), maxiters=300)
-    lower, upper = first.(example.bounds), last.(example.bounds)
-    unscale(s) = lower .+ s .* (upper .- lower)
-    # one ForwardDiff pass carrying all the derivatives is faster than the default of several passes
-    merit = OptimizationFunction((s, _) -> example.merit(unscale(s)), Optimization.AutoForwardDiff(chunksize=length(example.x0)))
-    s0 = (example.x0 .- lower) ./ (upper .- lower)
-    problem = OptimizationProblem(merit, s0; lb=zeros(length(s0)), ub=ones(length(s0)))
-    solution = solve(problem, solver; maxiters)
-    return (u=unscale(solution.u), retcode=solution.retcode, solution=solution)
-end
 
 """
     printresults(example, solution)
@@ -68,11 +48,11 @@ function printresults(example, solution)
     @printf("\n  merit (mean squared RMS spot radius, mm²): %.4e -> %.4e\n", example.merit(x0), example.merit(x))
     fields = join((replace(string(f), r"\.0$" => "") for f in example.fields), "°, ") * "°"
     println("  RMS spot radius (μm) for fields ", fields, ":")
-    println("    start ", round.(Examples.rmsspotradii(example, x0), digits=1))
-    println("    final ", round.(Examples.rmsspotradii(example, x), digits=1))
+    println("    start ", round.(rmsspotradii(example, x0), digits=1))
+    println("    final ", round.(rmsspotradii(example, x), digits=1))
 
     println("\n  smallest separation between neighboring surfaces (negative = surfaces cross):")
-    for s in Examples.surfaceseparations(example, x)
+    for s in surfaceseparations(example, x)
         @printf("    surfaces %d-%d (%-5s)  center %8.3f mm   smallest %8.3f mm at height %.2f mm%s\n",
             s.surfaces..., s.medium, s.center, s.minimum, s.height, s.minimum > 0 ? "" : "   <-- SURFACES CROSS")
     end
@@ -85,7 +65,7 @@ Draw the design before and after optimization, one above the other. Needs a Maki
 `using CairoMakie` first.
 """
 function drawresult(example, solution)
-    rays = Examples.fieldrays(example)
+    rays = fieldrays(example)
     Vis.drawcomparison([example.build(example.x0), example.build(solution.u)]; raygenerator=rays,
         titles=["Before: " * example.name, "After"], trackallrays=true, test=true, colorbysourcenum=true)
 end
@@ -96,7 +76,7 @@ end
 """Zemax's singlet tutorial: an F/4 N-BK7 singlet, focal length 100mm, fields 0, 3.5 and 5 degrees."""
 function optimize_singlet()
     example = Examples.singlet_optimization()
-    solution = solveexample(example)
+    solution = optimizelens(example)
     printresults(example, solution)
     return example, solution
 end
@@ -104,7 +84,7 @@ end
 """The singlet with an even aspheric front surface: its conic and 4th and 6th order terms are free as well."""
 function optimize_aspheric_singlet()
     example = Examples.aspheric_singlet_optimization()
-    solution = solveexample(example)
+    solution = optimizelens(example)
     printresults(example, solution)
     return example, solution
 end
@@ -112,7 +92,7 @@ end
 """Zemax's sample "Cooke 40 degree field": starts at Zemax's optimized design, so little should change."""
 function optimize_cooke40()
     example = Examples.cooke40_optimization()
-    solution = solveexample(example)
+    solution = optimizelens(example)
     printresults(example, solution)
     return example, solution
 end
@@ -120,7 +100,7 @@ end
 """OpticSim's cooketriplet with its radii, air gaps and image distance free. Takes about a minute and a half."""
 function optimize_cooke_triplet()
     example = Examples.cooke_triplet_optimization()
-    solution = solveexample(example)
+    solution = optimizelens(example)
     printresults(example, solution)
     return example, solution
 end
@@ -128,16 +108,16 @@ end
 """
 Zeiss's f/1.4 Biotar (Merté, 1927), 5 fields and the F, d and C lines. First the patent's lens is refocused (only the
 image distance free), then the curvatures, group spacings, stop position and glass thicknesses are optimized starting
-from the refocused lens, and the two are compared. The optimization took 4.2 minutes with 8 threads on the performance
-cores of a 24-core laptop processor, and about half an hour on one thread; start Julia with `julia -t auto` to use every
-core.
+from the refocused lens, and the two are compared. With the default 8 rings (3255 rays per evaluation) this takes several
+minutes with all 24 threads of a 24-core laptop processor, and about half an hour or more on one thread; start Julia
+with `julia -t auto` to use every core. The result in the documentation used 14 rings and took 10 minutes on 24 threads.
 """
 function optimize_biotar()
     patent = Examples.biotar_refocus_optimization()
-    refocused = solveexample(patent)
+    refocused = optimizelens(patent)
     printresults(patent, refocused)
     example = Examples.biotar_optimization(image=refocused.u[1])
-    solution = solveexample(example)
+    solution = optimizelens(example)
     printresults(example, solution)
 
     println("\nPatent lens refocused vs optimized:")
@@ -145,9 +125,9 @@ function optimize_biotar()
         system = ex.build(x)
         rays = ex.aimedrays(x)
         # rays that pass through each lens surface once, in order, as the merit function counts them
-        reached = sum(count(((r, _),) -> (lt = trace(system, r, test=true); lt !== nothing && OpticSim.nhits(lt) == Examples.lenssurfaces(system.prescription)), f) for f in rays)
+        reached = sum(count(((r, _),) -> (lt = trace(system, r, test=true); lt !== nothing && OpticSim.nhits(lt) == OpticSim.lenssurfaces(system.prescription)), f) for f in rays)
         @printf("  %-18s merit %.4e mm²   rays reaching the image %d of %d\n", name, ex.merit(x), reached, sum(length, rays))
-        println("      RMS spot radius (μm) for fields ", round.(ex.fields, digits=1), "°: ", round.(Examples.rmsspotradii(ex, x), digits=1))
+        println("      RMS spot radius (μm) for fields ", round.(ex.fields, digits=1), "°: ", round.(rmsspotradii(ex, x), digits=1))
     end
     return patent, refocused, example, solution
 end
