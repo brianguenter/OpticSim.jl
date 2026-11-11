@@ -17,6 +17,7 @@ using LinearAlgebra
 
 # include("docs_examples.jl")
 include("other_examples.jl")
+include("biotar.jl")
 include("optimization_examples.jl")
 
 end #module Examples

@@ -2,7 +2,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # See LICENSE in the project root for full license information.
 
-export cooketriplet, doublegauss, biotar, doubleconvexlensonly
+export cooketriplet, doublegauss, doubleconvexlensonly
 
 
 """
@@ -74,57 +74,6 @@ function doublegauss(::Type{T}=Float64, detpix::Int=1000) where {T<:Real}
         detpix
     )
 end
-
-# The f/1.4 Biotar, Example 2 of Willy Merté's patent DE 485,798 (US 1,786,916), Carl Zeiss Jena, 1927, normalized to a
-# 100mm focal length. r4 reads "-115.0" in the scanned patent; every other radius of Example 2 is Example 1's scaled by
-# 0.967-0.970, and Example 1's r4 is -1118.78, so r4 is taken as -1082. This gives the patent's 100mm focal length (99.9),
-# while -115 gives 98.95 and makes the second element's edge thickness negative.
-const BIOTAR_RADII = [83.6, 321.0, 44.8, -1082.0, 28.3, -38.5, 50.5, -53.2, 106.0, -120.0]
-# thickness after each surface
-const BIOTAR_THICKNESSES = [10.75, 1.65, 15.55, 5.05, 18.9, 5.05, 21.22, 0.97, 13.9]
-# glasses after surfaces 1 to 9 (nothing after surface 2, 5 and 8: air), modelled from the patent's nd and ν
-const BIOTAR_GLASSES = (
-    AGFFileReader.modelglass(1.64238, 48.0, 0.0), # I, V and VI
-    AGFFileReader.modelglass(1.62306, 56.9, 0.0), # II
-    AGFFileReader.modelglass(1.57566, 41.2, 0.0), # III
-    AGFFileReader.modelglass(1.67270, 32.2, 0.0), # IV
-)
-# The patent gives no clear apertures or stop position. The stop is the aperture stop: 22.2mm in radius, which passes
-# an f/1.43 axial beam, essentially the patent's f/1.4. The deep inner surfaces 5 and 6 meet at a height of about 22.8mm,
-# which limits them to 22.5mm, and a 22.2mm stop fits between them only 10.75 to 11.86mm after surface 5; it is placed
-# at 11.3mm. The other clear apertures pass the stop's beam. At the edge of an f/1.4 beam the second element (the front
-# doublet's crown) comes to a knife edge, so the patent lens loses its outermost axial rays there.
-const BIOTAR_SEMIDIAMETERS = [36.0, 34.5, 33.0, 32.0, 22.5, 22.5, 28.0, 28.0, 28.0, 27.0]
-const BIOTAR_STOP_SEMIDIAMETER = 22.2
-const BIOTAR_STOP_FRACTION = 11.3 / 18.9 # where the stop is in the air space after surface 5
-
-# `stop` is the distance from surface 5 to the stop, within the air space after surface 5
-function biotarprescription(radii::AbstractVector{T}, thicknesses::AbstractVector{T}, image::T; stop=BIOTAR_STOP_FRACTION * thicknesses[5]) where {T}
-    gI, gII, gIII, gIV = BIOTAR_GLASSES
-    d = thicknesses
-    DataFrame(
-        SurfaceType=["Object", "Standard", "Standard", "Standard", "Standard", "Standard", "Stop",
-            "Standard", "Standard", "Standard", "Standard", "Standard", "Image"],
-        Radius=[T(Inf); radii[1:5]; T(Inf); radii[6:10]; T(Inf)],
-        Thickness=[T(Inf), d[1], d[2], d[3], d[4], stop, d[5] - stop, d[6], d[7], d[8], d[9], image, missing],
-        Material=[Air, gI, Air, gII, gIII, Air, Air, gIV, gI, Air, gI, Air, missing],
-        SemiDiameter=[T(Inf); T.(BIOTAR_SEMIDIAMETERS[1:5]); T(BIOTAR_STOP_SEMIDIAMETER); T.(BIOTAR_SEMIDIAMETERS[6:10]); T(33.0)],
-    )
-end
-
-"""
-    biotar(T = Float64, detpix = 1000; image = 65.54)
-
-Zeiss's f/1.4 Biotar, the first double Gauss lens: Example 2 of Willy Merté's 1927 patent DE 485,798 (US 1,786,916),
-normalized to a 100mm focal length. Six elements in four groups: a singlet, a cemented doublet, the stop, a cemented
-doublet and a singlet. `image` is the distance from the last surface to the image; the default is the best focus for
-the 5 fields and 3 wavelengths of [`biotar_optimization`](@ref).
-
-The prescription is read from a scan of the patent, with one radius corrected (see `BIOTAR_RADII`); the clear
-apertures and the exact stop position are not in the patent and are chosen here.
-"""
-biotar(::Type{T}=Float64, detpix::Int=1000; image=65.54) where {T<:Real} =
-    AxisymmetricOpticalSystem{T}(biotarprescription(T.(BIOTAR_RADII), T.(BIOTAR_THICKNESSES), T(image)), detpix, detpix)
 
 function cooketripletfirstelement(::Type{T}=Float64) where {T<:Real}
     AxisymmetricOpticalSystem(

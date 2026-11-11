@@ -195,48 +195,25 @@ function cooke_triplet_optimization(; rings=6)
 end
 
 #############################################################################
-# Zeiss Biotar f/1.4: Merté's 1927 double Gauss
-
-const BIOTAR_SOURCE = "Willy Merté, patent DE 485,798 / US 1,786,916 (Carl Zeiss Jena, 1927), Example 2, f/1.4, normalized to a 100mm focal length; 5 fields over a 17.3° half field (silent-era 35mm cine full aperture), F, d and C lines"
-const BIOTAR_WAVELENGTHS = [0.4861, 0.5876, 0.6563] # F, d and C lines
-# relative field heights 0, 0.3, 0.5, 0.7 and 1 of a 17.3° half field: the first f/1.4 Biotar was a 5cm lens for 35mm cine
-# film. Its silent-era full aperture (before optical soundtracks) was 0.980 x 0.735in, 24.89 x 18.67mm, 4:3, with a 31.1mm
-# diagonal, and atan(15.56/50) = 17.3°. (The patent itself gives no field.)
-const BIOTAR_FIELDS = [atand(k * hypot(24.89, 18.67) / 100) for k in (0.0, 0.3, 0.5, 0.7, 1.0)]
-
-# refractive index after each of surfaces 1 to 9 at λ
-function biotarindices(λ)
-    gI, gII, gIII, gIV = (AGFFileReader.index(g, λ) for g in BIOTAR_GLASSES)
-    [gI, 1.0, gII, gIII, 1.0, gIV, gI, 1.0, gI]
-end
-
-# focal length of the patent's lens at 587.6nm: 99.91mm, the patent's 100 within the precision of its data
-function biotarfocallength()
-    n = biotarindices(0.5876)
-    y, nu = paraxialtrace(1.0, 0.0, 1 ./ BIOTAR_RADII, [BIOTAR_THICKNESSES; 0.0], [n; 1.0], 1.0)
-    return -1 / nu
-end
+# Zeiss Biotar f/1.4: Merté's 1927 double Gauss. The lens data and specification are in biotar.jl.
 
 # x = curvatures of surfaces 1 to 9; the five spacings between the lens's four groups, the stop and the image: group 1 to
 # group 2 (after surface 2), group 2 to the stop (after surface 5), the stop to group 3, group 3 to group 4 (after
 # surface 8), and the last surface to the image; and the six glass thicknesses, after surfaces 1, 3, 4, 6, 7 and 9. The
 # cemented doublets stay cemented: each pair shares a surface. The last curvature is set by a paraxial solve that keeps
-# the focal length the patent lens's (at 587.6nm), so the optimizer can't trade focal length, and with it f-number, for
-# image quality, and the starting point is exactly the patent's lens.
+# the focal length the patent lens's (at the d line), so the optimizer can't trade focal length, and with it f-number,
+# for image quality, and the starting point is exactly the patent's lens.
 function biotaroptimizationprescription(x::AbstractVector{T}) where {T}
     c = x[1:9]
     gap12, gap2stop, gapstop3, gap34, image = x[10:14]
     t1, t3, t4, t6, t7, t9 = x[15:20]
     d = [t1, gap12, t3, t4, gap2stop + gapstop3, t6, t7, gap34, t9]
-    c10 = lastcurvature(T(biotarfocallength()), c, d, T.(biotarindices(0.5876)))
-    # the clear apertures follow the design: each passes the f/1.4 axial beam, so only the stop limits it
-    passaxialbeam(biotarprescription(1 ./ [c; c10], d, image; stop=gap2stop), 100 / 1.4 / 2, BIOTAR_WAVELENGTHS)
+    c10 = lastcurvature(T(biotarfocallength()), c, d, T.(biotarindices(BIOTAR_REFERENCE_WAVELENGTH)))
+    biotarprescription(1 ./ [c; c10], d, image; stop=gap2stop)
 end
 
-const BIOTAR_GLASS_THICKNESSES = (1, 3, 4, 6, 7, 9) # BIOTAR_THICKNESSES entries that are glass
-
 """
-    biotar_optimization(; rings = 8, image = 65.5) -> LensOptimizationProblem
+    biotar_optimization(; rings = 8, image = BIOTAR_IMAGE_DISTANCE) -> LensOptimizationProblem
 
 Zeiss's f/1.4 Biotar ([`biotar`](@ref)) as an optimization problem: 5 field points over a 17.3° half field, the
 silent-era 35mm cine full aperture (24.89 x 18.67mm) of the first f/1.4 Biotar (relative field heights 0, 0.3, 0.5, 0.7
@@ -249,9 +226,9 @@ Free (20 variables):
   to group 3, group 3 to group 4, and the last surface to the image;
 - the six glass thicknesses, each within 10% of the patent's.
 
-Glasses are fixed, the cemented doublets stay cemented, and the last curvature is set by a paraxial
-solve that keeps the focal length at the patent lens's, 99.9mm. The merit function returns NaN for a system whose
-surfaces cross, including a stop that a deep surface would reach through.
+Glasses are fixed, the cemented doublets stay cemented, and the last curvature is set by a paraxial solve that keeps the
+focal length at the patent lens's, 99.9mm. The merit function returns NaN for a system whose surfaces cross, including a
+stop that a deep surface would reach through.
 
 The clear apertures follow the design ([`OpticSim.passaxialbeam`](@ref)): each surface is at least large enough for the
 f/1.4 axial beam, so only the stop limits it and the optimizer can't stop the lens down with another surface. They never
@@ -264,21 +241,20 @@ surfaces 5 and 6 (f/1.43), trims the outermost ring.
 The starting point is the patent's lens with the distance from the last surface to the image `image`; see
 [`biotar_refocus_optimization`](@ref) for the patent's lens with only the image distance free.
 """
-function biotar_optimization(; rings=8, image=65.5)
-    c0 = 1 ./ BIOTAR_RADII[1:9]
+function biotar_optimization(; rings=8, image=BIOTAR_IMAGE_DISTANCE)
+    c0 = BIOTAR_CURVATURES[1:9]
     d = BIOTAR_THICKNESSES
-    stop = BIOTAR_STOP_FRACTION * d[5]
+    stop = BIOTAR_STOP_DISTANCE
     t0 = [d[i] for i in BIOTAR_GLASS_THICKNESSES]
     x0 = [c0; d[2]; stop; d[5] - stop; d[8]; image; t0]
     cmax = maxcurvature.(BIOTAR_SEMIDIAMETERS[1:9])
     cbounds = [(max(min(c - δ, c + δ), -m), min(max(c - δ, c + δ), m)) for (c, m) in zip(c0, cmax) for δ in (max(0.25abs(c), 0.002),)]
-    bounds = [cbounds; [(0.5, 5.0), (8.0, 18.0), (4.0, 14.0), (0.5, 5.0), (55.0, 75.0)]; [(0.9t, 1.1t) for t in t0]]
+    bounds = [cbounds; [(0.5, 5.0), (8.0, 18.0), (4.0, 14.0), (0.5, 5.0), BIOTAR_IMAGE_BOUNDS]; [(0.9t, 1.1t) for t in t0]]
     # x[15:17] are the glass thicknesses after surfaces 1, 3 and 4; x[10] the air space after surface 2; x[11] surface 5 to stop
     aimed(x) = biotarrays(rings; c=x[1:5], d=[x[15], x[10], x[16], x[17]], stop=x[11])
     rays = aimed(x0)
-    presc(x) = biotaroptimizationprescription(x)
-    build(x::AbstractVector{T}) where {T} = AxisymmetricOpticalSystem{T}(presc(x), 1, 1)
-    merit(x::AbstractVector{T}) where {T} = spotmerit(presc(x), aimed(x), T)
+    build(x::AbstractVector{T}) where {T} = AxisymmetricOpticalSystem{T}(biotaroptimizationprescription(x), 1, 1)
+    merit(x::AbstractVector{T}) where {T} = spotmerit(biotaroptimizationprescription(x), aimed(x), T)
     LensOptimizationProblem("Zeiss Biotar f/1.4 (Merté 1927)", BIOTAR_SOURCE,
         vcat(["curvature surface $i (1/mm)" for i in 1:9],
             ["group 1 to group 2 (mm)", "group 2 to the stop (mm)", "the stop to group 3 (mm)", "group 3 to group 4 (mm)",
@@ -286,6 +262,8 @@ function biotar_optimization(; rings=8, image=65.5)
             ["glass thickness after surface $i (mm)" for i in BIOTAR_GLASS_THICKNESSES]),
         x0, bounds, build, merit, BIOTAR_FIELDS, rays; aimedrays=aimed)
 end
+
+const BIOTAR_IMAGE_BOUNDS = (55.0, 75.0) # for the distance from the last surface to the image
 
 """
     biotar_refocus_optimization(; rings = 8) -> LensOptimizationProblem
@@ -296,20 +274,8 @@ distance.
 """
 function biotar_refocus_optimization(; rings=8)
     rays = biotarrays(rings)
-    presc(x) = passaxialbeam(biotarprescription(BIOTAR_RADII .* one(eltype(x)), BIOTAR_THICKNESSES .* one(eltype(x)), x[1]), 100 / 1.4 / 2, BIOTAR_WAVELENGTHS)
-    build(x::AbstractVector{T}) where {T} = AxisymmetricOpticalSystem{T}(presc(x), 1, 1)
-    merit(x::AbstractVector{T}) where {T} = spotmerit(presc(x), rays, T)
+    build(x::AbstractVector{T}) where {T} = AxisymmetricOpticalSystem{T}(biotarpatentprescription(x[1]), 1, 1)
+    merit(x::AbstractVector{T}) where {T} = spotmerit(biotarpatentprescription(x[1]), rays, T)
     LensOptimizationProblem("Zeiss Biotar f/1.4 (Merté 1927), refocused only", BIOTAR_SOURCE,
-        ["last surface to image (mm)"], [65.5], [(55.0, 75.0)], build, merit, BIOTAR_FIELDS, rays)
-end
-
-# Rays filling the f/1.4 entrance pupil for each field, at the F, d and C lines, from one emitter per field and
-# wavelength. The rays are aimed: the entrance pupil, the image of the stop through surfaces 1 to 5, is computed
-# paraxially for the given design (curvatures `c` of surfaces 1 to 5, thicknesses `d` after surfaces 1 to 4, and the
-# distance `stop` from surface 5 to the stop), so the beams follow the stop as it and the front groups change.
-function biotarrays(rings; c=1 ./ BIOTAR_RADII[1:5], d=BIOTAR_THICKNESSES[1:4], stop=BIOTAR_STOP_FRACTION * BIOTAR_THICKNESSES[5])
-    n = biotarindices(0.5876)
-    zpupil = entrancepupildistance(c, [d; stop], n[1:5])
-    # the pupil is inside the lens: start the rays 20mm in front of the first surface
-    [pupilrays(θ, 100 / 1.4, zpupil, BIOTAR_WAVELENGTHS, ones(3); rings, distance=zpupil + 20.0) for θ in BIOTAR_FIELDS]
+        ["last surface to image (mm)"], [BIOTAR_IMAGE_DISTANCE], [BIOTAR_IMAGE_BOUNDS], build, merit, BIOTAR_FIELDS, rays)
 end
