@@ -67,7 +67,7 @@ function singlet_optimization(; rings=6)
         "Singlet lens (Zemax tutorial)", SINGLET_SOURCE,
         ["front curvature (1/mm)", "center thickness (mm)", "back surface to image (mm)"],
         [0.001, 4.0, 100.0], [(0.001, 0.05), (2.0, 12.0), (50.0, 150.0)],
-        build, merit, SINGLET_FIELDS, rays)
+        build, merit, SINGLET_FIELDS, rays; prescription=presc)
 end
 
 """
@@ -90,7 +90,7 @@ function aspheric_singlet_optimization(; rings=6)
         ["front curvature (1/mm)", "center thickness (mm)", "back surface to image (mm)", "front conic",
             "front 4th order term (sag at edge, mm)", "front 6th order term (sag at edge, mm)"],
         [0.001, 4.0, 100.0, 0.0, 0.0, 0.0], [(0.001, 0.05), (2.0, 12.0), (50.0, 150.0), (-5.0, 1.0), (-1.0, 1.0), (-1.0, 1.0)],
-        build, merit, SINGLET_FIELDS, rays)
+        build, merit, SINGLET_FIELDS, rays; prescription=presc)
 end
 
 #############################################################################
@@ -148,7 +148,7 @@ function cooke40_optimization(; rings=6)
         "Cooke triplet, 40 degree field (Zemax sample)", COOKE40_SOURCE,
         vcat(["curvature surface $i (1/mm)" for i in 1:5], ["air gap lens 1 to 2 (mm)", "air gap lens 2 to 3 (mm)", "last surface to image (mm)"]),
         x0, [[(-c, c) for c in cmax]; [(1.0, 15.0), (1.0, 15.0), (30.0, 60.0)]],
-        build, merit, COOKE40_FIELDS, rays)
+        build, merit, COOKE40_FIELDS, rays; prescription=presc)
 end
 
 #############################################################################
@@ -191,7 +191,7 @@ function cooke_triplet_optimization(; rings=6)
     LensOptimizationProblem(
         "Cooke triplet (OpticSim cooketriplet)", "OpticSim's cooketriplet(); field, aperture and bounds chosen for this example",
         vcat(["curvature surface $i (1/mm)" for i in (1, 2, 3, 5, 6)], ["air gap lens 1 to 2 (mm)", "air gap lens 2 to 3 (mm)", "last surface to image (mm)"]),
-        x0, bounds, build, merit, [0.0, 5.0], rays)
+        x0, bounds, build, merit, [0.0, 5.0], rays; prescription=presc)
 end
 
 #############################################################################
@@ -260,7 +260,7 @@ function biotar_optimization(; rings=8, image=BIOTAR_IMAGE_DISTANCE)
             ["group 1 to group 2 (mm)", "group 2 to the stop (mm)", "the stop to group 3 (mm)", "group 3 to group 4 (mm)",
                 "last surface to image (mm)"],
             ["glass thickness after surface $i (mm)" for i in BIOTAR_GLASS_THICKNESSES]),
-        x0, bounds, build, merit, BIOTAR_FIELDS, rays; aimedrays=aimed)
+        x0, bounds, build, merit, BIOTAR_FIELDS, rays; aimedrays=aimed, prescription=biotaroptimizationprescription)
 end
 
 const BIOTAR_IMAGE_BOUNDS = (55.0, 75.0) # for the distance from the last surface to the image
@@ -277,5 +277,5 @@ function biotar_refocus_optimization(; rings=8)
     build(x::AbstractVector{T}) where {T} = AxisymmetricOpticalSystem{T}(biotarpatentprescription(x[1]), 1, 1)
     merit(x::AbstractVector{T}) where {T} = spotmerit(biotarpatentprescription(x[1]), rays, T)
     LensOptimizationProblem("Zeiss Biotar f/1.4 (Merté 1927), refocused only", BIOTAR_SOURCE,
-        ["last surface to image (mm)"], [BIOTAR_IMAGE_DISTANCE], [BIOTAR_IMAGE_BOUNDS], build, merit, BIOTAR_FIELDS, rays)
+        ["last surface to image (mm)"], [BIOTAR_IMAGE_DISTANCE], [BIOTAR_IMAGE_BOUNDS], build, merit, BIOTAR_FIELDS, rays; prescription=x -> biotarpatentprescription(x[1]))
 end
