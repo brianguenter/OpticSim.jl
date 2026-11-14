@@ -7,6 +7,7 @@ module OpticSim
 import Unitful
 using LinearAlgebra: eigen, svd, I, qr, dot, cross, norm, det, normalize, inv
 import LinearAlgebra
+import FastDifferentiation #sag surface derivatives (Geometry/SagCurvature.jl)
 
 using StaticArrays
 using DataFrames: DataFrame

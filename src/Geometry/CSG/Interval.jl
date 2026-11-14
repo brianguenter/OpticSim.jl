@@ -600,3 +600,12 @@ function Base.:*(transformation::Transform{T}, a::Interval{T}) where {T<:Real}
         end
     end
 end
+
+"""Copy of interval `a` with the [`surfaceid`](@ref) of its intersection end points set to `id`."""
+function withsurfaceid(a::Interval{T}, id::Int) where {T<:Real}
+    l = lower(a)
+    u = upper(a)
+    newl = l isa Intersection{T,3} ? withsurfaceid(l, id) : l
+    newu = u isa Intersection{T,3} ? withsurfaceid(u, id) : u
+    return Interval(newl, newu)
+end

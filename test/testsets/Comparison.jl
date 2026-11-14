@@ -240,7 +240,9 @@ end # testset Reflection
     res = trace(a, r5, test=true, trackrays=track)
     @test (res === nothing) # TIR
     # after TIR the ray reaches the lens edge, which absorbs it (it used to TIR off the absorbing edge too)
-    @test isapprox(point(track[end]), [6.2935706969201295, 6.3037855750348655, -4.298739183015263], rtol=COMP_TOLERANCE)
+    # reference updated when aspheric surfaces moved to the single Cartesian sag kernel (SagCurvature.jl): the
+    # last digits changed by 3e-14 relative, from the different floating point evaluation order
+    @test isapprox(point(track[end]), [6.293570696920151, 6.303785575034898, -4.298739183015141], rtol=COMP_TOLERANCE)
     @test isapprox(pathlength(track[end]), 41.75579529264225, rtol=COMP_TOLERANCE)
 
     a = TestData.zernikesystem()
