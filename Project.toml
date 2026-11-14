@@ -11,6 +11,7 @@ projects = ["OpticSim", "test", "docs", "Examples"]
 AGFFileReader = "36dd7d7d-c279-4b5c-a024-2ba417cea492"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+FastDifferentiation = "eb9bf01b-bf85-4b60-bf87-ee5de06c00be"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
@@ -24,6 +25,9 @@ Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
 OptimizationOptimJL = "36348300-93cb-4f02-beb5-3c3902f8871e"
 
+[sources]
+FastDifferentiation = {path = "../FastDifferentiation.jl"}
+
 [extensions]
 OpticSimForwardDiffExt = "ForwardDiff"
 OpticSimMakieExt = "Makie"
@@ -32,6 +36,7 @@ OpticSimOptimizationExt = ["Optimization", "OptimizationOptimJL", "ForwardDiff"]
 [compat]
 AGFFileReader = "1.2"
 DataFrames = "1.7"
+FastDifferentiation = "0.4.5"
 Distributions = "0.25"
 ForwardDiff = "0.10, 1"
 LinearAlgebra = "1.11"

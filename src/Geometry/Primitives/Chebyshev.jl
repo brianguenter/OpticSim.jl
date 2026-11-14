@@ -90,10 +90,10 @@ end
 end # module Chebyshev
 
 """
-    ChebyshevSurface{T,N,P,Q} <: ParametricSurface{T,N}
+    ChebyshevSurface{T,N,P,IJ} <: ParametricSurface{T,N}
 
 Rectangular surface incorporating Chebyshev polynomials as well as radius and conic terms.
-`T` is the datatype, `N` is the dimensionality, `P` is the number of Chebyshev terms in u and `Q` is the number of Chebyshev terms in v.
+`T` is the datatype, `N` is the dimensionality, `P` is the number of Chebyshev terms and `IJ` is the tuple of their `(i, j)` indices.
 
 The surface is centered at the origin and treated as being the cap of an infinite rectangular prism, thus creating a true half-space.
 **Note that the surface is vertically offset so that the center (i.e., `(u,v) == (0,0)`) lies at 0 on the z-axis.**
@@ -112,7 +112,7 @@ z(u,v) = \\frac{c(u^2 + v^2)^2}{1 + \\sqrt{1 - (1+k)c^2(u^2 + v^2)}} + \\sum_{i}
 
 where ``c = \\frac{1}{\\texttt{radius}}``, ``k = \\texttt{conic}`` and ``T_n`` is the nᵗʰ Chebyshev polynomial of the first kind.
 """
-struct ChebyshevSurface{T,N,P} <: ParametricSurface{T,N}
+struct ChebyshevSurface{T,N,P,IJ} <: ParametricSurface{T,N}
     halfsizeu::T
     halfsizev::T
     curvature::T
@@ -139,56 +139,50 @@ struct ChebyshevSurface{T,N,P} <: ParametricSurface{T,N}
             P = length(chebycoeff)
         end
         bounding_prism = BoundingBox(-halfsizeu, halfsizeu, -halfsizev, halfsizev, typemin(T), typemax(T))
-        return new{T,3,P}(halfsizeu, halfsizev, 1 / radius, conic, bounding_prism, SVector{P,Tuple{Int,Int,T}}(P === 0 ? [] : chebycoeff), offset)
+        coeffs = SVector{P,Tuple{Int,Int,T}}(P === 0 ? [] : chebycoeff)
+        IJ = Tuple((i, j) for (i, j, _) in coeffs) #(i, j) indices of the terms, used to generate the derivative code of `sag`
+        return new{T,3,P,IJ}(halfsizeu, halfsizev, 1 / radius, conic, bounding_prism, coeffs, offset)
     end
 end
 export ChebyshevSurface
 
-uvrange(::Type{ChebyshevSurface{T,N,P}}) where {T<:Real,N,P} = ((-one(T), one(T)), (-one(T), one(T)))
+uvrange(::Type{<:ChebyshevSurface{T,N,P}}) where {T<:Real,N,P} = ((-one(T), one(T)), (-one(T), one(T)))
 
 boundingobj(z::ChebyshevSurface{T}) where {T<:Real} = z.boundingprism
 halfsizeu(z::ChebyshevSurface{T}) where {T<:Real} = z.halfsizeu
 halfsizev(z::ChebyshevSurface{T}) where {T<:Real} = z.halfsizev
 
-function point(s::ChebyshevSurface{T,3,P}, u::T, v::T)::SVector{3,T} where {T<:Real,P}
-    x = u * s.halfsizeu
-    y = v * s.halfsizev
-    r2 = (x^2 + y^2)
-    q = (one(T) + s.conic) * s.curvature^2 * r2
-    if q > one(T)
-        return SVector{3,T}(NaN, NaN, NaN)
-    end
-    z = s.curvature * r2 / (one(T) + sqrt(one(T) - q))
-    @inbounds @simd for ci in 1:P
-        i, j, c = s.chebycoeff[ci]
-        z += c * Chebyshev.T(i, u) * Chebyshev.T(j, v)
-    end
-    return SVector{3,T}(x, y, z - s.offset)
-end
-
-function partials(s::ChebyshevSurface{T,3,P}, u::T, v::T)::Tuple{SVector{3,T},SVector{3,T}} where {T<:Real,P}
-    x = u * s.halfsizeu
-    y = v * s.halfsizev
+#=
+The shape of a ChebyshevSurface is defined once, by `sag` below, in Cartesian coordinates. `point`, `partials`, `normal`
+and `surfacecurvature` are derived from it (see SagCurvature.jl). `IJ` is the tuple of (i, j) indices of the Chebyshev
+terms. It is a type parameter so that derivative code can be generated once per term structure. Coefficients, in the
+order `sag` reads them: [curvature, conic, 1/halfsizeu, 1/halfsizev, offset, c₁, …, c_P]
+=#
+function sag(::Type{<:ChebyshevSurface{T,N,P,IJ}}, x, y, c) where {T,N,P,IJ}
     r2 = x^2 + y^2
-    t = one(T) - s.curvature^2 * (1 + s.conic) * r2
-    if t < zero(T)
-        return SVector{3,T}(NaN, NaN, NaN), SVector{3,T}(NaN, NaN, NaN)
+    curvature, conic = c[1], c[2]
+    h = curvature * r2 / (1 + sqrt(1 - (1 + conic) * curvature^2 * r2)) - c[5]
+    u = x * c[3]
+    v = y * c[4]
+    for k in 1:P
+        i, j = IJ[k]
+        h += c[5+k] * chebyshevT(i, u) * chebyshevT(j, v)
     end
-    q = s.curvature * sqrt(t) / t
-    dhdu = x * q * s.halfsizeu
-    dhdv = y * q * s.halfsizev
-    @inbounds @simd for k in s.chebycoeff
-        i, j, c = k
-        dhdu += c * Chebyshev.dTdq(i, u) * Chebyshev.T(j, v)
-        dhdv += c * Chebyshev.T(i, u) * Chebyshev.dTdq(j, v)
-    end
-    return SVector{3,T}(s.halfsizeu, 0.0, dhdu), SVector{3,T}(0.0, s.halfsizev, dhdv)
+    return h
 end
 
-function normal(s::ChebyshevSurface{T,3,P}, u::T, v::T)::SVector{3,T} where {T<:Real,P}
-    du, dv = partials(s, u, v)
-    return normalize(cross(du, dv))
+#Chebyshev polynomial of the first kind by its three term recurrence; branches only on the degree n, never on the value of q
+function chebyshevT(n::Int, q)
+    n == 0 && return one(q)
+    tₙ₋₁, tₙ = one(q), q
+    for _ in 2:n
+        tₙ₋₁, tₙ = tₙ, 2q * tₙ - tₙ₋₁
+    end
+    return tₙ
 end
+
+sagcoefficients(s::ChebyshevSurface{T,N,P}) where {T,N,P} = SVector{5 + P,T}(s.curvature, s.conic, inv(s.halfsizeu), inv(s.halfsizev), s.offset, map(t -> t[3], s.chebycoeff)...)
+sagdefined(s::ChebyshevSurface, r2) = conicdefined(s.curvature, s.conic, r2)
 
 function uv(s::ChebyshevSurface{T,3,P}, p::SVector{3,T}) where {T<:Real,P}
     return SVector{2,T}(p[1] / s.halfsizeu, p[2] / s.halfsizev)
@@ -217,7 +211,7 @@ end
 #########################################################################################################
 
 # Assumes the ray has been transformed into the canonical coordinate frame which has the vertical axis passing through (0,0,0) and aligned with the z axis.
-function surfaceintersection(surf::AcceleratedParametricSurface{T,3,ChebyshevSurface{T,3,P}}, r::AbstractRay{T,3}) where {T<:Real,P}
+function surfaceintersection(surf::AcceleratedParametricSurface{T,3,<:ChebyshevSurface{T,3,P}}, r::AbstractRay{T,3}) where {T<:Real,P}
     bboxint = surfaceintersection(surf.surface.boundingprism, r)
     if isemptyinterval(bboxint)
         return EmptyInterval(T)
@@ -269,3 +263,4 @@ function BoundingBox(surf::ChebyshevSurface{T,3,P}) where {T<:Real,P}
     end
     return BoundingBox(xmin, xmax, ymin, ymax, zmin, zmax)
 end
+nsagcoefficients(::Type{<:ChebyshevSurface{T,N,P}}) where {T,N,P} = 5 + P

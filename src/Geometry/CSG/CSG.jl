@@ -62,6 +62,10 @@ struct IntersectionNode{T,L<:CSGTree{T},R<:CSGTree{T}} <: CSGTree{T}
 end
 Base.show(io::IO, a::IntersectionNode{T}) where {T} = print(io, "Intersection($(a.leftchild), $(a.rightchild))")
 
+#source of unique LeafNode ids; 0 is reserved for intersections that did not come from a leaf
+const LEAFNODE_IDS = Threads.Atomic{Int}(0)
+nextleafid() = Threads.atomic_add!(LEAFNODE_IDS, 1) + 1
+
 """
     LeafNode{T,S<:ParametricSurface{T}} <: CSGTree{T}
 
@@ -69,16 +73,19 @@ An evaluated leaf node in the CSG tree, `geometry` attribute which contains a [`
 The leaf node also has a transform associated which is the composition of all nodes above it in the tree.
 As such, transforming points from the geometry using this transform puts them in world space, and transforming rays by
 the inverse transform puts them in object space.
+
+Every leaf has a unique `id`, and the intersections it returns carry that id as their [`surfaceid`](@ref).
 """
 struct LeafNode{T,S<:ParametricSurface{T,3}} <: CSGTree{T}
     geometry::S
     transform::Transform{T}
     invtransform::Transform{T}
     bbox::BoundingBox{T}
+    id::Int
 
     function LeafNode(a::S, transform::Transform{T}) where {T<:Real,S<:ParametricSurface{T,3}}
         # store the transformed bounding box so nodes higher in the tree have correct global space bounding boxes
-        return new{T,S}(a, transform, inv(transform), BoundingBox(a, transform))
+        return new{T,S}(a, transform, inv(transform), BoundingBox(a, transform), nextleafid())
     end
 end
 function Base.show(io::IO, a::LeafNode{T}) where {T}
@@ -267,11 +274,12 @@ function evalcsg(a::LeafNode{T}, ray::AbstractRay{T,N}, normalreverse::Bool = fa
         if normalreverse
             intscts = reversenormal(intscts)
         end
+        # world space intervals, with the end points tagged with this leaf's id
         if intscts isa Interval{T}
-            return a.transform * intscts
+            return withsurfaceid(a.transform * intscts, a.id)
         elseif intscts isa DisjointUnion{T}
             for i in eachindex(intervals(intscts))
-                intervals(intscts)[i] = a.transform * intervals(intscts)[i]
+                intervals(intscts)[i] = withsurfaceid(a.transform * intervals(intscts)[i], a.id)
             end
             return intscts
         else

@@ -57,6 +57,9 @@ include("Primitives/Qtype.jl")
 include("Primitives/Chebyshev.jl")
 include("Primitives/GridSag.jl")
 
+# derivatives of the sag surfaces above; must come after every `sag` method because it generates code from them
+include("SagCurvature.jl")
+
 include("AnalyticIntersection.jl")
 include("SphericalPolygon.jl")
 

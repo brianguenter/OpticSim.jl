@@ -147,81 +147,34 @@ const PRECOMP_B = Matrix{Float64}(reshape(collect(B(m, n, true) for n in 0:(QTYP
 const PRECOMP_C = Matrix{Float64}(reshape(collect(C(m, n, true) for n in 0:(QTYPE_PRECOMP-1) for m in 1:QTYPE_PRECOMP), (QTYPE_PRECOMP, QTYPE_PRECOMP)))
 
 """
-    S(coeffs::SVector{NP1,T}, m::Int x::T) -> T
+    S(c, offset, NP1, m, x)
 
-Evaluates ``\\sum_{n=0}^{N}c_n^mQ_n^m(x)`` where ``c_n^m`` is either an ``\\alpha`` or ``\\beta`` QType coefficient and ``m \\gt 0``.
+Evaluates ``\\sum_{n=0}^{N}c_n^mQ_n^m(x)`` where ``c_n^m = c[offset + n + 1]`` is either an ``\\alpha`` or ``\\beta`` QType
+coefficient, ``N = NP1 - 1`` and ``m \\gt 0``. Generic in the number type and without branches on values, so it can be
+differentiated symbolically (see SagCurvature.jl).
 """
-function S(coeffs::SVector{NP1,T}, m::Int, x::T)::T where {T<:Real,NP1}
+function S(c, offset::Int, NP1::Int, m::Int, x)
     @assert m > 0
-    if all(iszero.(coeffs))
-        return zero(T)
+    N = NP1 - 1
+    if N == 0
+        return c[offset+1]
     end
-    N = NP1 - 1 # offset for indexing
-    if N === 0
-        return coeffs[1]
-    end
-    αₙ₊₂ = zero(T)
-    αₙ₊₁ = zero(T)
-    αₙ = zero(T)
-    @inbounds for n in N:-1:0
+    αₙ₊₂ = zero(x)
+    αₙ₊₁ = zero(x)
+    αₙ = zero(x)
+    for n in N:-1:0
         # 2 eq B.6
-        αₙ = coeffs[n+1] + (A(m, n) + B(m, n) * x) * αₙ₊₁ - C(m, n + 1) * αₙ₊₂
+        αₙ = c[offset+n+1] + (A(m, n) + B(m, n) * x) * αₙ₊₁ - C(m, n + 1) * αₙ₊₂
         if n > 0
             αₙ₊₂ = αₙ₊₁
             αₙ₊₁ = αₙ
         end
     end
     # 2 eq B.9
-    if m === 1 && N > 2
+    if m == 1 && N > 2
         return αₙ / 2 - 2 / 5 * αₙ₊₂
     else
         return αₙ / 2
-    end
-end
-
-"""
-    dSdx(coeffs::SVector{NP1,T}, x::T) -> T
-
-Evaluates ``\\frac{\\partial}{\\partial x}\\sum_{n=0}^{N}c_n^mQ_n^m(x)`` where ``c_n^m`` is either an ``\\alpha`` or ``\\beta`` QType coefficient and ``m \\gt 0``.
-"""
-function dSdx(coeffs::SVector{NP1,T}, m::Int, x::T)::T where {T<:Real,NP1}
-    @assert m > 0
-    if all(iszero.(coeffs))
-        return zero(T)
-    end
-    N = NP1 - 1 # offset for indexing
-    if N === 0
-        return zero(T)
-    end
-    αₙ₊₂ = zero(T)
-    αₙ₊₁ = zero(T)
-    dαₙ₊₂ = zero(T)
-    dαₙ₊₁ = zero(T)
-    dαₙ = zero(T)
-    @inbounds for n in N:-1:0
-        # calculate deriv
-        Bmn = B(m, n)
-        k = (A(m, n) + Bmn * x)
-        Cmnp1 = C(m, n + 1)
-        if n < N # derivative calculated from N-1 to 0, so ignore first iteration
-            # 2 eq B.11
-            dαₙ = Bmn * αₙ₊₁ + k * dαₙ₊₁ - Cmnp1 * dαₙ₊₂
-            if n > 0
-                dαₙ₊₂ = dαₙ₊₁
-                dαₙ₊₁ = dαₙ
-            end
-        end
-        # calculate height for use in next iter deriv
-        # 2 eq B.6
-        αₙ = coeffs[n+1] + k * αₙ₊₁ - Cmnp1 * αₙ₊₂
-        αₙ₊₂ = αₙ₊₁
-        αₙ₊₁ = αₙ
-    end
-    # 2 eq B.10
-    if m === 1 && N > 2
-        return dαₙ / 2 - 2 / 5 * dαₙ₊₂
-    else
-        return dαₙ / 2
     end
 end
 
@@ -265,64 +218,29 @@ const PRECOMP_f0 = Vector{Float64}(collect(f0(n, true) for n in 0:(QTYPE_PRECOMP
 const PRECOMP_h0 = Vector{Float64}(collect(h0(n, true) for n in 0:(QTYPE_PRECOMP-1)))
 
 """
-    S0(coeffs::SVector{NP1,T}, x::T) -> T
+    S0(c, offset, NP1, x)
 
-Evaluates ``\\sum_{n=0}^{N}\\alpha_n^0Q_n^0(x)``.
+Evaluates ``\\sum_{n=0}^{N}\\alpha_n^0Q_n^0(x)`` where ``\\alpha_n^0 = c[offset + n + 1]`` and ``N = NP1 - 1``. Generic in the
+number type and without branches on values, so it can be differentiated symbolically (see SagCurvature.jl).
 """
-function S0(coeffs::SVector{NP1,T}, x::T)::T where {T<:Real,NP1}
-    if all(iszero.(coeffs))
-        return zero(T)
+function S0(c, offset::Int, NP1::Int, x)
+    N = NP1 - 1
+    if N == 0
+        return c[offset+1]
     end
-    N = NP1 - 1 # offset for indexing
-    if N === 0
-        return coeffs[1]
-    end
-    k = T(2) - 4 * x
+    k = 2 - 4 * x
     # 1 eq 3.7a
-    αₙ₊₂ = coeffs[N+1]
+    αₙ₊₂ = c[offset+N+1]
     # 1 eq 3.7b
-    αₙ₊₁ = coeffs[N] + k * αₙ₊₂
+    αₙ₊₁ = c[offset+N] + k * αₙ₊₂
     for n in (N-2):-1:0
         # 1 eq 3.8
-        αₙ = coeffs[n+1] + k * αₙ₊₁ - αₙ₊₂
+        αₙ = c[offset+n+1] + k * αₙ₊₁ - αₙ₊₂
         αₙ₊₂ = αₙ₊₁
         αₙ₊₁ = αₙ
     end
     # 1 eq 3.9
     return 2 * (αₙ₊₁ + αₙ₊₂) # a0 and a1
-end
-
-"""
-    dS0dx(coeffs::SVector{NP1,T}, x::T) -> T
-
-Evaluates ``\\frac{\\partial}{\\partial x}\\sum_{n=0}^{N}\\alpha_n^0Q_n^0(x)``.
-"""
-function dS0dx(coeffs::SVector{NP1,T}, x::T)::T where {T<:Real,NP1}
-    if all(iszero.(coeffs))
-        return zero(T)
-    end
-    N = NP1 - 1 # offset for indexing
-    if N == 0
-        return zero(T)
-    end
-    k = T(2) - 4 * x
-    αₙ₊₂ = coeffs[N+1]
-    αₙ₊₁ = coeffs[N] + k * αₙ₊₂
-    # 1 eq 3.10a
-    dαₙ₊₂ = zero(T)
-    # 1 eq 3.10b
-    dαₙ₊₁ = -4 * αₙ₊₂
-    for n in (N-2):-1:0
-        # 1 eq 3.11
-        dαₙ = k * dαₙ₊₁ - dαₙ₊₂ - 4 * αₙ₊₁
-        dαₙ₊₂ = dαₙ₊₁
-        dαₙ₊₁ = dαₙ
-        αₙ = coeffs[n+1] + k * αₙ₊₁ - αₙ₊₂
-        αₙ₊₂ = αₙ₊₁
-        αₙ₊₁ = αₙ
-    end
-    # 1 eq 3.12
-    return 2 * (dαₙ₊₁ + dαₙ₊₂) # a0 and a1
 end
 
 ########################################
@@ -536,99 +454,44 @@ uvrange(::Type{QTypeSurface{T,D,M,N}}) where {T<:Real,D,M,N} = ((zero(T), one(T)
 
 semidiameter(z::QTypeSurface{T}) where {T<:Real} = z.semidiameter
 
-function point(z::QTypeSurface{T,3,M,N}, ρ::T, θ::T)::SVector{3,T} where {T<:Real,M,N}
-    rad = z.semidiameter
-    r = ρ * rad
-    # ρ is normalised [0, 1]
-    # r is absolute
-    r2 = r^2
-    ρ2 = ρ^2
+#=
+The shape of a QTypeSurface is defined once, by `sag` below, in Cartesian coordinates. `point`, `partials`, `normal` and
+`surfacecurvature` are derived from it (see SagCurvature.jl). Coefficients, in the order `sag` reads them:
+[curvature, conic, 1/normradius, b0coeffs (NP1), dαcoeffs[1] (NP1), dβcoeffs[1] (NP1), …, dαcoeffs[M], dβcoeffs[M]]
+=#
+function sag(::Type{<:QTypeSurface{T,D,M,NP1}}, x, y, c) where {T,D,M,NP1}
+    r2 = x^2 + y^2
+    curvature, conic, invnormradius = c[1], c[2], c[3]
+    c2 = curvature^2
+    sqrtq = sqrt(1 - (1 + conic) * c2 * r2)
+    h = curvature * r2 / (1 + sqrtq)
+    if NP1 == 0 #no polynomial terms; structural, decided by the type
+        return h
+    end
+    ux = x * invnormradius
+    uy = y * invnormradius
+    u2 = ux^2 + uy^2
+    # 2 eq B.1
+    total = u2 * (1 - u2) * QType.S0(c, 3, NP1, u2)
+    re, im = one(ux), zero(ux) #uᵐcos(mθ), uᵐsin(mθ) = Re, Im of (ux + i uy)ᵐ
+    for m in 1:M
+        re, im = re * ux - im * uy, re * uy + im * ux
+        offset = 3 + NP1 + 2 * (m - 1) * NP1
+        total += re * QType.S(c, offset, NP1, m, u2) + im * QType.S(c, offset + NP1, NP1, m, u2)
+    end
+    return h + sqrt(1 + conic * c2 * r2) / sqrtq * total
+end
+
+function sagcoefficients(z::QTypeSurface{T,D,M,NP1}) where {T,D,M,NP1}
+    head = SVector{3,T}(z.curvature, z.conic, inv(z.normradius))
+    terms = ntuple(m -> vcat(z.dαcoeffs[m], z.dβcoeffs[m]), Val(M))
+    return vcat(head, z.b0coeffs, terms...)
+end
+
+#the conic and polynomial prefactor square roots are real inside this radius; outside it the surface is undefined and point returns NaN
+function sagdefined(z::QTypeSurface{T,D,M,NP1}, r2) where {T,D,M,NP1}
     c2 = z.curvature^2
-    q = (one(T) + z.conic) * c2 * r2
-    if q > one(T)
-        return SVector{3,T}(NaN, NaN, NaN)
-    end
-    sqrtq = sqrt(one(T) - q)
-    h = z.curvature * r2 / (one(T) + sqrtq)
-    if N > 0
-        # 2 eq B.1
-        p = one(T) + z.conic * c2 * r2
-        if p < zero(T)
-            return SVector{3,T}(NaN, NaN, NaN)
-        end
-        u = ρ * rad / z.normradius
-        u2 = u^2
-        tot = u2 * (one(T) - u2) * QType.S0(z.b0coeffs, u2)
-        @inbounds @simd for m in 1:M
-            tot += u^m * (cos(m * θ) * QType.S(z.dαcoeffs[m], m, u2)::T + sin(m * θ) * QType.S(z.dβcoeffs[m], m, u2)::T)
-        end
-        h += (sqrt(p) / sqrtq) * tot
-    end
-    return SVector{3,T}(r * cos(θ), r * sin(θ), h)
-end
-
-function partials(z::QTypeSurface{T,3,M,N}, ρ::T, θ::T)::Tuple{SVector{3,T},SVector{3,T}} where {T<:Real,M,N}
-    rad = z.semidiameter
-    r = ρ * rad
-    # ρ is normalised [0, 1]
-    # r is absolute
-    r2 = r^2
-    ρ2 = ρ^2
-    k = z.conic
-    c = z.curvature
-    c2 = c^2
-    q = (one(T) + k) * c2 * r2
-    if q > one(T)
-        return SVector{3,T}(NaN, NaN, NaN), SVector{3,T}(NaN, NaN, NaN)
-    end
-    sqrtq = sqrt(one(T) - q)
-    dhdρ = -((rad * c * r * sqrtq) / (q - one(T)))
-    dhdθ = zero(T)
-    if N > 0
-        p = one(T) + k * c2 * r2
-        if p < zero(T)
-            return SVector{3,T}(NaN, NaN, NaN), SVector{3,T}(NaN, NaN, NaN)
-        end
-        sqrtp = sqrt(p)
-        a = sqrtp / sqrtq
-        dadρ = (c2 * (2k + one(T)) * rad * r) / (sqrtp * sqrtq^3)
-        n = rad / z.normradius
-        u = ρ * n
-        u2 = u^2
-        S0v = QType.S0(z.b0coeffs, u2)::T
-        b = u2 * (one(T) - u2) * S0v
-        dbdu = 2 * u * (one(T) - 2 * u2) * S0v + 2 * u^3 * (one(T) - u2) * QType.dS0dx(z.b0coeffs, u2)::T
-        c = zero(T)
-        dcdu = zero(T)
-        if M > 0
-            @inbounds @simd for m in 1:M
-                Sα = QType.S(z.dαcoeffs[m], m, u2)::T
-                Sβ = QType.S(z.dβcoeffs[m], m, u2)::T
-                sinmθ = sin(m * θ)
-                cosmθ = cos(m * θ)
-                dhdθ += u^m * m * (-sinmθ * Sα + cosmθ * Sβ)
-                c += u^m * (cosmθ * Sα + sinmθ * Sβ)
-                dcdu += u^(m - 1) * (m * (cosmθ * Sα + sinmθ * Sβ) + 2 * u2 * (cosmθ * QType.dSdx(z.dαcoeffs[m], m, u2)::T + sinmθ * QType.dSdx(z.dβcoeffs[m], m, u2)::T))
-            end
-        end
-        dhdθ *= a
-        dhdρ += dadρ * (b + c) + a * n * (dbdu + dcdu) # want the derivative wrt ρ, not u
-    end
-    cosθ = cos(θ)
-    sinθ = sin(θ)
-    pu = SVector{3,T}(rad * cosθ, rad * sinθ, dhdρ)
-    pv = SVector{3,T}(r * -sinθ, r * cosθ, dhdθ)
-    return pu, pv
-end
-
-function normal(z::QTypeSurface{T,D,M,N}, ρ::T, θ::T)::SVector{3,T} where {T<:Real,D,M,N}
-    du, dv = partials(z, ρ, θ)
-    if ρ == zero(T) && norm(dv) == zero(T)
-        # in cases where there is no δθ at ρ = 0 (i.e. anything which is rotationally symmetric)
-        # then we get some big problems, hardcoding this case solves the problems
-        return SVector{3,T}(0, 0, 1)
-    end
-    return normalize(cross(du, dv))
+    return (1 + z.conic) * c2 * r2 <= 1 && (NP1 == 0 || 1 + z.conic * c2 * r2 >= 0)
 end
 
 function uv(z::QTypeSurface{T,3,M,N}, p::SVector{3,T})::SVector{2,T} where {T<:Real,M,N}

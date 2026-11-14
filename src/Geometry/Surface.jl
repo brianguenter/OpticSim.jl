@@ -76,9 +76,44 @@ onsurface(surface::ParametricSurface{T,N}, p::SVector{N,T}) -> Bool
 surfaceintersection(surface::ParametricSurface{T,N}, AbstractRay::Ray{T,N}) -> Union{EmptyInterval{T},Interval{T},DisjointUnion{T}}
 interface(surface::ParametricSurface{T,N}) -> OpticalInterface{T}
 ```
+
+**Must** implement the following to be used with Gaussian beams, whose wavefront curvature is
+refracted and reflected at each surface:
+```julia
+surfacecurvature(surface::ParametricSurface{T,3}, p::SVector{3,T}) -> NamedTuple{(:normal, :d1, :d2, :C)}
+```
+See [`surfacecurvature`](@ref) for the definition and sign convention.
 """
 abstract type ParametricSurface{S<:Real,N} <: Surface{S} end
 export ParametricSurface, point, partials, uvrange, inside, onsurface, uv
+
+"""
+    surfacecurvature(surface::ParametricSurface{T,3}, p::SVector{3,T}) -> (normal, d1, d2, C)
+
+Local second-order geometry of `surface` at the point `p`, which is on the surface and expressed in
+the surface's local coordinate frame. Gaussian beam tracing uses it to refract and reflect the
+wavefront curvature at each surface (the generalized Coddington / Stavroudis equations).
+
+Returns a `NamedTuple` with fields:
+- `normal::SVector{3,T}`: unit normal, pointing to the outside of the surface (the same orientation
+  as [`normal`](@ref)).
+- `d1::SVector{3,T}`, `d2::SVector{3,T}`: orthonormal tangent vectors with `d1 × d2 == normal`.
+- `C::SMatrix{2,2,T}`: the symmetric curvature matrix (shape operator) in the `(d1, d2)` basis,
+  `C[i,j] = normal ⋅ ∂²S/∂sᵢ∂sⱼ`, where `s₁, s₂` are arclength coordinates along `d1, d2`.
+  Eigenvalues are the principal curvatures, eigenvectors the principal directions.
+
+Sign convention: `C` is positive in a direction where the surface bends toward the side `normal`
+points to. A convex sphere of radius `R` with an outward normal has `C = -(1/R) I`.
+
+The result is in the surface's local frame. Callers transform `normal`, `d1` and `d2` to world
+coordinates; `C` is unchanged by rigid transforms.
+
+Sag surfaces z = h(x, y) implement this with a FastDifferentiation function of `(x, y)`, with the
+surface coefficients as runtime inputs. The function is compiled once per surface type and order,
+so changing coefficients during optimization does not recompile it.
+"""
+function surfacecurvature end
+export surfacecurvature
 
 # all subclasses must implement one of these at least...
 """

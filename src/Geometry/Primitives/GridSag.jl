@@ -214,17 +214,6 @@ end
     return SMatrix{4,4,T,16}(1, 0, -3, 2, 0, 0, 3, -2, 0, 1, -2, 1, 0, 0, -1, 1) * SMatrix{4,4,T,16}(f00, f10, fu00, fu10, f01, f11, fu01, fu11, fv00, fv10, fuv00, fuv10, fv01, fv11, fuv01, fuv11) * SMatrix{4,4,T,16}(1, 0, 0, 0, 0, 0, 1, 0, -3, 3, -2, -1, 2, -2, 1, 1)
 end
 
-@inline function bicubicζ(surf::GridSagSurface{T,3,S,Nu,Nv}, uli::Int, uui::Int, vli::Int, vui::Int, κ::T, γ::T) where {T<:Real,S,Nu,Nv}
-    return (SMatrix{1,4,T,4}(1, κ, κ^2, κ^3)*bicubicα(surf, uli, uui, vli, vui)*SMatrix{4,1,T,4}(1, γ, γ^2, γ^3))[1]
-end
-
-@inline function bicubicdζ(surf::GridSagSurface{T,3,S,Nu,Nv}, uli::Int, uui::Int, vli::Int, vui::Int, κ::T, γ::T) where {T<:Real,S,Nu,Nv}
-    α = bicubicα(surf, uli, uui, vli, vui)
-    dκ = (SMatrix{1,4,T,4}(0, 1, 2κ, 3κ^2)*α*SMatrix{4,1,T,4}(1, γ, γ^2, γ^3))[1]
-    dγ = (SMatrix{1,4,T,4}(1, κ, κ^2, κ^3)*α*SMatrix{4,1,T,4}(0, 1, 2γ, 3γ^2))[1]
-    return dκ, dγ
-end
-
 @inline function normalizedcoords(Nu::Int, Nv::Int, u::T, v::T, decenter::Tuple{T,T}) where {T<:Real}
     u = u - decenter[1]
     v = v - decenter[2]
@@ -239,73 +228,56 @@ end
     return uli, uui, vli, vui, κ, γ
 end
 
-@inline function ζ(surf::GridSagSurface{T,3,S,Nu,Nv}, u::T, v::T) where {T<:Real,S,Nu,Nv}
-    uli, uui, vli, vui, κ, γ = normalizedcoords(Nu, Nv, u, v, surf.decenteruv)
-    if surf.interpolation === GridSagLinear
-        sagll = gridsag(surf, uli, vli, 1)
-        saglu = gridsag(surf, uli, vui, 1)
-        sagul = gridsag(surf, uui, vli, 1)
-        saguu = gridsag(surf, uui, vui, 1)
-        z = κ * (γ * saguu + (1 - γ) * sagul) + (1 - κ) * (γ * saglu + (1 - γ) * sagll)
-    elseif surf.interpolation === GridSagBicubic
-        z = bicubicζ(surf, uli, uui, vli, vui, κ, γ)
+#=
+The shape of a GridSagSurface is the sag of its base surface plus a polynomial in the grid cell coordinates κ, γ. Within one
+grid cell κ and γ are affine in x and y, so every cell has the fixed form of `sag(::Type{GridSagCell{S}}, …)` below, with the
+cell's data as runtime coefficients. `sagkernel` picks the cell that contains (x, y). `point`, `partials`, `normal` and
+`surfacecurvature` are derived from it (see SagCurvature.jl). Coefficients, in the order `sag` reads them:
+[base surface coefficients (nsagcoefficients(S) of them), κx, κ0, γy, γ0, α], with κ = κx x + κ0, γ = γy y + γ0 and α the
+4×4 cell matrix in column major order: sag = base + Σᵢⱼ κⁱ⁻¹ αᵢⱼ γʲ⁻¹. Bicubic interpolation uses the full α. Bilinear
+interpolation is the special case
+    κ(γ s_uu + (1-γ) s_ul) + (1-κ)(γ s_lu + (1-γ) s_ll) = s_ll + κ(s_ul - s_ll) + γ(s_lu - s_ll) + κγ(s_uu - s_ul - s_lu + s_ll)
+so both modes share one kernel type, and the kernel type does not depend on runtime data.
+=#
+"""Kernel type for the sag of one grid cell of a [`GridSagSurface`](@ref) with base surface type `S`."""
+struct GridSagCell{S} end
+
+function sag(::Type{GridSagCell{S}}, x, y, c) where {S}
+    K = nsagcoefficients(S)
+    h = sag(S, x, y, c) #reads c[1:K]
+    κ = x * c[K+1] + c[K+2]
+    γ = y * c[K+3] + c[K+4]
+    κpow = (one(κ), κ, κ^2, κ^3)
+    γpow = (one(γ), γ, γ^2, γ^3)
+    for j in 1:4, i in 1:4
+        h += κpow[i] * c[K+4+i+4*(j-1)] * γpow[j]
     end
-    return z
+    return h
 end
 
-@inline function dζ(surf::GridSagSurface{T,3,S,Nu,Nv}, u::T, v::T) where {T<:Real,S,Nu,Nv}
-    uli, uui, vli, vui, κ, γ = normalizedcoords(Nu, Nv, u, v, surf.decenteruv)
-    # calculate sag derivative at point
-    if surf.interpolation === GridSagLinear
-        sagll = gridsag(surf, uli, vli, 1)
-        saglu = gridsag(surf, uli, vui, 1)
-        sagul = gridsag(surf, uui, vli, 1)
-        saguu = gridsag(surf, uui, vui, 1)
-        dζdκ = (γ * saguu + (1 - γ) * sagul) - (γ * saglu + (1 - γ) * sagll)
-        dζdγ = (κ * saguu + (1 - κ) * saglu) - (κ * sagul + (1 - κ) * sagll)
-        # NOT C1 CONTINUOUS!!!
-    elseif surf.interpolation === GridSagBicubic
-        dζdκ, dζdγ = bicubicdζ(surf, uli, uui, vli, vui, κ, γ)
-        # C1 continuous, but not C2 continuous (at grid boundaries)
+sagsmooth(::Type{GridSagCell{S}}) where {S} = sagsmooth(S)
+
+function sagkernel(surf::GridSagSurface{T,3,S,Nu,Nv}, x, y) where {T,S,Nu,Nv}
+    su = inv(halfsizeu(surf.basesurface))
+    sv = inv(halfsizev(surf.basesurface))
+    uli, uui, vli, vui, _, _ = normalizedcoords(Nu, Nv, x * su, y * sv, surf.decenteruv)
+    du, dv = surf.decenteruv
+    affine = SVector{4,T}(su * (Nu - 1) / 2, (1 - du) * (Nu - 1) / 2 - uli, sv * (Nv - 1) / 2, (1 - dv) * (Nv - 1) / 2 - vli)
+    if surf.interpolation === GridSagBicubic
+        α = vec(bicubicα(surf, uli, uui, vli, vui))
+    else
+        sll, slu = gridsag(surf, uli, vli, 1), gridsag(surf, uli, vui, 1)
+        sul, suu = gridsag(surf, uui, vli, 1), gridsag(surf, uui, vui, 1)
+        z = zero(T)
+        α = SVector{16,T}(sll, sul - sll, z, z, slu - sll, suu - sul - slu + sll, z, z, z, z, z, z, z, z, z, z)
     end
-    # change variables
-    dζdu = dζdκ * (Nu - 1) / 2
-    dζdv = dζdγ * (Nv - 1) / 2
-    return dζdu, dζdv
+    return GridSagCell{S}, vcat(sagcoefficients(surf.basesurface), affine, α)
 end
 
-function point(surf::GridSagSurface{T,3,S}, ρ::T, ϕ::T)::SVector{3,T} where {T<:Real,S<:ZernikeSurface{T,3}}
-    x, y, z = point(surf.basesurface, ρ, ϕ)
-    u = ρ * cos(ϕ)
-    v = ρ * sin(ϕ)
-    return SVector{3,T}(x, y, z + ζ(surf, u, v))
-end
-
-function point(surf::GridSagSurface{T,3,S}, u::T, v::T)::SVector{3,T} where {T<:Real,S<:ChebyshevSurface{T,3}}
-    x, y, z = point(surf.basesurface, u, v)
-    return SVector{3,T}(x, y, z + ζ(surf, u, v))
-end
-
-function partials(surf::GridSagSurface{T,3,S}, ρ::T, ϕ::T)::Tuple{SVector{3,T},SVector{3,T}} where {T<:Real,S<:ZernikeSurface{T,3}}
-    pρ, pϕ = partials(surf.basesurface, ρ, ϕ)
-    u = ρ * cos(ϕ)
-    v = ρ * sin(ϕ)
-    dζdu, dζdv = dζ(surf, u, v)
-    dζdρ = dζdu * cos(ϕ) + dζdv * sin(ϕ)
-    dζdϕ = dζdv * u - dζdu * v
-    return SVector{3,T}(pρ[1], pρ[2], pρ[3] + dζdρ), SVector{3,T}(pϕ[1], pϕ[2], pϕ[3] + dζdϕ)
-end
-
-function partials(surf::GridSagSurface{T,3,S}, u::T, v::T)::Tuple{SVector{3,T},SVector{3,T}} where {T<:Real,S<:ChebyshevSurface{T,3}}
-    pu, pv = partials(surf.basesurface, u, v)
-    du, dv = dζ(surf, u, v)
-    return SVector{3,T}(pu[1], pu[2], pu[3] + du), SVector{3,T}(pv[1], pv[2], pv[3] + dv)
-end
-
-function normal(z::GridSagSurface{T,N}, u::T, v::T)::SVector{N,T} where {T<:Real,N}
-    du, dv = partials(z, u, v)
-    return normalize(cross(du, dv))
-end
+semidiameter(surf::GridSagSurface) = semidiameter(surf.basesurface)
+halfsizeu(surf::GridSagSurface) = halfsizeu(surf.basesurface)
+halfsizev(surf::GridSagSurface) = halfsizev(surf.basesurface)
+sagdefined(surf::GridSagSurface, r2) = sagdefined(surf.basesurface, r2)
 
 uv(s::GridSagSurface{T,3}, p::SVector{3,T}) where {T<:Real} = uv(s.basesurface, p)
 

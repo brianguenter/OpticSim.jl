@@ -137,7 +137,7 @@ function surfaceintersection(l::ParaxialLens{T}, r::AbstractRay{T,3}) where {T<:
     else
         intsct = halfspaceintersection(itvl)
         u, v = uv(intsct)
-        intsct = Intersection(α(intsct), point(intsct), normal(intsct), u, v, interface(l), flippednormal(intsct))
+        intsct = Intersection(α(intsct), point(intsct), normal(intsct), u, v, interface(l), flippednormal(intsct), surfaceid(intsct))
         return positivehalfspace(intsct)
     end
 end

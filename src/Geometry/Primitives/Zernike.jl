@@ -116,10 +116,10 @@ Either `ZernikeIndexingOSA` or `ZernikeIndexingNoll`, see [Zernike polynomials w
 export ZernikeIndexType, ZernikeIndexingOSA, ZernikeIndexingNoll
 
 """
-    ZernikeSurface{T,N,P,Q,M} <: ParametricSurface{T,N}
+    ZernikeSurface{T,N,P,Q,M,Z} <: ParametricSurface{T,N}
 
 Surface incorporating the Zernike polynomials - radius, conic and aspherics are defined relative to absolute semi-diameter, Zernike terms are normalized according to the `normradius` parameter.
-`T` is the datatype, `N` is the dimensionality, `P` is the number of Zernike terms, `Q` is the number of aspheric terms and `M` is the Aspheric Type.
+`T` is the datatype, `N` is the dimensionality, `P` is the number of Zernike terms, `Q` is the number of aspheric terms, `M` is the Aspheric Type and `Z` is the tuple of `(n, m)` indices of the Zernike terms.
 
 The surface is centered at the origin and treated as being the cap of an infinite cylinder, thus creating a true half-space.
 Outside of `0 <= ρ <= 1` the height of the surface is not necessarily well defined, so NaN may be returned.
@@ -143,7 +143,7 @@ z(r,\\phi) = \\frac{cr^2}{1 + \\sqrt{1 - (1+k)c^2r^2}} + \\sum_{i}^{Q}\\alpha_ir
 
 where ``\\rho = \\frac{r}{\\texttt{normradius}}``, ``c = \\frac{1}{\\texttt{radius}}``, ``k = \\texttt{conic}`` and ``Z_n`` is the nᵗʰ Zernike polynomial.
 """
-struct ZernikeSurface{T,N,P,Q,M} <: ParametricSurface{T,N}
+struct ZernikeSurface{T,N,P,Q,M,Z} <: ParametricSurface{T,N}
     asp::AsphericSurface{T,N,Q,M}
     coeffs::SVector{P,Tuple{Int,Int,T}}
     boundingcylinder::Cylinder{T,N}
@@ -167,13 +167,14 @@ struct ZernikeSurface{T,N,P,Q,M} <: ParametricSurface{T,N}
         end
         P = length(zcs)
         M = asphericType(asp)
-        new{T,3,P,Q,M}(asp::AsphericSurface{T,3,Q,M}, SVector{P,Tuple{Int,Int,T}}(zcs), Cylinder(semidiameter, interface=opaqueinterface(T))) # TODO!! incorrect interface on cylinder
+        Z = Tuple((R, S) for (R, S, _) in zcs) #(n, m) indices of the terms, used to generate the derivative code of `sag`
+        new{T,3,P,Q,M,Z}(asp::AsphericSurface{T,3,Q,M}, SVector{P,Tuple{Int,Int,T}}(zcs), Cylinder(semidiameter, interface=opaqueinterface(T))) # TODO!! incorrect interface on cylinder
     end
 
 end
 export ZernikeSurface
 
-uvrange(::Type{ZernikeSurface{T,N,P,Q,M}}) where {T<:Real,N,P,Q,M} = ((zero(T), one(T)), (-T(π), T(π))) # ρ and ϕ
+uvrange(::Type{<:ZernikeSurface{T,N,P,Q,M}}) where {T<:Real,N,P,Q,M} = ((zero(T), one(T)), (-T(π), T(π))) # ρ and ϕ
 
 semidiameter(z::ZernikeSurface{T}) where {T<:Real} = z.asp.semidiameter
 halfsizeu(z::ZernikeSurface{T}) where {T<:Real} = semidiameter(z)
@@ -181,47 +182,49 @@ halfsizev(z::ZernikeSurface{T}) where {T<:Real} = semidiameter(z)
 
 boundingobj(z::ZernikeSurface{T}) where {T<:Real} = z.boundingcylinder
 
-function point(z::ZernikeSurface{T,3,P,Q,M}, ρ::T, ϕ::T)::SVector{3,T} where {T<:Real,P,Q,M}
-    pnt = point(z.asp, ρ, ϕ)
-
-    # sum zernike
-    rad = semidiameter(z.asp)
-    r = ρ * rad
-    u = r / z.asp.normradius
-    h = zero(T)
-    @inbounds @simd for m in 1:P
-        (R, S, k) = z.coeffs[m]
-        h += k * Zernike.ζ(R, S, u, ϕ)
+#=
+The shape of a ZernikeSurface is defined once, by `sag` below, in Cartesian coordinates. `point`, `partials`, `normal`
+and `surfacecurvature` are derived from it (see SagCurvature.jl). `Z` is the tuple of (n, m) indices of the Zernike terms.
+It is a type parameter so that derivative code can be generated once per term structure.
+=#
+function sag(::Type{<:ZernikeSurface{T,N,P,Q,M,Z}}, x, y, c) where {T,N,P,Q,M,Z}
+    h = sag(AsphericSurface{T,N,Q,M}, x, y, c) #reads c[1:2+Q]
+    invnormradius = c[3+Q]
+    ux = x * invnormradius
+    uy = y * invnormradius
+    u2 = ux^2 + uy^2
+    for i in 1:P
+        n, m = Z[i]
+        h += c[3+Q+i] * zernikecartesian(n, m, ux, uy, u2)
     end
-    return SVector{3,T}(pnt[1], pnt[2], pnt[3] + h)
+    return h
 end
 
-function partials(z::ZernikeSurface{T,3,P,Q,M}, ρ::T, ϕ::T)::Tuple{SVector{3,T},SVector{3,T}} where {T<:Real,P,Q,M}
-    pρ, pϕ = partials(z.asp, ρ, ϕ)
-    # sum zernike partials
-    rad = z.asp.semidiameter
-    n = rad / z.asp.normradius
-    u = ρ * n
-    dhdρ = zero(T)
-    dhdϕ = zero(T)
-    @inbounds @simd for m in 1:P
-        (R, S, k) = z.coeffs[m]
-        du, dϕ = Zernike.δζ(R, S, u, ϕ)
-        dhdρ += k * du * n # want the derivative wrt ρ, not u
-        dhdϕ += k * dϕ
+"""
+    zernikecartesian(n, m, ux, uy, u2)
+
+Normalized Zernike term ``Z_n^m`` at normalized Cartesian coordinates `(ux, uy)`, `u2 = ux² + uy²`. Written as a polynomial
+in `ux`, `uy` (using ``u^{|m|}\\cos(|m|\\phi) = \\Re((u_x + i u_y)^{|m|})``) so it is smooth at the origin and has no branches
+on the coordinate values.
+"""
+function zernikecartesian(n::Int, m::Int, ux, uy, u2)
+    am = abs(m)
+    isodd(n - am) && return zero(u2)
+    re, im = one(ux), zero(ux) #(ux + i uy)^|m|
+    for _ in 1:am
+        re, im = re * ux - im * uy, re * uy + im * ux
     end
-    return SVector{3,T}(pρ[1], pρ[2], pρ[3] + dhdρ), SVector{3,T}(pϕ[1], pϕ[2], pϕ[3] + dhdϕ)
+    angular = m < 0 ? im : re
+    radial = zero(u2)
+    for k in 0:((n-am)÷2)
+        radial += ((-1)^k * factorial(n - k)) / (factorial(k) * factorial((n + am) ÷ 2 - k) * factorial((n - am) ÷ 2 - k)) * u2^((n - am - 2k) ÷ 2)
+    end
+    return sqrt((2 * (n + 1)) / (1 + (m == 0 ? 1 : 0))) * radial * angular
 end
 
-function normal(z::ZernikeSurface{T,3,P,Q,M}, ρ::T, ϕ::T)::SVector{3,T} where {T<:Real,P,Q,M}
-    du, dv = partials(z, ρ, ϕ)
-    if ρ == zero(T) && norm(dv) == zero(T)
-        # in cases where there is no δϕ at ρ = 0 (i.e. anything which is rotationally symmetric)
-        # then we get some big problems, hardcoding this case solves the problems
-        return SVector{3,T}(0, 0, 1)
-    end
-    return normalize(cross(du, dv))
-end
+sagcoefficients(z::ZernikeSurface{T,N,P,Q}) where {T,N,P,Q} = SVector{3 + Q + P,T}(sagcoefficients(z.asp)..., inv(z.asp.normradius), map(t -> t[3], z.coeffs)...)
+sagsmooth(::Type{<:ZernikeSurface{T,N,P,Q,M}}) where {T,N,P,Q,M} = sagsmooth(AsphericSurface{T,N,Q,M})
+sagdefined(z::ZernikeSurface, r2) = sagdefined(z.asp, r2)
 
 function uv(z::ZernikeSurface{T,3,P,Q,M}, p::SVector{3,T}) where {T<:Real,P,Q,M}
     # avoid divide by zero for ForwardDiff
@@ -257,7 +260,8 @@ end
 #########################################################################################################
 
 # Assumes the ray has been transformed into the canonical coordinate frame which has the vertical axis passing through (0,0,0) and aligned with the z axis.
-function surfaceintersection(surf::AcceleratedParametricSurface{T,3,ZernikeSurface{T,3,P,Q,M}}, r::AbstractRay{T,3}) where {T<:Real,P,Q,M}
+# `<:` matters: ZernikeSurface{T,3,P,Q,M} leaves the type parameter Z free, and without `<:` this method would never match a concrete surface
+function surfaceintersection(surf::AcceleratedParametricSurface{T,3,<:ZernikeSurface{T,3,P,Q,M}}, r::AbstractRay{T,3}) where {T<:Real,P,Q,M}
     cylint = surfaceintersection(surf.surface.boundingcylinder, r)
     if isemptyinterval(cylint)
         return EmptyInterval(T)
@@ -304,3 +308,4 @@ function BoundingBox(surf::ZernikeSurface{T,3,P,Q,M}) where {T<:Real,P,Q,M}
 
     return BoundingBox(bb.xmin, bb.xmax, bb.ymin, bb.ymax, bb.zmin - ak, bb.zmax + ak) #could just return bb, but this way is safer
 end
+nsagcoefficients(::Type{<:ZernikeSurface{T,N,P,Q}}) where {T,N,P,Q} = 3 + Q + P

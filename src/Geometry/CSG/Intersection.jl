@@ -27,7 +27,12 @@ v(a::Intersection{T,N}) -> T
 α(a::Intersection{T,N}) -> T
 interface(a::Intersection{T,N}) -> OpticalInterface{T}
 flippednormal(a::Intersection{T,N}) -> Bool
+surfaceid(a::Intersection{T,N}) -> Int
 ```
+
+`surfaceid` identifies the CSG leaf ([`LeafNode`](@ref)) whose surface was hit, so the hit can be traced back to its
+surface and transform (for example to compute [`surfacecurvature`](@ref) for Gaussian beams). It is 0 for intersections
+that did not come from a leaf.
 """
 struct Intersection{T,N} <: FinitePoint{T}
     α::T # value of ray parameter at the point of intersection
@@ -39,19 +44,20 @@ struct Intersection{T,N} <: FinitePoint{T}
     # Interval holding two) contains no pointers and is never allocated on the heap.
     interface::AllOpticalInterfaces{T}
     flippednormal::Bool
+    surfaceid::Int
 
-    function Intersection(α::T, point::SVector{N,T}, normal::SVector{N,T}, u::T, v::T, interface::AllOpticalInterfaces{T}, flippednormal::Bool) where {T<:Real,N}
-        new{T,N}(α, point, normalize(normal), u, v, interface, flippednormal)
+    function Intersection(α::T, point::SVector{N,T}, normal::SVector{N,T}, u::T, v::T, interface::AllOpticalInterfaces{T}, flippednormal::Bool, surfaceid::Int=0) where {T<:Real,N}
+        new{T,N}(α, point, normalize(normal), u, v, interface, flippednormal, surfaceid)
     end
 
-    function Intersection(α::T, point::SVector{N,T}, normal::SVector{N,T}, u::T, v::T, interface::AllOpticalInterfaces{T}; flippednormal::Bool=false) where {T<:Real,N}
-        new{T,N}(α, point, normalize(normal), u, v, interface, flippednormal)
+    function Intersection(α::T, point::SVector{N,T}, normal::SVector{N,T}, u::T, v::T, interface::AllOpticalInterfaces{T}; flippednormal::Bool=false, surfaceid::Int=0) where {T<:Real,N}
+        new{T,N}(α, point, normalize(normal), u, v, interface, flippednormal, surfaceid)
     end
 
-    function Intersection(α::T, point::AbstractVector{T}, normal::AbstractVector{T}, u::T, v::T, interface::AllOpticalInterfaces{T}; flippednormal=false) where {T<:Real}
+    function Intersection(α::T, point::AbstractVector{T}, normal::AbstractVector{T}, u::T, v::T, interface::AllOpticalInterfaces{T}; flippednormal=false, surfaceid::Int=0) where {T<:Real}
         @assert length(point) == length(normal)
         N = length(point)
-        new{T,N}(α, SVector{N,T}(point), SVector{N,T}(normal), u, v, interface, flippednormal)
+        new{T,N}(α, SVector{N,T}(point), SVector{N,T}(normal), u, v, interface, flippednormal, surfaceid)
     end
 end
 export Intersection
@@ -64,6 +70,16 @@ v(a::Intersection{T,N}) where {T<:Real,N} = a.v
 α(a::Intersection{T,N}) where {T<:Real,N} = a.α
 interface(a::Intersection{T,N}) where {T<:Real,N} = a.interface
 flippednormal(a::Intersection{T,N}) where {T<:Real,N} = a.flippednormal
+"""
+    surfaceid(a::Intersection) -> Int
+
+The `id` of the CSG leaf ([`LeafNode`](@ref)) whose surface `a` is on, or 0 if `a` didn't come from a leaf.
+"""
+surfaceid(a::Intersection{T,N}) where {T<:Real,N} = a.surfaceid
+export surfaceid
+
+"""Copy of `a` with its [`surfaceid`](@ref) set to `id`."""
+withsurfaceid(a::Intersection{T,N}, id::Int) where {T<:Real,N} = Intersection(α(a), point(a), normal(a), u(a), v(a), interface(a), flippednormal(a), id)
 
 function Base.print(io::IO, a::Intersection{T,N}) where {T<:Real,N}
     println(io, Intersection{T,N})
@@ -82,7 +98,7 @@ end
 Used by the CSG complement operator (i.e. [`-`](@ref)) to reverse the inside outside sense of the object.
 """
 function reversenormal(a::Intersection{T,N}) where {T<:Real,N}
-    return Intersection(α(a), point(a), -normal(a), u(a), v(a), interface(a), !flippednormal(a))
+    return Intersection(α(a), point(a), -normal(a), u(a), v(a), interface(a), !flippednormal(a), surfaceid(a))
 end
 
 """
@@ -180,5 +196,5 @@ function Base.:*(a::Transform{T}, intsct::Intersection{T,3})::Intersection{T,3} 
     # rotate the normal with the upper left 3x3 block of the transform directly, rather than building a rotation Transform
     m = Geometry.matrix(a)
     rotated = SMatrix{3,3,T,9}(m[1, 1], m[2, 1], m[3, 1], m[1, 2], m[2, 2], m[3, 2], m[1, 3], m[2, 3], m[3, 3]) * normal(intsct)
-    return Intersection(α(intsct), a * point(intsct), rotated, u(intsct), v(intsct), interface(intsct), flippednormal(intsct))
+    return Intersection(α(intsct), a * point(intsct), rotated, u(intsct), v(intsct), interface(intsct), flippednormal(intsct), surfaceid(intsct))
 end

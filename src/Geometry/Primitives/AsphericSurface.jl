@@ -160,75 +160,58 @@ halfsizev(z::AsphericSurface{T}) where {T<:Real} = semidiameter(z)
 
 boundingobj(z::AsphericSurface{T}) where {T<:Real} = z.boundingcylinder
 
-prod_step(z::AsphericSurface{T,N,Q,ODDEVEN}, r, r2) where {T<:Real,N,Q} = r, r
-prod_step(z::AsphericSurface{T,N,Q,ODD}, r, r2) where {T<:Real,N,Q} = r, r2
-prod_step(z::AsphericSurface{T,N,Q,EVEN}, r, r2) where {T<:Real,N,Q} = r2, r2
-
-function point(z::AsphericSurface{T,3,Q,M}, ρ::T, ϕ::T)::SVector{3,T} where {T<:Real,Q,M}
-    rad = z.semidiameter
-    r = ρ * rad
-    r2 = r^2
-    t = one(T) - z.curvature^2 * (z.conic + one(T)) * r^2
-    if t < zero(T)
-        return SVector{3,T}(NaN, NaN, NaN)
-    end
-    h = z.curvature * r2 / (one(T) + sqrt(t))
-    # sum aspheric
-    if M != CONIC
-        prod, step = prod_step(z, r, r2)  #multiple dispatch on M
-        if isnothing(z.aspherics)
-            throw(ErrorException("attempt to compute point on aspheric which has no aspheric surfaces"))
-        end
-        asp, rest = Iterators.peel(z.aspherics) #JET doesn't seem to be able to infer that z.aspheric cannot be nothing at this point and gives an error.
-        h += asp * prod
-        for asp in rest
-            prod *= step
-            h += asp * prod
-        end
-    end
-    return SVector{3,T}(r * cos(ϕ), r * sin(ϕ), h)
+#=
+The shape of an AsphericSurface is defined once, by `sag` below, in Cartesian coordinates. `point`, `partials`, `normal`
+and `surfacecurvature` are all derived from it (see SagCurvature.jl). Aspheric coefficients by type:
+EVEN:    aspherics[i] multiplies r^(2i)
+ODD:     aspherics[i] multiplies r^(2i-1)
+ODDEVEN: aspherics[i] multiplies r^i
+=#
+function sag(::Type{<:AsphericSurface{T,N,Q,M}}, x, y, c) where {T,N,Q,M}
+    r2 = x^2 + y^2
+    curvature, conic = c[1], c[2]
+    h = curvature * r2 / (1 + sqrt(1 - curvature^2 * (conic + 1) * r2))
+    return h + asphericpolynomial(Val(M), Val(Q), r2, c, 2)
 end
 
-
-partial_prod_step(z::AsphericSurface{T,3,Q,EVEN}, r::T, r2::T) where {T<:Real,Q} = r, r2, 2:2:2Q
-partial_prod_step(z::AsphericSurface{T,3,Q,ODD}, r::T, r2::T) where {T<:Real,Q} = one(T), r2, 1:2:(2Q-1)
-partial_prod_step(z::AsphericSurface{T,3,Q,ODDEVEN}, r::T, r2::T) where {T<:Real,Q} = one(T), r, 1:1:Q
-
-function partials(z::AsphericSurface{T,3,Q,M}, ρ::T, ϕ::T)::Tuple{SVector{3,T},SVector{3,T}} where {T<:Real,Q,M}
-    rad = z.semidiameter
-    r = ρ * rad
-    r2 = r * r
-    t = one(T) - z.curvature^2 * (z.conic + one(T)) * r^2
-    if t < zero(T)
-        return SVector{3,T}(NaN, NaN, NaN), SVector{3,T}(NaN, NaN, NaN)
+#Σ aᵢ rⁿⁱ for the aspheric terms of type M, with aᵢ = c[offset + i]. The loops run over the type parameter Q, so they unroll at compile time and contain no value branches.
+asphericpolynomial(::Val{CONIC}, ::Val{Q}, r2, c, offset) where {Q} = zero(r2)
+function asphericpolynomial(::Val{EVEN}, ::Val{Q}, r2, c, offset) where {Q}
+    total = zero(r2)
+    term = r2
+    for i in 1:Q
+        total += c[offset+i] * term
+        term *= r2
     end
-    dhdρ = rad * z.curvature * r * sqrt(t) / t
-    # sum aspherics partial
-    if M != CONIC
-        prod, step, mIter = partial_prod_step(z, r, r2)
-
-        ((m, asp), rest) = Iterators.peel(zip(mIter, z.aspherics))
-        dhdρ += rad * asp * 2 * prod #first term m=1*2 and prod = r
-        for (m, asp) in rest
-            prod *= step
-            dhdρ += rad * m * asp * prod
-        end
+    return total
+end
+function asphericpolynomial(::Val{ODD}, ::Val{Q}, r2, c, offset) where {Q}
+    total = zero(r2)
+    term = sqrt(r2)
+    for i in 1:Q
+        total += c[offset+i] * term
+        term *= r2
     end
-    dhdϕ = zero(T)
-    cosϕ = cos(ϕ)
-    sinϕ = sin(ϕ)
-    return SVector{3,T}(rad * cosϕ, rad * sinϕ, dhdρ), SVector{3,T}(r * -sinϕ, r * cosϕ, dhdϕ)
+    return total
+end
+function asphericpolynomial(::Val{ODDEVEN}, ::Val{Q}, r2, c, offset) where {Q}
+    total = zero(r2)
+    r = sqrt(r2)
+    term = r
+    for i in 1:Q
+        total += c[offset+i] * term
+        term *= r
+    end
+    return total
 end
 
-function normal(z::AsphericSurface{T,3}, ρ::T, ϕ::T)::SVector{3,T} where {T<:Real}
-    du, dv = partials(z, ρ, ϕ)
-    if ρ == zero(T) && norm(dv) == zero(T)
-        # in cases where there is no δϕ at ρ = 0 (i.e. anything which is rotationally symmetric)
-        # then we get some big problems, hardcoding this case solves the problems
-        return SVector{3,T}(0, 0, 1)
-    end
-    return normalize(cross(du, dv))
-end
+sagcoefficients(z::AsphericSurface{T,N,Q}) where {T,N,Q} = SVector{2 + Q,T}(z.curvature, z.conic, z.aspherics...)
+#odd terms contain sqrt(x² + y²), which can not be differentiated symbolically on the axis
+sagsmooth(::Type{<:AsphericSurface{T,N,Q,M}}) where {T,N,Q,M} = !(M == ODD || M == ODDEVEN)
+
+#the conic square root is real inside this radius; outside it the surface is undefined and point returns NaN
+@inline conicdefined(curvature, conic, r2) = one(r2) - curvature^2 * (conic + one(r2)) * r2 >= zero(r2)
+sagdefined(z::AsphericSurface, r2) = conicdefined(z.curvature, z.conic, r2)
 
 function uv(z::AsphericSurface{T,3}, p::SVector{3,T}) where {T<:Real}
     # avoid divide by zero for ForwardDiff

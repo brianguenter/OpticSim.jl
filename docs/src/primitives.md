@@ -77,6 +77,7 @@ These are some useful functions related to `Surface` objects.
 point(::ParametricSurface{T}, ::T, ::T) where {T<:Real}
 normal
 partials(::ParametricSurface{T}, ::T, ::T) where {T<:Real}
+surfacecurvature
 uvrange
 uv
 OpticSim.uvtopix
