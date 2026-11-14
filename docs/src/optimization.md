@@ -12,7 +12,7 @@ The `Examples` module in the repository (`Examples/optimization_examples.jl`) co
 - a `build(x)` function returning the optical system;
 - a `merit(x)` function: the mean over the fields of the squared RMS spot radius about the centroid.
 
-The merit function works with automatic differentiation, so solvers get exact gradients from ForwardDiff. Its rays come from an emitter for each field and wavelength ([`OpticSim.pupilsource`](@ref)): a `Sources.Source` with a hexapolar grid of origins filling the entrance pupil. Only rays that pass through each lens surface once, in order, count, as in a sequential lens design program: OpticSim traces non-sequentially, and light reaching the image by a stray path, such as a reflection inside a thick element, is flare, not part of the image.
+The merit function works with automatic differentiation, so solvers get exact gradients, from compiled sequential ray Jacobians (see [Fast gradients for sequential lenses](@ref)) or from ForwardDiff. Its rays come from an emitter for each field and wavelength ([`OpticSim.pupilsource`](@ref)): a `Sources.Source` with a hexapolar grid of origins filling the entrance pupil. Only rays that pass through each lens surface once, in order, count, as in a sequential lens design program: OpticSim traces non-sequentially, and light reaching the image by a stray path, such as a reflection inside a thick element, is flare, not part of the image.
 
 ## Solving an example
 
@@ -24,7 +24,7 @@ julia -t auto --project=Examples Examples/run_optimization_examples.jl
 
 `-t auto` starts Julia with a thread per core: the merit function traces its rays in parallel. The rays are split into small chunks that the threads take from a shared queue, so fast and slow cores both stay busy, and the result doesn't depend on the number of threads. For the Biotar, 24 threads on a 24-core laptop processor (8 performance and 16 efficiency cores) evaluate the merit 13 times as fast as one thread and its gradient 9 times as fast.
 
-The examples solve their problems with [`optimizelens`](@ref), which is available once Optimization, OptimizationOptimJL and ForwardDiff are loaded. It scales each variable to run from 0 to 1 across its bounds before passing it to the solver. Lens variables have very different scales: a change of 0.001/mm in a curvature affects the image about as much as a change of millimeters in a spacing. Without scaling the gradient is thousands of times larger for curvatures, and a gradient-based solver barely moves the spacings: in an unscaled Biotar optimization the spacings changed by less than a micrometer. It also passes `Optimization.AutoForwardDiff(chunksize = length(x0))`, which computes all the derivatives in one pass instead of several.
+The examples solve their problems with [`optimizelens`](@ref), which is available once Optimization, OptimizationOptimJL and ForwardDiff are loaded. It scales each variable to run from 0 to 1 across its bounds before passing it to the solver. Lens variables have very different scales: a change of 0.001/mm in a curvature affects the image about as much as a change of millimeters in a spacing. Without scaling the gradient is thousands of times larger for curvatures, and a gradient-based solver barely moves the spacings: in an unscaled Biotar optimization the spacings changed by less than a micrometer. Its gradients come from compiled sequential ray Jacobians when the problem has a `prescription` function, as all the examples do (see [Fast gradients for sequential lenses](@ref)); otherwise from ForwardDiff, with `Optimization.AutoForwardDiff(chunksize = length(x0))`, which computes all the derivatives in one pass instead of several.
 
 The core of each example is:
 
@@ -54,6 +54,69 @@ Vis.save("singlet.png")
 ```
 
 The drawings below were made this way.
+
+## Fast gradients for sequential lenses
+
+A [`LensOptimizationProblem`](@ref) created with a `prescription` function, the function that gives the lens prescription (a DataFrame) for variables `x`, can have its spot merit and its gradient computed without differentiating through OpticSim's ray tracer. [`optimizelens`](@ref) then does this by default (`gradient = :sequential`), and [`spotmerit_and_gradient`](@ref) does it directly. All the examples give their prescription function. The gradient is exact, the same as ForwardDiff's to about 1e-13, and whole optimizations are many times faster:
+
+| Example | Variables | Rays | Gradient: ForwardDiff → sequential | Optimization: ForwardDiff → sequential | Final merit: ForwardDiff, sequential |
+|:--|:--|:--|:--|:--|:--|
+| Singlet | 3 | 381 | 8.9ms → 0.4ms (21×) | 11.1s → 1.0s (11×) | 3.5165e-3, 3.5165e-3 |
+| Aspheric singlet | 6 | 381 | 5.5ms → 0.5ms (11×) | 26.3s → 1.6s (17×) | 1.9038e-3, 1.9038e-3 |
+| Cooke triplet, 40° field | 8 | 1143 | 26ms → 2.0ms (13×) | 20.5s → 1.2s (18×) | 1.5564e-4, 1.5564e-4 |
+| Cooke triplet | 8 | 254 | 5.2ms → 0.6ms (9×) | 24.2s → 1.3s (18×) | 5.3696e-4, 5.3696e-4 |
+| Zeiss Biotar f/1.4 | 20 | 3255 | 336ms → 27ms (13×) | 29 minutes → 76s (23×) | 3.452e-3, 3.469e-3 |
+
+Both ways use `Fminbox(LBFGS())` from the same starting point, with 8 threads, on a laptop that was also running another long computation, so the times are slower than on an idle machine; the ratios are what matter. The optimizations need fewer evaluations with sequential gradients as well, because line search steps compute only the merit, without its gradient. Four of the optimizations end at the same design; the Biotar's took a slightly different path and stopped 0.5% higher. The gradient for the Biotar is dominated by its prescription function (the focal length solve, aiming the rays at the pupil, sizing the clear apertures), which ForwardDiff still differentiates; tracing the rays and evaluating their Jacobians takes a few milliseconds.
+
+The prescription function must describe the same lens as `build(x)`, and `merit(x)` must be the spot merit of that prescription traced with `aimedrays(x)`; the constructor checks that the two merits agree at the starting values. The sequential gradient supports what the examples use: Standard and Aspheric surfaces (conics with even aspheric terms), flat surfaces, stops in air and a flat image. For any other merit function, or other surface types, use `gradient = :forwarddiff`, which differentiates `merit(x)` with ForwardDiff.
+
+### How it works
+
+A ray that passes every surface of a sequential lens in order goes through the same chain of operations whatever the ray and whatever the lens parameters: intersect the first surface, refract, intersect the next surface, refract, ..., intersect the image. So the map
+
+    (lens parameters θ, ray start o and direction d, intersection parameters t₁, t₂, ...) -> (x, y) on the image
+
+is one fixed expression for each lens layout, the number and kind of its surfaces. θ holds every surface's curvature, conic, aspheric coefficients and vertex position ([`OpticSim.sequentiallens`](@ref)). The expression is built symbolically with FastDifferentiation, the first time a layout is used, together with its Jacobian ∂(x, y)/∂[θ; o; d], and compiled ([`OpticSim.sequentialjacobian`](@ref)). Each ray then takes two steps:
+
+1. Trace it numerically ([`OpticSim.sequentialtrace`](@ref)): at each curved surface, Newton's method finds the parameter t at which the ray o + t d meets the surface. The tⱼ are recorded. The trace also decides whether the ray takes the sequential path at all: it fails if the ray misses a surface, falls outside a clear semi-diameter or is totally internally reflected.
+2. Evaluate the compiled function with θ, o, d and the recorded tⱼ. It returns the image point and its Jacobian.
+
+The merit's gradient with respect to θ and to each ray's start follows from the Jacobians. The chain rule to the optimization variables x is a single ForwardDiff pass through the prescription function and the aimed rays, which traces no rays. On the examples the compiled Jacobian takes about 3μs per ray and the numeric trace about 1.3μs.
+
+#### The Newton step that makes the derivative exact
+
+The image point depends on θ in two ways: directly, through the surface shapes, positions and refraction, and through the intersection parameters. The ray meets surface j at P = o + t d, where t solves the intersection equation
+
+    F(t, θ) = P_z(t) - z_vertex + s(r²(t)) = 0
+
+with s the surface's sag. No formula gives t, so the derivative of the image point is
+
+    dx/dθ = ∂x/∂θ + ∂x/∂t ⋅ dt/dθ
+
+and the numeric trace gives the value of t but not dt/dθ. If the compiled function took t as a constant input, FastDifferentiation would return only ∂x/∂θ, which is wrong: each intersection slides along the ray when its surface moves.
+
+The derivative of t comes from the implicit function theorem. Differentiating F(t(θ), θ) = 0 with respect to θ,
+
+    F_t ⋅ dt/dθ + F_θ = 0,   so   dt/dθ = -F_θ / F_t
+
+It needs only the derivatives of F at the solution, not the iterations that found it.
+
+The compiled function produces this derivative without being told about it. It doesn't use the recorded t directly. It first takes one Newton step,
+
+    t̂(t, θ) = t - F(t, θ) / F_t(t, θ)
+
+and uses t̂ everywhere after. At the recorded root, where F = 0:
+
+- the value is t̂ = t - 0/F_t = t, so the step changes nothing numerically;
+- the derivative with respect to the input t is ∂t̂/∂t = 1 - (F_t² - F F_tt)/F_t² = F F_tt / F_t² = 0, so whatever t is passed in, t̂ doesn't respond to it, and it costs nothing that t is a constant input;
+- the derivative with respect to θ, with t held fixed, which is all FastDifferentiation sees, is ∂t̂/∂θ = -F_θ/F_t + F (∂F_t/∂θ)/F_t² = -F_θ/F_t. The second term vanishes because F = 0, and what is left is the implicit function theorem's dt/dθ.
+
+So differentiating t̂ symbolically, with t a frozen number, gives the same derivative as differentiating through the converged Newton iteration. The single step is the implicit function theorem in a form that symbolic differentiation handles by itself. The chain rule then carries each dtⱼ/dθ through all the later surfaces to the image point. Planes, stops and the image need no step: their intersection t = (z - o_z)/d_z is an explicit formula.
+
+Two conditions apply. The recorded t must be a converged root, because ∂t̂/∂t = 0 needs F = 0; the numeric trace iterates until the Newton update is below 1e-13 (1 + |t|), so what is left is at roundoff level. And the derivative is exact to first order only: second derivatives (a Hessian) would need more than one Newton step's terms. A gradient-based optimizer needs only first derivatives.
+
+The compiled expression is fixed for a layout: one Newton step per curved surface and no loops or branches, so it is compiled once and every ray that reaches the image uses it. The iteration happens in the cheap numeric trace, in plain floating point. ForwardDiff, in contrast, carries every partial derivative through every Newton iteration and through OpticSim's general intersection code.
 
 ## The examples
 
@@ -181,7 +244,7 @@ A radius set by a solve, like the Cooke sample's last radius, is not a free vari
 
 ## Choosing a solver
 
-Both solvers below come from Optimization.jl wrapper packages that enforce bounds. They ran on every example from the same starting point, with ForwardDiff gradients.
+Both solvers below come from Optimization.jl wrapper packages that enforce bounds. They ran on every example from the same starting point, with ForwardDiff gradients; the times in this section are for ForwardDiff gradients, and the sequential gradients make them many times shorter.
 
 | Example | `LBFGSB()`: evaluations, merit | `Fminbox(LBFGS())`: evaluations, merit |
 |:--|:--|:--|
@@ -222,8 +285,10 @@ Ipopt, through OptimizationMOI, handles bounds directly and backs off from NaN, 
 
 | Function | What it does | When to use it |
 |---|---|---|
-| [`LensOptimizationProblem`](@ref) | Holds a problem: variable names, starting values, bounds, `build(x)`, `merit(x)`, field angles and rays. Checks that every starting value is inside its bounds. | To describe your own problem, so that `optimizelens` and the reporting functions below work with it. See `Examples/optimization_examples.jl` for five complete ones. |
-| [`optimizelens`](@ref) | Solves a problem with Optimization.jl, by default with `Fminbox(LBFGS())`, with each variable scaled to run from 0 to 1 across its bounds and ForwardDiff gradients. Needs Optimization, OptimizationOptimJL and ForwardDiff to be loaded. | To optimize. The scaling matters whenever the variables have different units, e.g. curvatures and spacings; without it, gradient solvers barely move the spacings. Pass `solver=` to try a different bounded solver. |
+| [`LensOptimizationProblem`](@ref) | Holds a problem: variable names, starting values, bounds, `build(x)`, `merit(x)`, field angles and rays, and optionally `prescription(x)`. Checks that every starting value is inside its bounds, and that a prescription's spot merit is `merit`. | To describe your own problem, so that `optimizelens` and the reporting functions below work with it. See `Examples/optimization_examples.jl` for five complete ones. Give `prescription` for fast exact gradients. |
+| [`optimizelens`](@ref) | Solves a problem with Optimization.jl, by default with `Fminbox(LBFGS())`, with each variable scaled to run from 0 to 1 across its bounds. Gradients from compiled sequential ray Jacobians if the problem has a prescription, otherwise ForwardDiff (`gradient = :sequential` or `:forwarddiff` chooses). Needs Optimization, OptimizationOptimJL and ForwardDiff to be loaded. | To optimize. The scaling matters whenever the variables have different units, e.g. curvatures and spacings; without it, gradient solvers barely move the spacings. Pass `solver=` to try a different bounded solver. |
+| [`spotmerit_and_gradient`](@ref) | The spot merit and its exact gradient from compiled sequential ray Jacobians. Needs ForwardDiff to be loaded. | To evaluate or check a design's gradient, or to use another optimization package. |
+| [`OpticSim.sequentiallens`](@ref), [`OpticSim.sequentialtrace`](@ref), [`OpticSim.sequentialjacobian`](@ref) | A prescription's sequential lens and its parameters θ; the numeric sequential trace of a ray; the compiled image point and Jacobian of a lens layout. | To write another merit function with fast exact gradients, from the image points and their Jacobians. |
 
 ### Rays
 
@@ -269,4 +334,8 @@ OpticSim.fieldhits
 OpticSim.surfacescross
 OpticSim.axialrayheights
 OpticSim.passaxialbeam
+OpticSim.SequentialLens
+OpticSim.sequentiallens
+OpticSim.sequentialtrace
+OpticSim.sequentialjacobian
 ```

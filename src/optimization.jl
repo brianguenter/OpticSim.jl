@@ -7,14 +7,20 @@
 # problems are in Examples/optimization_examples.jl. The "Optimization functions" section of docs/src/optimization.md
 # says what each function is for and when to use it.
 
-export LensOptimizationProblem, optimizelens, rmsspotradii, surfaceseparations, fieldrays
+export LensOptimizationProblem, optimizelens, rmsspotradii, surfaceseparations, fieldrays, spotmerit_and_gradient
 
 """
-    optimizelens(lens::LensOptimizationProblem; solver = Optim.Fminbox(Optim.LBFGS()), maxiters = 300) -> (u, retcode, solution)
+    optimizelens(lens::LensOptimizationProblem; solver = Optim.Fminbox(Optim.LBFGS()), maxiters = 300, gradient = :auto) -> (u, retcode, solution)
 
 Create an Optimization.jl problem for `lens`, with its starting values, bounds and merit function, and solve it. The
-solver enforces the bounds. Gradients come from ForwardDiff. Returns the optimized variables `u`, the solver's return code
-and its full solution.
+solver enforces the bounds. Returns the optimized variables `u`, the solver's return code and its full solution.
+
+`gradient` chooses how gradients are computed:
+- `:sequential`: the spot merit and its gradient from compiled sequential ray Jacobians ([`spotmerit_and_gradient`](@ref)).
+  Exact, and typically 10 to 20 times faster than `:forwarddiff` for a whole optimization. Needs a `lens` created with a
+  `prescription` function.
+- `:forwarddiff`: ForwardDiff through `lens.merit`, which works for any merit function.
+- `:auto` (the default): `:sequential` if `lens` has a `prescription`, otherwise `:forwarddiff`.
 
 The solver works with each variable scaled to run from 0 to 1 across its bounds. Lens variables have very different
 scales: a curvature change of 0.001/mm affects the image about as much as a spacing change of millimeters, so without
@@ -45,6 +51,11 @@ A lens optimization problem.
 - `rays`: for each field, the rays traced at `x0`, as (ray, weight) pairs
 - `aimedrays(x)`: the rays traced for variables `x`; the same as `rays` unless the problem aims its rays at the
   entrance pupil of each design
+- `prescription(x)`: optional (keyword argument), the lens prescription (DataFrame) for variables `x`, the one `build(x)`
+  makes a system of. Give it when `merit(x)` is the spot merit of that prescription traced with `aimedrays(x)`
+  (`OpticSim.spotmerit(prescription(x), aimedrays(x), T)`): [`optimizelens`](@ref) then computes the merit and its
+  gradient with compiled sequential ray Jacobians ([`spotmerit_and_gradient`](@ref)), many times faster than ForwardDiff
+  through the ray trace. The constructor checks that the two merits agree at `x0`.
 
 Optimization.jl takes the bounds as separate vectors: `lb = first.(ex.bounds)`, `ub = last.(ex.bounds)`.
 
@@ -52,7 +63,7 @@ The rays for each field and wavelength come from an emitter ([`OpticSim.pupilsou
 hexapolar grid. The example problems in `Examples` take a `rings` keyword: `rings` rings give 1 + 3 rings (rings + 1) rays, 127 for
 6.
 """
-struct LensOptimizationProblem{B,M,A}
+struct LensOptimizationProblem{B,M,A,P}
     name::String
     source::String
     variables::Vector{String}
@@ -63,13 +74,19 @@ struct LensOptimizationProblem{B,M,A}
     fields::Vector{Float64}
     rays::Vector{Vector{Tuple{OpticalRay{Float64,3},Float64}}} # per field: (ray, weight)
     aimedrays::A
+    prescription::P # nothing, or x -> prescription DataFrame
 
-    function LensOptimizationProblem(name, source, variables, x0, bounds, build::B, merit::M, fields, rays; aimedrays::A=(_ -> rays)) where {B,M,A}
+    function LensOptimizationProblem(name, source, variables, x0, bounds, build::B, merit::M, fields, rays; aimedrays::A=(_ -> rays), prescription::P=nothing) where {B,M,A,P}
         @assert length(variables) == length(x0) == length(bounds) "one name, starting value and bounds per variable"
         for (v, x, (l, u)) in zip(variables, x0, bounds)
             @assert l <= x <= u "$v: starting value $x is outside its bounds ($l, $u)"
         end
-        new{B,M,A}(name, source, variables, x0, bounds, build, merit, fields, rays, aimedrays)
+        if prescription !== nothing
+            m = merit(x0)
+            s = first(sequentialspotmerit(prescription(x0), aimedrays(x0); withgradient=false))
+            @assert isapprox(m, s, rtol=1e-8) "merit(x0) = $m differs from the sequential spot merit of prescription(x0), $s: with a prescription, merit(x) must be the spot merit of prescription(x) traced with aimedrays(x)"
+        end
+        new{B,M,A,P}(name, source, variables, x0, bounds, build, merit, fields, rays, aimedrays, prescription)
     end
 end
 
