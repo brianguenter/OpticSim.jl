@@ -70,6 +70,11 @@ v(a::Intersection{T,N}) where {T<:Real,N} = a.v
 α(a::Intersection{T,N}) where {T<:Real,N} = a.α
 interface(a::Intersection{T,N}) where {T<:Real,N} = a.interface
 flippednormal(a::Intersection{T,N}) where {T<:Real,N} = a.flippednormal
+"""
+    surfaceid(a::Intersection) -> Int
+
+The `id` of the CSG leaf ([`LeafNode`](@ref)) whose surface `a` is on, or 0 if `a` didn't come from a leaf.
+"""
 surfaceid(a::Intersection{T,N}) where {T<:Real,N} = a.surfaceid
 export surfaceid
 
